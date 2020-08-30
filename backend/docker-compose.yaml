@@ -1,0 +1,25 @@
+version: '2'
+services:
+  rethinkdb:
+    iamge: rethinkdb:latest
+    ports:
+      - "8084:8080"
+      - "29015:29015"
+      - "28015:28015"
+    volumes:
+      - ./data:/data
+    command: rethinkdb --bind all --data /data
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    restart: always
+    volumes:
+      - ./:/app
+    command: uvicorn src.app:app --reload --host=0.0.0.0 --port=8000
+    ports:
+      - "8009:8000"
+    environment:
+      - DATABASE_URI=user:1234@rethinkdb:28015/iot
+    depends_on:
+      - "rethinkdb"
