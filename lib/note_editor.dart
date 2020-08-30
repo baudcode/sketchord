@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
+import 'package:flutter_share/flutter_share.dart';
+import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
 import 'package:tuple/tuple.dart';
@@ -8,6 +12,9 @@ import 'dart:ui';
 //import 'file_manager.dart';
 // import 'recorder_bottom_sheet_store2.dart';
 //import 'package:progress_indicators/progress_indicators.dart';
+import "recorder_bottom_sheet.dart";
+import "recorder_store.dart";
+
 import 'utils.dart';
 
 // TODO: Add an animation like this: https://i.pinimg.com/originals/6b/a1/74/6ba174bf48e9b6dc8d8bd19d13c9caa9.gif
@@ -88,7 +95,7 @@ class EditableState extends State<Editable> {
 
 class NoteEditorState extends State<NoteEditor>
     with StoreWatcherMixin<NoteEditor> {
-  //RecorderBottomSheetStore recorderStore;
+  RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
 
@@ -97,16 +104,15 @@ class NoteEditorState extends State<NoteEditor>
   @override
   void initState() {
     super.initState();
-    //recorderStore = listenToStore(recorderBottomSheetStoreToken);
+    recorderStore = listenToStore(recorderBottomSheetStoreToken);
     store = listenToStore(noteEditorStoreToken);
     store.setNote(widget.note);
-    /*TODO:
+
     recordingFinished.clearListeners();
     recordingFinished.listen((f) {
       print("recording finished ${f.path}");
       addAudioFile(f);
     });
-    */
   }
 
   @override
@@ -255,7 +261,6 @@ class NoteEditorState extends State<NoteEditor>
 
   // use this: https://pub.flutter-io.cn/packages/audio_recorder
 
-  /* TODO:
   _audioFileView(AudioFile file) {
     Widget subTitle;
 
@@ -264,15 +269,6 @@ class NoteEditorState extends State<NoteEditor>
     else
       subTitle = Text(file.createdAt.toIso8601String());
 
-    if (FileManager.instance.isDeletingFile(file))
-      subTitle = JumpingText("Deleting ...");
-
-    if (FileManager.instance.isUploadingFile(file))
-      subTitle = JumpingText("Uploading ...");
-
-    if (FileManager.instance.isDownloadingFile(file))
-      subTitle = JumpingText("Downloading ...");
-
     var view = ListTile(
       onLongPress: () => _onAudioFileLongPress(file),
       trailing: Text(file.durationString),
@@ -280,9 +276,11 @@ class NoteEditorState extends State<NoteEditor>
       leading: IconButton(
           icon: Icon(Icons.play_arrow),
           onPressed: () {
-            if (!File(file.path).existsSync()) {
-              print('file ${file.path} does not exist locally, downloading...');
+            print("trying to play ${file.path}");
+            if (File(file.path).existsSync()) {
               startPlaybackAction(file.path);
+            } else {
+              showSnack(_globalKey.currentState, "This files was removed!");
             }
           }),
       title: Text(file.name),
@@ -290,17 +288,35 @@ class NoteEditorState extends State<NoteEditor>
 
     return Dismissible(
       child: view,
-      onDismissed: (d) => deleteAudioFile(file),
-      direction: DismissDirection.startToEnd,
+      onDismissed: (d) {
+        if (d == DismissDirection.endToStart) {
+          deleteAudioFile(file);
+        } else {}
+      },
+      confirmDismiss: (d) async {
+        if (d == DismissDirection.endToStart) {
+          return true;
+        } else {
+          shareFile(file.path);
+          return false;
+        }
+      },
+      direction: DismissDirection.horizontal,
       key: GlobalKey(),
       background: Card(
           child: Container(
+              color: Colors.greenAccent,
+              child: Row(children: <Widget>[Icon(Icons.share)]),
+              padding: EdgeInsets.all(10))),
+      secondaryBackground: Card(
+          child: Container(
               color: Colors.redAccent,
-              child: Row(children: <Widget>[Icon(Icons.delete)]),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[Icon(Icons.delete)]),
               padding: EdgeInsets.all(10))),
     );
   }
-  
 
   _onFloatingActionButtonPress() {
     if (recorderStore.state == RecorderState.RECORDING) {
@@ -309,7 +325,6 @@ class NoteEditorState extends State<NoteEditor>
       startRecordingAction();
     }
   }
-  */
 
   _addSectionItem() {
     return Container(
@@ -404,11 +419,9 @@ class NoteEditorState extends State<NoteEditor>
             'Audio Files',
             style: Theme.of(context).textTheme.subtitle1,
           )));
-    /* TODO
     for (AudioFile f in store.note.audioFiles) {
       items.add(_audioFileView(f));
     }
-    */
 
     List<Widget> stackChildren = [];
 
@@ -434,7 +447,6 @@ class NoteEditorState extends State<NoteEditor>
         key: _globalKey,
         appBar: AppBar(),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-        /*
         floatingActionButton: FloatingActionButton(
           onPressed: _onFloatingActionButtonPress,
           child: Icon(((recorderStore.state == RecorderState.RECORDING))
@@ -445,7 +457,6 @@ class NoteEditorState extends State<NoteEditor>
               : Theme.of(context).accentColor),
         ),
         bottomSheet: RecorderBottomSheet(),
-        */
         body: Stack(children: stackChildren));
   }
 }

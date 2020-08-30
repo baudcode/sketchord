@@ -1,17 +1,21 @@
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart' show Action, Store, StoreToken;
 
 enum SettingsTheme { dark, light }
 
 class SettingsStore extends Store {
-  SettingsTheme theme = SettingsTheme.dark;
+  SettingsTheme _theme = SettingsTheme.dark;
+
+  // getters
+  SettingsTheme get theme => _theme;
 
   SettingsStore() {
     // init listener
-    toggleTheme.listen((note) {
+    toggleTheme.listen((_) {
       if (theme == SettingsTheme.dark) {
-        theme = SettingsTheme.light;
+        _theme = SettingsTheme.light;
       } else {
-        theme = SettingsTheme.dark;
+        _theme = SettingsTheme.dark;
       }
       trigger();
     });
@@ -25,4 +29,5 @@ class SettingsStore extends Store {
 // default NoteView (tile, list)
 Action toggleTheme = Action();
 Action setDefaultModeView = Action();
+
 StoreToken settingsToken = StoreToken(SettingsStore());

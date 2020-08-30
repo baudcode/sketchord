@@ -1,7 +1,9 @@
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
+import 'package:sound/recorder_store.dart';
 import 'package:sound/utils.dart';
 import 'package:uuid/uuid.dart';
 import 'settings_store.dart';
@@ -22,6 +24,7 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   SettingsStore store;
+  RecorderBottomSheetStore recorderStore;
 
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
 
@@ -29,6 +32,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   void initState() {
     super.initState();
     store = listenToStore(settingsToken);
+    recorderStore = listenToStore(recorderBottomSheetStoreToken);
   }
 
   _themeAsString() {
@@ -53,6 +57,26 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
           RaisedButton(
             child: Text(_themeAsString()),
             onPressed: toggleTheme,
+          ),
+        ]),
+      ],
+    ));
+  }
+
+  _audioFormatAsString() {
+    return recorderStore.audioFormat == AudioFormat.AAC ? "AAC" : "WAV";
+  }
+
+  _audioFormatItem() {
+    return _wrapItem(Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Column(children: [Text("AudioFormat: ")]),
+        Column(children: [
+          RaisedButton(
+            child: Text(_audioFormatAsString()),
+            onPressed: toggleAudioFormat,
           ),
         ]),
       ],
@@ -105,7 +129,9 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
           style: Theme.of(context).textTheme.subtitle1),
       new ExportNote(state: _globalKey.currentState),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Import Note"), onPressed: _importNote)
+      RaisedButton(child: Text("Import Note"), onPressed: _importNote),
+      SizedBox(height: 10),
+      _audioFormatItem()
     ];
 
     return ListView.builder(
