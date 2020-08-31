@@ -234,7 +234,8 @@ class RecorderBottomSheetStore extends Store {
       if (_state == RecorderState.RECORDING ||
           _state == RecorderState.PLAYING ||
           _state == RecorderState.PAUSING) {
-        if (_state == RecorderState.PLAYING) {
+        if (_state == RecorderState.PLAYING ||
+            _state == RecorderState.PAUSING) {
           stopPlayer();
           _state = RecorderState.STOP;
           trigger();

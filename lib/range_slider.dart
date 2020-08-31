@@ -414,7 +414,7 @@ class _RangeSliderState extends State<RangeSlider>
 
   static const double _defaultTrackHeight = 2.0;
   static const SliderTrackShape _defaultTrackShape =
-      RectangularSliderTrackShape();
+      RoundedRectSliderTrackShape();
   static const SliderTickMarkShape _defaultTickMarkShape =
       RoundSliderTickMarkShape();
   static const SliderComponentShape _defaultOverlayShape =
@@ -474,21 +474,23 @@ class _RangeSliderState extends State<RangeSlider>
           ),
     );
 
-    return _RangeSliderRenderObjectWidget(
-      lowerValue: _unlerp(widget.lowerValue),
-      upperValue: _unlerp(widget.upperValue),
-      divisions: widget.divisions,
-      onChanged: (widget.onChanged != null) ? _handleChanged : null,
-      onChangeStart: _handleChangeStart,
-      onChangeEnd: _handleChangeEnd,
-      sliderTheme: sliderTheme,
-      state: this,
-      showValueIndicator: widget.showValueIndicator,
-      valueIndicatorMaxDecimals: widget.valueIndicatorMaxDecimals,
-      touchRadiusExpansionRatio: widget.touchRadiusExpansionRatio,
-      valueIndicatorFormatter: widget.valueIndicatorFormatter,
-      allowThumbOverlap: widget.allowThumbOverlap,
-    );
+    return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
+        child: _RangeSliderRenderObjectWidget(
+          lowerValue: _unlerp(widget.lowerValue),
+          upperValue: _unlerp(widget.upperValue),
+          divisions: widget.divisions,
+          onChanged: (widget.onChanged != null) ? _handleChanged : null,
+          onChangeStart: _handleChangeStart,
+          onChangeEnd: _handleChangeEnd,
+          sliderTheme: sliderTheme,
+          state: this,
+          showValueIndicator: widget.showValueIndicator,
+          valueIndicatorMaxDecimals: widget.valueIndicatorMaxDecimals,
+          touchRadiusExpansionRatio: widget.touchRadiusExpansionRatio,
+          valueIndicatorFormatter: widget.valueIndicatorFormatter,
+          allowThumbOverlap: widget.allowThumbOverlap,
+        ));
   }
 }
 

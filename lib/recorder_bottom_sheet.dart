@@ -33,20 +33,6 @@ class _BottomInfoState extends State<BottomInfo>
     stopAction();
   }
 
-  _getSlider() {
-    return Slider(
-      min: 0.0,
-      max: recorderStore.currentLength == null
-          ? 0.0
-          : recorderStore.currentLength.inSeconds.toDouble(),
-      value: playerPositionStore.position.inSeconds.toDouble(),
-      onChanged: (value) {
-        skipTo(Duration(milliseconds: value.toInt()));
-      },
-      label: "Playing",
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     Duration elapsed;
@@ -131,6 +117,47 @@ class _BottomInfoState extends State<BottomInfo>
   }
 }
 
+class PlayerSlider extends StatefulWidget {
+  PlayerSlider({Key key}) : super(key: key);
+
+  @override
+  _PlayerSliderState createState() => _PlayerSliderState();
+}
+
+class _PlayerSliderState extends State<PlayerSlider>
+    with StoreWatcherMixin<PlayerSlider> {
+  RecorderBottomSheetStore store;
+  PlayerPositionStore playerPositionStore;
+
+  @override
+  void initState() {
+    super.initState();
+    store = listenToStore(recorderBottomSheetStoreToken);
+    playerPositionStore = listenToStore(playerPositionStoreToken);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        height: 50,
+        child: Column(children: [
+          Expanded(
+              child: Slider(
+            inactiveColor: Colors.amber,
+            min: 0.0,
+            max: store.currentLength == null
+                ? 0.0
+                : store.currentLength.inSeconds.toDouble(),
+            value: playerPositionStore.position.inSeconds.toDouble(),
+            onChanged: (value) {
+              skipTo(Duration(milliseconds: value.toInt()));
+            },
+            label: "Playing",
+          ))
+        ]));
+  }
+}
+
 class RecorderBottomSheet extends StatefulWidget {
   RecorderBottomSheet({Key key}) : super(key: key);
 
@@ -170,17 +197,25 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       color = Colors.redAccent;
     }
 
-    double width = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width;
 
     Looper looper = Looper(color);
     BottomInfo info = BottomInfo(color);
 
     if (showLooper) {
       return Container(
-          height: 120,
+          height: 250,
           width: width,
           color: color,
-          child: Column(children: [looper, SizedBox(height: 20), info]));
+          child: Column(children: [
+            SizedBox(height: 20),
+            looper,
+            SizedBox(height: 30),
+            Text("Player:"),
+            PlayerSlider(),
+            Expanded(child: Container()),
+            info
+          ]));
     } else {
       return info;
     }

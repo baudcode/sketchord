@@ -115,22 +115,27 @@ class NoteEditorState extends State<NoteEditor>
         recorderStore.state == RecorderState.PLAYING ||
         recorderStore.state == RecorderState.RECORDING;
 
-    return Scaffold(
-        key: _globalKey,
-        appBar: AppBar(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-        floatingActionButton: FloatingActionButton(
-          onPressed: _onFloatingActionButtonPress,
-          child: Icon(((recorderStore.state == RecorderState.RECORDING))
-              ? Icons.mic_none
-              : Icons.mic),
-          backgroundColor: ((recorderStore.state == RecorderState.RECORDING)
-              ? Colors.redAccent
-              : Theme.of(context).accentColor),
-        ),
-        bottomSheet:
-            showSheet ? RecorderBottomSheet(key: Key("BottomSheet")) : null,
-        body: Stack(children: stackChildren));
+    return WillPopScope(
+        onWillPop: () async {
+          stopAction();
+          return true;
+        },
+        child: Scaffold(
+            key: _globalKey,
+            appBar: AppBar(),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+            floatingActionButton: FloatingActionButton(
+              onPressed: _onFloatingActionButtonPress,
+              child: Icon(((recorderStore.state == RecorderState.RECORDING))
+                  ? Icons.mic_none
+                  : Icons.mic),
+              backgroundColor: ((recorderStore.state == RecorderState.RECORDING)
+                  ? Colors.redAccent
+                  : Theme.of(context).accentColor),
+            ),
+            bottomSheet:
+                showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
+            body: Stack(children: stackChildren)));
   }
 }
 

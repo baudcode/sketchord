@@ -44,18 +44,13 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
 
     return Container(
       color: widget.color,
-      height: 50,
-      child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-        Padding(
-            padding: EdgeInsets.only(left: 10),
-            child: Text(
-              "Looper:",
-              style: Theme.of(context).textTheme.subtitle2,
-              textScaleFactor: .5,
-            )),
+      height: 80,
+      child: Column(children: [
+        Text(
+          "Looper:",
+        ),
         Expanded(
-            child: GestureDetector(
-                child: frs.RangeSlider(
+            child: frs.RangeSlider(
           min: 0,
           onChangeEnd: (double endLowerValue, double endUpperValue) {
             setLoopRange(RangeValues(endLowerValue, endUpperValue));
@@ -70,7 +65,7 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
               range = RangeValues(newLowerValue, newUpperValue);
             });
           },
-        )))
+        ))
       ]),
     );
   }
