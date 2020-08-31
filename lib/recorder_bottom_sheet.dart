@@ -1,64 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart';
+import 'package:sound/looper.dart';
 import 'recorder_store.dart';
 
-class RecorderBottomSheet extends StatefulWidget {
+class BottomInfo extends StatefulWidget {
+  final Color color;
+  final double pad;
+  final double height;
+
+  BottomInfo(this.color, {this.pad = 4, this.height = 50, Key key})
+      : super(key: key);
+
   @override
-  State<StatefulWidget> createState() {
-    return RecorderBottomSheetState();
-  }
+  _BottomInfoState createState() => _BottomInfoState();
 }
 
-class RecorderBottomSheetState extends State<RecorderBottomSheet>
-    with StoreWatcherMixin<RecorderBottomSheet> {
-  RecorderBottomSheetStore store;
-  AnimationController controller;
-  Animation<double> animation;
+class _BottomInfoState extends State<BottomInfo>
+    with StoreWatcherMixin<BottomInfo> {
+  RecorderBottomSheetStore recorderStore;
+  PlayerPositionStore playerPositionStore;
+  RecorderPositionStore recorderPositionStore;
 
   @override
   void initState() {
     super.initState();
-    store = listenToStore(recorderBottomSheetStoreToken);
+    recorderStore = listenToStore(recorderBottomSheetStoreToken);
+    playerPositionStore = listenToStore(playerPositionStoreToken);
+    recorderPositionStore = listenToStore(recorderPositionStoreToken);
   }
 
   _onButtonPress() {
     stopAction();
   }
 
+  _getSlider() {
+    return Slider(
+      min: 0.0,
+      max: recorderStore.currentLength == null
+          ? 0.0
+          : recorderStore.currentLength.inSeconds.toDouble(),
+      value: playerPositionStore.position.inSeconds.toDouble(),
+      onChanged: (value) {
+        skipTo(Duration(milliseconds: value.toInt()));
+      },
+      label: "Playing",
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (store.state == RecorderState.STOP)
-      return Container(height: 0, width: 0);
+    Duration elapsed;
+    Duration length;
 
-    String elapsed = "";
-    if (store.elapsed != null) elapsed = store.elapsed.inSeconds.toString();
-
-    String timeString = elapsed;
-
-    if (store.state == RecorderState.PLAYING ||
-        store.state == RecorderState.PAUSING) {
-      if (store.currentLength != null) {
-        timeString += " / " + store.currentLength.inSeconds.toString();
+    if (recorderStore.state == RecorderState.PAUSING ||
+        recorderStore.state == RecorderState.PLAYING) {
+      elapsed = playerPositionStore.position;
+      if (recorderStore.currentLength != null) {
+        length = recorderStore.currentLength;
       }
+    } else if (recorderStore.state == RecorderState.RECORDING) {
+      elapsed = recorderPositionStore.position;
+    }
+
+    String _elapsed = "";
+
+    if (elapsed != null) {
+      _elapsed = (elapsed.inMilliseconds / 1000).toStringAsFixed(1);
+    }
+
+    String timeString = _elapsed;
+
+    if (length != null) {
+      timeString += " / " + length.inSeconds.toString();
     }
     timeString += " s";
 
-    Color color;
-    IconData icon;
+    IconData icon = Icons.stop;
 
-    if (store.state == RecorderState.PLAYING ||
-        store.state == RecorderState.PAUSING) {
-      icon = Icons.stop;
-      color = Theme.of(context).primaryColor;
-    } else if (store.state == RecorderState.RECORDING) {
-      icon = Icons.stop;
-      color = Colors.redAccent;
-    }
-    String state =
-        (RecorderState.RECORDING == store.state) ? "Recording" : "Playing";
+    String state = (RecorderState.RECORDING == recorderStore.state)
+        ? "Recording"
+        : (recorderStore.state == RecorderState.PAUSING)
+            ? "Pausing"
+            : "Playing";
 
-    double pad = 4;
-
+    double pad = widget.pad;
     List<Widget> children = [
       Padding(
           child: IconButton(icon: Icon(icon), onPressed: _onButtonPress),
@@ -69,30 +94,21 @@ class RecorderBottomSheetState extends State<RecorderBottomSheet>
         child: Text(timeString),
         padding: EdgeInsets.only(left: pad, right: pad));
 
-    if ((RecorderState.RECORDING == store.state)) {
+    if ((RecorderState.RECORDING == recorderStore.state)) {
       children.add(Expanded(child: Text(state)));
       children.add(
           Padding(child: timeWidget, padding: EdgeInsets.only(right: pad)));
     } else {
-      if (store.currentLength != null && store.elapsed != null) {
-        print('elapsed: ${store.elapsed.inMilliseconds.toDouble()}');
-        print('max: ${store.currentLength.inMilliseconds.toDouble()}');
-        children.add(Expanded(
-            flex: 1,
-            child: Slider(
-              min: 0.0,
-              max: store.currentLength.inMilliseconds.toDouble(),
-              value: store.elapsed.inMilliseconds.toDouble(),
-              onChanged: (value) {
-                skipTo(Duration(milliseconds: value.toInt()));
-              },
-              label: "Playing",
-            )));
-      } else {
-        children.add(Expanded(child: Text(state)));
-      }
+      children.add(
+          Padding(child: timeWidget, padding: EdgeInsets.only(right: pad)));
 
-      if (store.state == RecorderState.PAUSING) {
+      /*
+      if (length != null) {
+        children.add(Expanded(flex: 1, child: _getSlider()));
+      } else {
+       */
+
+      if (recorderStore.state == RecorderState.PAUSING) {
         children.add(Padding(
             padding: EdgeInsets.only(right: pad),
             child: IconButton(
@@ -107,10 +123,66 @@ class RecorderBottomSheetState extends State<RecorderBottomSheet>
     }
 
     return Container(
-        color: color,
-        height: 50,
+        color: widget.color,
+        height: widget.height,
         child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: children));
+  }
+}
+
+class RecorderBottomSheet extends StatefulWidget {
+  RecorderBottomSheet({Key key}) : super(key: key);
+
+  @override
+  _RecorderBottomSheetState createState() => _RecorderBottomSheetState();
+}
+
+class _RecorderBottomSheetState extends State<RecorderBottomSheet>
+    with StoreWatcherMixin<RecorderBottomSheet> {
+  RecorderBottomSheetStore store;
+
+  @override
+  void initState() {
+    super.initState();
+    store = listenToStore(recorderBottomSheetStoreToken);
+    print("INIT STATE....");
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (store.state == RecorderState.STOP)
+      return Container(height: 0, width: 0);
+
+    var showLooper = ((store.state == RecorderState.PLAYING ||
+        store.state == RecorderState.PAUSING));
+    Color color;
+
+    if (store.state == RecorderState.PLAYING ||
+        store.state == RecorderState.PAUSING) {
+      color = Theme.of(context).primaryColor;
+    } else if (store.state == RecorderState.RECORDING) {
+      color = Colors.redAccent;
+    }
+
+    double width = MediaQuery.of(context).size.height;
+
+    Looper looper = Looper(color);
+    BottomInfo info = BottomInfo(color);
+
+    if (showLooper) {
+      return Container(
+          height: 120,
+          width: width,
+          color: color,
+          child: Column(children: [looper, SizedBox(height: 20), info]));
+    } else {
+      return info;
+    }
   }
 }

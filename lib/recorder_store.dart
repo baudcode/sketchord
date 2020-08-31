@@ -1,5 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart' show RangeValues;
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart' show Store, Action, StoreToken;
 // import 'package:video_player/video_player.dart';
@@ -16,6 +16,38 @@ import 'package:path/path.dart' as p;
 
 enum RecorderState { STOP, RECORDING, PLAYING, PAUSING }
 
+class PlayerPositionStore extends Store {
+  Duration _position = Duration(seconds: 0);
+
+  Duration get position => _position;
+
+  PlayerPositionStore() {
+    changePlayerPosition.listen((event) {
+      _position = event;
+      trigger();
+    });
+  }
+}
+
+Action<Duration> changePlayerPosition = Action();
+StoreToken playerPositionStoreToken = StoreToken(PlayerPositionStore());
+
+class RecorderPositionStore extends Store {
+  Duration _position = Duration(seconds: 0);
+
+  Duration get position => _position;
+
+  RecorderPositionStore() {
+    changeRecorderPosition.listen((event) {
+      _position = event;
+      trigger();
+    });
+  }
+}
+
+Action<Duration> changeRecorderPosition = Action();
+StoreToken recorderPositionStoreToken = StoreToken(RecorderPositionStore());
+
 class RecorderBottomSheetStore extends Store {
   //VideoPlayerController _controller;
   RecordingStatus _currentStatus = RecordingStatus.Unset;
@@ -29,49 +61,70 @@ class RecorderBottomSheetStore extends Store {
   // recorder
   RecorderState _state = RecorderState.STOP;
   String _currentPath;
-  Duration _elapsed;
+
+  Duration _recordTime;
+  Duration get recordTime => _recordTime;
+
+  RangeValues _loopRange;
+  RangeValues get loopRange => _loopRange;
 
   // getters
   RecorderState get state => _state;
   RecordingStatus get status => _currentStatus;
   Duration get currentLength => _currentLength;
   String get stateString => _state.toString();
-  Duration get elapsed => _elapsed;
   String get currentPath => _currentPath;
   AudioFormat get audioFormat => _audioFormat;
+  AudioPlayer get player => _player;
+
+  getDurationLoopEnd() {
+    if (_loopRange == null) return null;
+    return Duration(milliseconds: (_loopRange.end * 1000).floor());
+  }
+
+  getDurationLoopStart() {
+    if (_loopRange == null) return null;
+    return Duration(milliseconds: (_loopRange.start * 1000).floor());
+  }
 
   Future<int> stopPlayer() async {
-    return await _player.stop();
+    int res = await _player.stop();
+    changePlayerPosition(Duration(seconds: 0));
+    return res;
   }
 
   Future<int> startPlayer(String path) async {
     print("playing $path");
-
     // set length not yet available
-    _currentLength = null;
-    trigger();
 
-    _player.onDurationChanged.listen((d) {
-      _currentLength = d;
-      trigger();
+    _player.onAudioPositionChanged.listen((pos) async {
+      if (_loopRange != null && pos >= getDurationLoopEnd()) {
+        pos = getDurationLoopStart();
+        await _player.seek(pos);
+      }
+      changePlayerPosition(pos);
     });
 
-    _player.onAudioPositionChanged.listen((event) {
-      _elapsed = event;
-      trigger();
+    _player.onDurationChanged.listen((event) {
+      if (_currentLength != event) {
+        _currentLength = event;
+        trigger();
+      }
     });
 
+    _state = RecorderState.PLAYING;
     _player.onPlayerStateChanged.listen((AudioPlayerState event) {
       print("player state change $event");
     });
 
     _player.onPlayerCompletion.listen((event) {
       print("player completed");
-      _state = RecorderState.STOP;
-      trigger();
+      stopAction();
     });
 
+    print("play me");
     int result = await _player.play(path, isLocal: true);
+    trigger();
     return result;
   }
 
@@ -120,11 +173,14 @@ class RecorderBottomSheetStore extends Store {
 
       var current = await _recorder.current(channel: 0);
       // print(current.status);
-      _currentStatus = current.status;
-      _current = current;
-      _elapsed = current.duration;
-      print("update to ${current.duration.inSeconds}");
-      trigger();
+      if (_currentStatus != current.status) {
+        _currentStatus = current.status;
+        _current = current;
+        print("update to ${current.duration.inSeconds}");
+        trigger();
+      }
+
+      changeRecorderPosition(current.duration);
     });
 
     return true;
@@ -137,8 +193,9 @@ class RecorderBottomSheetStore extends Store {
       // reuslt.path, result.duration
       print("Stop recording: ${result.path}");
       print("Stop recording: ${result.duration}");
-      _elapsed = result.duration;
+      _recordTime = result.duration;
       _current = result;
+      changeRecorderPosition(Duration(seconds: 0));
     }
 
     return "";
@@ -163,20 +220,20 @@ class RecorderBottomSheetStore extends Store {
     // sound = FlutterSound();
     startPlaybackAction.listen((path) {
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
-        _elapsed = null;
+        changePlayerPosition(Duration(seconds: 0));
         _currentPath = path;
         startPlayer(path).then((t) {
-          _state = RecorderState.PLAYING;
-          trigger();
+          //   _state = RecorderState.PLAYING;
+          // trigger();
         });
       }
     });
 
     stopAction.listen((_) {
+      _loopRange = null;
       if (_state == RecorderState.RECORDING ||
           _state == RecorderState.PLAYING ||
           _state == RecorderState.PAUSING) {
-        _elapsed = Duration(microseconds: 0);
         if (_state == RecorderState.PLAYING) {
           stopPlayer();
           _state = RecorderState.STOP;
@@ -184,7 +241,8 @@ class RecorderBottomSheetStore extends Store {
         } else {
           stopRecorder().then((_) {
             _state = RecorderState.STOP;
-            recordingFinished(AudioFile(duration: elapsed, path: currentPath));
+            recordingFinished(
+                AudioFile(duration: _recordTime, path: currentPath));
           });
         }
       }
@@ -209,12 +267,8 @@ class RecorderBottomSheetStore extends Store {
       });
     });
 
-    setElapsed.listen((e) {
-      _elapsed = e;
-      trigger();
-    });
-
     skipTo.listen((d) async {
+      print("seeking to $d");
       await _player.seek(d);
       trigger();
     });
@@ -250,6 +304,18 @@ class RecorderBottomSheetStore extends Store {
       print("setting audio format to $_audioFormat");
       trigger();
     });
+
+    setLoopRange.listen((range) async {
+      print("$range, $_loopRange");
+
+      if (_loopRange == null ||
+          (_loopRange != null && range.start != _loopRange.start)) {
+        var start = Duration(milliseconds: (range.start * 1000).floor());
+        await _player.seek(start);
+      }
+      _loopRange = range;
+      trigger();
+    });
   }
 }
 
@@ -265,6 +331,7 @@ Action<Duration> setElapsed = Action();
 Action<Duration> skipTo = Action();
 Action<AudioFile> recordingFinished = Action();
 Action resetRecorderState = Action();
+Action<RangeValues> setLoopRange = Action();
 
 StoreToken recorderBottomSheetStoreToken =
     StoreToken(RecorderBottomSheetStore());
