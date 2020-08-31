@@ -11,8 +11,7 @@ showUndoSnackbar(ScaffoldState state, String dataString, dynamic data,
   state.showSnackBar(snackbar);
 }
 
-showSnack(ScaffoldState state, String message,
-    {Duration duration = defaultDuration}) {
+showSnack(var state, String message, {Duration duration = defaultDuration}) {
   var snackbar = SnackBar(content: Text(message), duration: duration);
 
   state.showSnackBar(snackbar);

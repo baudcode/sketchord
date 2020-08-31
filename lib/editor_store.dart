@@ -115,7 +115,11 @@ class NoteEditorStore extends Store {
     });
 
     changeAudioFile.listen((AudioFile f) async {
-      int index = _note.audioFiles.indexOf(f);
+      int index = _note.audioFiles.indexWhere((AudioFile a) => a.id == f.id);
+      if (index == -1) {
+        print("cannot change audio file, file not found");
+        return;
+      }
       _note.audioFiles[index] = f;
 
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');

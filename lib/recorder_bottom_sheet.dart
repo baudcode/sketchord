@@ -206,13 +206,13 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     if (showLooper) {
       return Container(
-          height: 250,
+          height: 300,
           width: width,
           color: color,
           child: Column(children: [
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             looper,
-            SizedBox(height: 30),
+            SizedBox(height: 50),
             Text("Player:"),
             PlayerSlider(),
             Expanded(child: Container()),

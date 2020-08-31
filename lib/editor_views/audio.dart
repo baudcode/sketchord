@@ -62,9 +62,13 @@ class AudioFileView extends StatelessWidget {
     else
       subTitle = Text(file.createdAt.toIso8601String());
 
+    Widget trailing = Text(file.durationString);
+    if (file.loopRange != null)
+      trailing = Text("${file.loopString} / ${file.durationString}");
+
     var view = ListTile(
       onLongPress: () => _onAudioFileLongPress(context, file),
-      trailing: Text(file.durationString),
+      trailing: trailing,
       subtitle: subTitle,
       dense: true,
       visualDensity: VisualDensity.comfortable,
@@ -74,7 +78,7 @@ class AudioFileView extends StatelessWidget {
           onPressed: () {
             print("trying to play ${file.path}");
             if (File(file.path).existsSync()) {
-              startPlaybackAction(file.path);
+              startPlaybackAction(file);
             } else {
               showSnack(globalKey.currentState, "This files was removed!");
             }

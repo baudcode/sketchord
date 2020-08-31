@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
-RangeValues deserializeRangeValues(Map<String, double> s) {
+RangeValues deserializeRangeValues(dynamic c) {
+  if (c == null) return null;
+  var s = new Map<String, double>.from(c);
   return RangeValues(s['start'], s['end']);
 }
 
@@ -19,6 +21,9 @@ class AudioFile {
   RangeValues loopRange;
 
   File get file => File(path);
+  String get loopString => loopRange == null
+      ? null
+      : "${(loopRange.end - loopRange.start).toStringAsFixed(1)}";
 
   Duration duration; // duration is milliseconds
   AudioFile(

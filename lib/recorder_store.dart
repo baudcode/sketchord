@@ -74,6 +74,9 @@ class RecorderBottomSheetStore extends Store {
   Duration get currentLength => _currentLength;
   String get stateString => _state.toString();
   String get currentPath => _currentPath;
+
+  AudioFile _audioFile;
+  AudioFile get currentAudioFile => _audioFile;
   AudioFormat get audioFormat => _audioFormat;
   AudioPlayer get player => _player;
 
@@ -218,11 +221,15 @@ class RecorderBottomSheetStore extends Store {
 
   RecorderBottomSheetStore() {
     // sound = FlutterSound();
-    startPlaybackAction.listen((path) {
+    startPlaybackAction.listen((AudioFile f) {
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
         changePlayerPosition(Duration(seconds: 0));
-        _currentPath = path;
-        startPlayer(path).then((t) {
+        _audioFile = f;
+        _currentPath = f.path;
+        _loopRange = f.loopRange;
+        print("Loop Range: $_loopRange");
+
+        startPlayer(f.path).then((t) {
           //   _state = RecorderState.PLAYING;
           // trigger();
         });
@@ -321,7 +328,7 @@ class RecorderBottomSheetStore extends Store {
 }
 
 Action<String> startRecordingAction = Action();
-Action<String> startPlaybackAction = Action();
+Action<AudioFile> startPlaybackAction = Action();
 
 Action<RecorderState> setRecorderState = Action();
 Action<String> setPath = Action();

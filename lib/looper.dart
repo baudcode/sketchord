@@ -1,6 +1,10 @@
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart';
+import 'package:sound/editor_store.dart';
+import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
+import 'package:sound/utils.dart';
 import 'range_slider.dart' as frs;
 
 class Looper extends StatefulWidget {
@@ -35,20 +39,40 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
     super.dispose();
   }
 
+  _onSaveLoop() {
+    Flushbar(
+      //title: "Hey Ninja",
+      message: "Saved ${range.start} to ${range.end}",
+      duration: Duration(seconds: 2),
+    )..show(context);
+
+    AudioFile newFile = store.currentAudioFile;
+    newFile.loopRange = range;
+    changeAudioFile(newFile);
+  }
+
   _view() {
     var defaultRange =
         RangeValues(0.0, store.currentLength.inSeconds.toDouble());
 
     var lowerValue = range == null ? defaultRange.start : range.start;
     var upperValue = range == null ? defaultRange.end : range.end;
-
     return Container(
       color: widget.color,
-      height: 80,
+      height: 100,
       child: Column(children: [
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: FlatButton(
+                  visualDensity: VisualDensity.compact,
+                  child: Text("Save Loop"),
+                  onPressed: (range == null) ? null : _onSaveLoop))
+        ]),
         Text(
           "Looper:",
         ),
+        SizedBox(height: 20),
         Expanded(
             child: frs.RangeSlider(
           min: 0,
