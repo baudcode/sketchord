@@ -147,10 +147,12 @@ class _PlayerSliderState extends State<PlayerSlider>
             min: 0.0,
             max: store.currentLength == null
                 ? 0.0
-                : store.currentLength.inSeconds.toDouble(),
-            value: playerPositionStore.position.inSeconds.toDouble(),
+                : (store.currentLength.inMilliseconds / 1000).toDouble(),
+            value:
+                (playerPositionStore.position.inMilliseconds / 1000).toDouble(),
             onChanged: (value) {
-              skipTo(Duration(milliseconds: value.toInt()));
+              print("on changed to $value");
+              skipTo(Duration(milliseconds: (value * 1000).floor()));
             },
             label: "Playing",
           ))

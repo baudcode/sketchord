@@ -98,6 +98,7 @@ class NoteEditorState extends State<NoteEditor>
             'Audio Files',
             style: Theme.of(context).textTheme.subtitle1,
           )));
+
     for (AudioFile f in store.note.audioFiles) {
       items.add(AudioFileView(file: f, globalKey: _globalKey));
     }

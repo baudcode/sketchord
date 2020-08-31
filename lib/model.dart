@@ -1,10 +1,22 @@
+import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+
+RangeValues deserializeRangeValues(Map<String, double> s) {
+  return RangeValues(s['start'], s['end']);
+}
+
+Map<String, double> serializeRangeValues(RangeValues v) {
+  if (v == null) return null;
+
+  return {"start": v.start, "end": v.end};
+}
 
 class AudioFile {
   String path, id, name;
   String downloadURL;
   DateTime createdAt, lastModified;
+  RangeValues loopRange;
 
   File get file => File(path);
 
@@ -15,8 +27,8 @@ class AudioFile {
       this.id,
       this.createdAt,
       this.lastModified,
-      this.downloadURL,
-      this.name}) {
+      this.name,
+      this.loopRange}) {
     if (id == null) id = Uuid().v4().toString();
     if (createdAt == null) createdAt = DateTime.now();
     if (name == null)
@@ -29,19 +41,14 @@ class AudioFile {
   }
 
   factory AudioFile.create(
-      {String path,
-      Duration duration,
-      String id,
-      String downloadURL,
-      String name}) {
+      {String path, Duration duration, String id, String name}) {
     return AudioFile(
         createdAt: DateTime.now(),
         lastModified: DateTime.now(),
         path: path,
         duration: duration,
         id: id,
-        name: name,
-        downloadURL: downloadURL);
+        name: name);
   }
 
   factory AudioFile.fromJson(Map<dynamic, dynamic> map) {
@@ -49,6 +56,7 @@ class AudioFile {
         createdAt: deserializeDateTime(map["createdAt"]),
         lastModified: deserializeDateTime(map["createdAt"]),
         duration: deserializeDuration(map["duration"]),
+        loopRange: deserializeRangeValues(map['loopRange']),
         id: map["id"],
         path: map["path"]);
   }
@@ -57,6 +65,7 @@ class AudioFile {
     return {
       "createdAt": serializeDateTime(createdAt),
       "downloadURL": downloadURL,
+      "loopRange": serializeRangeValues(loopRange),
       "id": id,
       "path": path,
       "duration": serializeDuration(duration)
