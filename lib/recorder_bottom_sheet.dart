@@ -38,20 +38,18 @@ class _BottomInfoState extends State<BottomInfo>
     Duration elapsed;
     Duration length;
 
+    String _elapsed = "";
+
     if (recorderStore.state == RecorderState.PAUSING ||
         recorderStore.state == RecorderState.PLAYING) {
       elapsed = playerPositionStore.position;
+      _elapsed = (elapsed.inMilliseconds / 1000).toStringAsFixed(1);
       if (recorderStore.currentLength != null) {
         length = recorderStore.currentLength;
       }
     } else if (recorderStore.state == RecorderState.RECORDING) {
       elapsed = recorderPositionStore.position;
-    }
-
-    String _elapsed = "";
-
-    if (elapsed != null) {
-      _elapsed = (elapsed.inMilliseconds / 1000).toStringAsFixed(1);
+      _elapsed = elapsed.inSeconds.toString();
     }
 
     String timeString = _elapsed;

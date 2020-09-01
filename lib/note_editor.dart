@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:flutter_share/flutter_share.dart';
@@ -69,6 +70,28 @@ class NoteEditorState extends State<NoteEditor>
     }
   }
 
+  _onAudioFileDelete(AudioFile file, int index) {
+    Flushbar(
+      //title: "Hey Ninja",
+      message: "${file.name} was deleted",
+      onStatusChanged: (status) {
+        // lets check whether the file was restored or not
+        if (status == FlushbarStatus.DISMISSED &&
+            !store.note.audioFiles.contains(file)) {
+          hardDeleteAudioFile(file);
+        }
+      },
+      mainButton: FlatButton(
+          child: Text("Undo"),
+          onPressed: () {
+            restoreAudioFile(Tuple2(file, index));
+          }),
+      duration: Duration(seconds: 3),
+    )..show(context);
+
+    softDeleteAudioFile(file);
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> items = [];
@@ -99,9 +122,10 @@ class NoteEditorState extends State<NoteEditor>
             style: Theme.of(context).textTheme.subtitle1,
           )));
 
-    for (AudioFile f in store.note.audioFiles) {
-      items.add(AudioFileView(file: f, globalKey: _globalKey));
-    }
+    store.note.audioFiles.asMap().forEach((int index, AudioFile f) {
+      items.add(AudioFileView(
+          f, index, () => _onAudioFileDelete(f, index), _globalKey));
+    });
 
     List<Widget> stackChildren = [];
 

@@ -8,10 +8,7 @@ class NoteEditorStore extends Store {
   Note _note;
   Note get note => _note;
 
-  bool _loading = false;
   Tuple2<int, dynamic> _lastDeletion;
-
-  bool get loading => _loading;
 
   void setNote(Note n) {
     _note = n;
@@ -20,18 +17,13 @@ class NoteEditorStore extends Store {
   NoteEditorStore() {
     editorSetNote.listen((note) {
       _note = note;
-      _loading = false;
       trigger();
     });
 
     addAudioFile.listen((f) async {
       _note.audioFiles.add(f);
-      _loading = true;
-      trigger();
-
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');
 
-      _loading = false;
       trigger();
     });
 
@@ -41,18 +33,26 @@ class NoteEditorStore extends Store {
       trigger();
     });
 
-    deleteAudioFile.listen((f) async {
-      _loading = true;
-      trigger();
-
+    hardDeleteAudioFile.listen((f) async {
       FileManager().delete(f);
 
-      print("Removing: ${_note.audioFiles.remove(f)}");
+      _note.audioFiles.remove(f);
+      print("Removing: ${f.name}");
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');
 
-      _loading = false;
       trigger();
     });
+
+    softDeleteAudioFile.listen((AudioFile f) async {
+      _note.audioFiles.remove(f);
+      print("Softly emoving: ${f.name}");
+
+      //FileManager().delete(f);
+      //await LocalStorage().syncNoteAttr(_note, 'audioFiles');
+
+      trigger();
+    });
+
     deleteSection.listen((s) async {
       int index = _note.sections.indexOf(s);
       _note.sections.removeAt(index);
@@ -150,11 +150,20 @@ class NoteEditorStore extends Store {
     updateNoteEditorView.listen((_) {
       trigger();
     });
+
+    restoreAudioFile.listen((Tuple2<AudioFile, int> a) async {
+      print(
+          "restoring audio file ${a.item1.path} at ${a.item2} into the notes");
+      _note.audioFiles.insert(a.item2, a.item1);
+      await LocalStorage().syncNoteAttr(_note, 'audioFiles');
+      trigger();
+    });
   }
 }
 
 Action<Note> editorSetNote = Action();
-Action<AudioFile> deleteAudioFile = Action();
+Action<AudioFile> softDeleteAudioFile = Action();
+Action<AudioFile> hardDeleteAudioFile = Action();
 Action<Section> deleteSection = Action();
 Action undoDeleteSection = Action();
 Action<Section> addSection = Action();
@@ -170,6 +179,7 @@ Action<String> changeInstrument = Action();
 Action<AudioFile> changeAudioFile = Action();
 Action<Tuple2<Section, String>> changeContent = Action();
 Action<AudioFile> addAudioFile = Action();
+Action<Tuple2<AudioFile, int>> restoreAudioFile = Action();
 Action<Tuple2<AudioFile, bool>> uploadCallback = Action();
 Action updateNoteEditorView = Action();
 

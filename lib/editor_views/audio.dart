@@ -1,17 +1,22 @@
 import 'dart:io';
 
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
 import 'package:sound/share.dart';
 import 'package:sound/utils.dart';
+import 'package:tuple/tuple.dart';
 
 class AudioFileView extends StatelessWidget {
   final AudioFile file;
+  final int index;
   final GlobalKey globalKey;
-
-  const AudioFileView({this.file, this.globalKey, Key key}) : super(key: key);
+  final Function onDelete;
+  const AudioFileView(this.file, this.index, this.onDelete, this.globalKey,
+      {Key key})
+      : super(key: key);
 
   _onAudioFileLongPress(BuildContext context, AudioFile file) {
     var controller =
@@ -90,7 +95,7 @@ class AudioFileView extends StatelessWidget {
       child: view,
       onDismissed: (d) {
         if (d == DismissDirection.endToStart) {
-          deleteAudioFile(file);
+          onDelete();
         } else {}
       },
       confirmDismiss: (d) async {
