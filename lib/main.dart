@@ -7,13 +7,16 @@ void main() {
   runApp(App());
 }
 
-const Color mainColor = Colors.blue;
+// ffe57c73
+Color mainColor = Colors.red.shade300;
 
 class App extends StatefulWidget {
   // This widget is the root of your application.
+
   ThemeData dark = ThemeData.dark().copyWith(
       indicatorColor: mainColor,
       accentColor: mainColor,
+      buttonColor: mainColor,
       sliderTheme: ThemeData.dark().sliderTheme.copyWith(
           trackHeight: 5,
           activeTickMarkColor: Colors.green,
