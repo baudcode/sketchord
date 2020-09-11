@@ -227,10 +227,14 @@ class StaticStorage extends Store {
   bool _isSearchValid(Note note) {
     if (_search != null) {
       var search = _search.toLowerCase();
-      if (note.label.toLowerCase().contains(search)) return true;
-      if (note.capo.toString().toLowerCase().contains(search)) return true;
-      if (note.title.toLowerCase().contains(search)) return true;
-      if (note.tuning.toLowerCase().contains(search)) return true;
+      if (note.label != null && note.label.toLowerCase().contains(search))
+        return true;
+      if (note.capo != null &&
+          note.capo.toString().toLowerCase().contains(search)) return true;
+      if (note.title != null && note.title.toLowerCase().contains(search))
+        return true;
+      if (note.tuning != null && note.tuning.toLowerCase().contains(search))
+        return true;
       if (note.sections.any((s) =>
           s.content.toLowerCase().contains(search) ||
           s.title.toLowerCase().contains(search))) return true;

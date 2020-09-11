@@ -132,7 +132,7 @@ class SectionListItem extends StatelessWidget {
                           padding: EdgeInsets.only(bottom: 10),
                           child: Editable(
                               initialValue: section.title,
-                              textStyle: Theme.of(context).textTheme.subtitle,
+                              textStyle: Theme.of(context).textTheme.subtitle1,
                               onChange: (s) =>
                                   changeSectionTitle(Tuple2(section, s)),
                               hintText: 'Title',
@@ -143,7 +143,9 @@ class SectionListItem extends StatelessWidget {
                             textStyle: Theme.of(context)
                                 .textTheme
                                 .subtitle2
-                                .copyWith(fontSize: 13),
+                                .copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.normal),
                             onChange: (s) => changeContent(Tuple2(section, s)),
                             hintText: 'Content',
                             maxLines: 100,
