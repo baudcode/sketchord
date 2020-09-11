@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_share/flutter_share.dart';
+import 'package:sound/export.dart';
 import 'package:sound/utils.dart';
 import 'db.dart';
 import 'backup.dart';
@@ -32,12 +33,21 @@ class ExportNoteState extends State<ExportNote> {
       showSnack(widget.state, "Please select a note to export first");
       return;
     }
+    String path = await Exporter.pdf(note);
+
+    await FlutterShare.shareFile(
+        title: '${note.title}.pdf',
+        text: 'Sharing PDF of ${note.title}',
+        filePath: path);
+
+    /*
     String path = await Backup().exportNote(note);
 
     await FlutterShare.shareFile(
         title: '${note.title}.json',
         text: 'Sharing Json of ${note.title}',
         filePath: path);
+    */
   }
 
   @override
