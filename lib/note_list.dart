@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_flux/flutter_flux.dart';
 import 'model.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +33,8 @@ class AbstractNoteItem extends StatelessWidget {
         child: Text("empty",
             style: Theme.of(context)
                 .textTheme
-                .title
-                .copyWith(fontWeight: FontWeight.w100)));
+                .headline5
+                .copyWith(fontWeight: FontWeight.w200)));
   }
 
   _onTap(context) {
@@ -95,11 +97,13 @@ class SmallNoteItem extends AbstractNoteItem {
                                   padding: EdgeInsets.only(bottom: 10),
                                   child: Text(
                                     note.title,
-                                    textScaleFactor: .7,
-                                    style: Theme.of(context).textTheme.title,
+                                    textScaleFactor: .75,
+                                    style:
+                                        Theme.of(context).textTheme.headline6,
                                   )),
                               Text(this.sectionText(),
                                   maxLines: 9,
+                                  textAlign: TextAlign.left,
                                   softWrap: true,
                                   overflow: TextOverflow.clip)
                             ])))));
@@ -205,32 +209,75 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
 
   _getItem(List<Note> notes, double width, int index, {double padding = 8}) {
     if (!store.view) {
-      print("view");
+      create() {
+        return Container(
+            height: Random().nextDouble() * 50 + 10,
+            padding: EdgeInsets.all(8),
+            child: Card(
+              child: Text("test" * Random().nextInt(50),
+                  maxLines: 9, softWrap: true, overflow: TextOverflow.clip),
+            ));
+      }
+
+      List<Widget> left = [];
+      List<Widget> right = [];
+
+      for (var i = 0; i < 5; i++) {
+        left.add(create());
+      }
+      for (var i = 0; i < 10; i++) {
+        right.add(create());
+      }
+
+      // return Container(
+      //     child: Row(
+      //   crossAxisAlignment: CrossAxisAlignment.start,
+      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //   children: [
+      //     Flexible(
+      //         child: Column(
+      //       children: left,
+      //       mainAxisAlignment: MainAxisAlignment.start,
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //     )),
+      //     Flexible(
+      //         child: Column(
+      //       children: right,
+      //       mainAxisAlignment: MainAxisAlignment.start,
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //     )),
+      //   ],
+      // ));
+
       return Padding(
           padding: EdgeInsets.all(padding),
           child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               children: [
-                Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Wrap(
-                        direction: Axis.vertical,
-                        alignment: WrapAlignment.spaceEvenly,
-                        children: processList(notes, true)
-                            .map((n) => SmallNoteItem(
-                                n,
-                                store.isSelected(n),
-                                store.isAnyNoteSelected(),
-                                width / 2 - padding,
-                                EdgeInsets.only(left: 0)))
-                            .toList(),
-                      )
-                    ]),
-                Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
+                Flexible(
+                    flex: 1,
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Wrap(
+                            direction: Axis.vertical,
+                            alignment: WrapAlignment.spaceEvenly,
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            children: processList(notes, true)
+                                .map((n) => SmallNoteItem(
+                                    n,
+                                    store.isSelected(n),
+                                    store.isAnyNoteSelected(),
+                                    width / 2 - padding,
+                                    EdgeInsets.only(left: 0)))
+                                .toList(),
+                          )
+                        ])),
+                Flexible(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
                       Wrap(
                         direction: Axis.vertical,
                         alignment: WrapAlignment.spaceEvenly,
@@ -243,7 +290,7 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
                                 EdgeInsets.only(left: 0)))
                             .toList(),
                       )
-                    ])
+                    ]))
               ]));
     } else {
       return Padding(
@@ -259,10 +306,11 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
     }
   }
 
-  _body() {
+  _body(BuildContext context) {
     List<Note> notes = store.filteredNotes;
 
     double width = MediaQuery.of(context).size.width;
+    print("width: $width");
     int childCount = (store.view) ? notes.length : 1;
     if (widget.sliver) {
       return SliverList(
@@ -281,6 +329,6 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
 
   @override
   Widget build(BuildContext context) {
-    return _body();
+    return _body(context);
   }
 }
