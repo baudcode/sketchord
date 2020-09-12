@@ -198,6 +198,20 @@ class Note {
           .toList(),
     );
   }
+  String getInfoText() {
+    List<String> info = [];
+    if (capo != null) {
+      info.add("Capo: $capo");
+    }
+    if (key != null) {
+      info.add("Key: $key");
+    }
+    if (tuning != null) {
+      info.add("Tuning: $tuning");
+    }
+    if (info.length == 0) return null;
+    return info.join(" | ");
+  }
 
   Note(
       {this.id,
