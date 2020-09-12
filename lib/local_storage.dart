@@ -8,12 +8,12 @@ class LocalStorage {
   LocalStorage._internal();
   static final LocalStorage _singleton = new LocalStorage._internal();
 
-  final _controller = StreamController<List<Note>>();
+  final StreamController<List<Note>> _controller =
+      StreamController<List<Note>>.broadcast();
 
   StreamController<List<Note>> get controller => _controller;
 
-  Stream<List<Note>> get stream => _controller.stream;
-
+  Stream<List<Note>> get stream => _controller.stream.asBroadcastStream();
   factory LocalStorage() {
     return _singleton;
   }
@@ -72,7 +72,7 @@ class LocalStorage {
   Future<List<Note>> getNotes() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> ids = await getNoteIDs(prefs);
-    print(ids);
+    // print(ids);
     var notes = ids
         .map((id) => getNote(id, prefs))
         .where((note) => note != null)
