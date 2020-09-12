@@ -135,7 +135,6 @@ class NoteItem extends AbstractNoteItem {
   }
 
   _text() {
-    print(this.sectionText());
     return Padding(
         padding: EdgeInsets.all(10),
         child: Text(
@@ -259,7 +258,6 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
 
     double width = MediaQuery.of(context).size.width;
     int childCount = (store.view) ? notes.length : 1;
-    print("children:  $childCount");
     if (widget.sliver) {
       return SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
