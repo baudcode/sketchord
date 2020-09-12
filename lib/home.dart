@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sound/settings.dart';
+import 'package:sound/ultimate.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
@@ -12,6 +13,10 @@ import 'model.dart';
 import 'db.dart';
 
 class Home extends StatelessWidget {
+  final Function onMenuPressed;
+
+  Home(this.onMenuPressed);
+
   _floatingButtonPress(BuildContext context) {
     Note note = Note.empty();
     LocalStorage().syncNote(note);
@@ -37,13 +42,12 @@ class Home extends StatelessWidget {
         print(snap);
         if (snap.hasData) {
           DB().setNotes(snap.data);
-          return HomeContent();
+          return HomeContent(this.onMenuPressed);
         } else {
           return CircularProgressIndicator();
         }
       },
     );
-
     return Scaffold(
         floatingActionButton: FloatingActionButton(
           foregroundColor: Colors.white,
@@ -60,7 +64,8 @@ class Home extends StatelessWidget {
 }
 
 class HomeContent extends StatefulWidget {
-  HomeContent();
+  final Function onMenuPressed;
+  HomeContent(this.onMenuPressed);
 
   @override
   State<StatefulWidget> createState() {
@@ -68,7 +73,8 @@ class HomeContent extends StatefulWidget {
   }
 }
 
-class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
+class HomeContentState extends State<HomeContent>
+    with StoreWatcherMixin, SingleTickerProviderStateMixin {
   TextEditingController _controller;
   StaticStorage storage;
 
@@ -79,6 +85,12 @@ class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
   @override
   Widget build(BuildContext context) {
     return _sliver();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -192,7 +204,6 @@ class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
           toggleChangeView();
         },
       ),
-      IconButton(icon: Icon(Icons.settings), onPressed: _openSettings)
     ];
   }
 
@@ -210,6 +221,7 @@ class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
 
   _sliverAppBar() {
     return SliverAppBar(
+      titleSpacing: 5.0,
       actions: isSearching ? _searchActionButtons() : _listActionButtons(),
       flexibleSpace: filtersEnabled
           ? Padding(
@@ -219,10 +231,10 @@ class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
       leading: isSearching
           ? IconButton(
               icon: Icon(Icons.arrow_back), onPressed: () => _clearSearch())
-          : null,
+          : IconButton(icon: Icon(Icons.menu), onPressed: widget.onMenuPressed),
       title: Padding(
           child: Center(child: _searchView()),
-          padding: EdgeInsets.only(left: 10)),
+          padding: EdgeInsets.only(left: 5)),
       expandedHeight: (isSearching && filtersEnabled) ? 360 : 0,
       floating: false,
       pinned: true,
@@ -241,13 +253,9 @@ class HomeContentState extends State<HomeContent> with StoreWatcherMixin {
     );
   }
 
-  _openSettings() {
-    Navigator.push(
-        context, new MaterialPageRoute(builder: (context) => Settings()));
-  }
-
   _sliver() {
     return CustomScrollView(
+      //physics: ClampingScrollPhysics(),
       slivers: <Widget>[
         (storage.isAnyNoteSelected()
             ? _sliverNoteSelectionAppBar()

@@ -14,7 +14,8 @@ import "export_note.dart";
 import 'package:path/path.dart' as p;
 
 class Settings extends StatefulWidget {
-  Settings();
+  final Function onMenuPressed;
+  Settings(this.onMenuPressed);
 
   @override
   State<StatefulWidget> createState() {
@@ -84,7 +85,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   }
 
   _onExport() async {
-    String path = await Backup().exportZip(DB().notes);
+    String path = await Backup().exportZip(await LocalStorage().getNotes());
     showSnack(_globalKey.currentState, "Exported zip to $path");
     String filename = p.basename(path);
     await FlutterShare.shareFile(
@@ -151,7 +152,9 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
 
     return Scaffold(
         key: _globalKey,
-        appBar: AppBar(),
+        appBar: AppBar(
+            leading: IconButton(
+                icon: Icon(Icons.menu), onPressed: widget.onMenuPressed)),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
         body: Stack(children: stackChildren));
   }

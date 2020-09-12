@@ -1,7 +1,7 @@
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
+import 'package:sound/menu.dart';
 import 'settings_store.dart';
-import "home.dart";
 
 void main() {
   runApp(App());
@@ -55,6 +55,6 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
     return MaterialApp(
         title: 'Sound',
         theme: store.theme == SettingsTheme.dark ? widget.dark : widget.light,
-        home: Home());
+        home: Menu());
   }
 }
