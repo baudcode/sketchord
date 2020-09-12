@@ -7,6 +7,7 @@ import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
+import 'package:sound/export_dialog.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
@@ -59,6 +60,9 @@ class NoteEditorState extends State<NoteEditor>
 
   @override
   void dispose() {
+    recordingFinished.clearListeners();
+    store.dispose();
+    recorderStore.dispose();
     super.dispose();
   }
 
@@ -140,6 +144,14 @@ class NoteEditorState extends State<NoteEditor>
         recorderStore.state == RecorderState.PLAYING ||
         recorderStore.state == RecorderState.RECORDING;
 
+    Icon icon = Icon(
+        ((recorderStore.state == RecorderState.RECORDING))
+            ? Icons.mic_none
+            : Icons.mic,
+        color: recorderStore.state == RecorderState.RECORDING
+            ? Theme.of(context).accentColor
+            : null);
+
     return WillPopScope(
         onWillPop: () async {
           stopAction();
@@ -147,16 +159,13 @@ class NoteEditorState extends State<NoteEditor>
         },
         child: Scaffold(
             key: _globalKey,
-            appBar: AppBar(),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-            floatingActionButton: FloatingActionButton(
-              onPressed: _onFloatingActionButtonPress,
-              child: Icon(((recorderStore.state == RecorderState.RECORDING))
-                  ? Icons.mic_none
-                  : Icons.mic),
-              backgroundColor: ((recorderStore.state == RecorderState.RECORDING)
-                  ? Colors.redAccent
-                  : Theme.of(context).accentColor),
+            appBar: AppBar(
+              actions: [
+                IconButton(
+                    icon: Icon(Icons.share),
+                    onPressed: () => showExportDialog(context, store.note)),
+                IconButton(icon: icon, onPressed: _onFloatingActionButtonPress)
+              ],
             ),
             bottomSheet:
                 showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
