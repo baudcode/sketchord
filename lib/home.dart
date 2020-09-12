@@ -79,8 +79,9 @@ class HomeContentState extends State<HomeContent>
   StaticStorage storage;
 
   bool isSearching;
-  bool isFiltering;
   bool filtersEnabled;
+
+  bool get isFiltering => storage.filters.length > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +167,34 @@ class HomeContentState extends State<HomeContent>
             ]));
   }
 
+  _activeFiltersView() {
+    return Padding(
+        padding: EdgeInsets.only(left: 25, top: 70),
+        child: Container(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+              Container(
+                  height: 50,
+                  child: ListView.builder(
+                    itemCount: storage.filters.length,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      Filter filter = storage.filters[index];
+                      Color color = Theme.of(context).indicatorColor;
+
+                      return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5),
+                          child: ActionChip(
+                              backgroundColor: color,
+                              label: Text(filter.content),
+                              onPressed: () => removeFilter(filter)));
+                    },
+                  ))
+            ])));
+  }
+
   _filtersView() {
     List<Widget> items = [
       _filterSpecificView("keys", DB().uniqueKeys, FilterBy.KEY),
@@ -174,10 +203,12 @@ class HomeContentState extends State<HomeContent>
       _filterSpecificView("labels", DB().uniqueLabels, FilterBy.LABEL),
     ];
 
-    return ListView.builder(
-      itemBuilder: (context, i) => items[i],
-      itemCount: items.length,
-    );
+    return Padding(
+        padding: EdgeInsets.only(left: 25, top: 60),
+        child: ListView.builder(
+          itemBuilder: (context, i) => items[i],
+          itemCount: items.length,
+        ));
   }
 
   _toggleIsSearching({searching}) {
@@ -224,10 +255,8 @@ class HomeContentState extends State<HomeContent>
       titleSpacing: 5.0,
       actions: isSearching ? _searchActionButtons() : _listActionButtons(),
       flexibleSpace: filtersEnabled
-          ? Padding(
-              padding: EdgeInsets.only(left: 25, top: 60),
-              child: _filtersView())
-          : Container(),
+          ? _filtersView()
+          : (isFiltering ? _activeFiltersView() : Container()),
       leading: isSearching
           ? IconButton(
               icon: Icon(Icons.arrow_back), onPressed: () => _clearSearch())
@@ -235,7 +264,8 @@ class HomeContentState extends State<HomeContent>
       title: Padding(
           child: Center(child: _searchView()),
           padding: EdgeInsets.only(left: 5)),
-      expandedHeight: (isSearching && filtersEnabled) ? 360 : 0,
+      expandedHeight:
+          (isSearching && filtersEnabled) ? 360 : (isFiltering ? 100 : 0),
       floating: false,
       pinned: true,
     );
