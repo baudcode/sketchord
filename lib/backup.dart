@@ -41,6 +41,21 @@ class Backup {
     return await readZip(f.path);
   }
 
+  Future<List<Note>> import() async {
+    File f = await FilePicker.getFile(
+      type: FileType.any,
+      // allowedExtensions: ['zip', 'json'],
+    );
+    if (f.path.endsWith(".json")) {
+      Note note = readNote(f.path);
+      return [note];
+    } else if (f.path.endsWith(".zip")) {
+      return await readZip(f.path);
+    }
+
+    return [];
+  }
+
   String decodeZipContent(ArchiveFile f) {
     Uint8List l = f.content;
     return new String.fromCharCodes(l);

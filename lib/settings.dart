@@ -10,7 +10,6 @@ import 'settings_store.dart';
 import "backup.dart";
 import 'db.dart';
 import 'package:flutter_share/flutter_share.dart';
-import "export_note.dart";
 import 'package:path/path.dart' as p;
 
 class Settings extends StatefulWidget {
@@ -45,21 +44,21 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   }
 
   _wrapItem(item) {
-    return Padding(padding: EdgeInsets.symmetric(vertical: 5), child: item);
+    return Padding(
+        padding: EdgeInsets.only(left: 48, bottom: 8, top: 8, right: 48),
+        child: item);
   }
 
   _themeItem() {
     return _wrapItem(Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Column(children: [Text("Theme: ")]),
-        Column(children: [
-          RaisedButton(
-            child: Text(_themeAsString()),
-            onPressed: toggleTheme,
-          ),
-        ]),
+        Expanded(child: Text("Theme: ")),
+        RaisedButton(
+          child: Text(_themeAsString()),
+          onPressed: toggleTheme,
+        ),
       ],
     ));
   }
@@ -71,15 +70,13 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   _audioFormatItem() {
     return _wrapItem(Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Column(children: [Text("AudioFormat: ")]),
-        Column(children: [
-          RaisedButton(
-            child: Text(_audioFormatAsString()),
-            onPressed: toggleAudioFormat,
-          ),
-        ]),
+        Expanded(child: Text("AudioFormat: ")),
+        RaisedButton(
+          child: Text(_audioFormatAsString()),
+          onPressed: toggleAudioFormat,
+        ),
       ],
     ));
   }
@@ -94,7 +91,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
 
   _onImport() async {
     try {
-      List<Note> notes = await Backup().importZip();
+      List<Note> notes = await Backup().import();
       for (Note note in notes) {
         // update id
         note.id = Uuid().v4();
@@ -107,32 +104,15 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     }
   }
 
-  _importNote() async {
-    Note note = await Backup().importNote();
-    if (note != null) {
-      note.id = Uuid().v4();
-      await LocalStorage().syncNote(note);
-      showSnack(_globalKey.currentState, "Successfully imported ${note.title}");
-    } else {
-      showSnack(_globalKey.currentState, "Error: Corrupt File");
-    }
-  }
-
   _list() {
     var items = [
       _themeItem(),
-      // export item
-      RaisedButton(child: Text("Export All as Zip"), onPressed: _onExport),
-      // import item
-      RaisedButton(child: Text("Import Zip"), onPressed: _onImport),
-      new SizedBox(height: 20),
-      Text("Export/Import Single Note",
-          style: Theme.of(context).textTheme.subtitle1),
-      new ExportNote(state: _globalKey.currentState),
+      _audioFormatItem(),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Import Note"), onPressed: _importNote),
+      RaisedButton(child: Text("Export"), onPressed: _onExport),
       SizedBox(height: 10),
-      _audioFormatItem()
+      RaisedButton(child: Text("Import"), onPressed: _onImport),
+      SizedBox(height: 10),
     ];
 
     return ListView.builder(
