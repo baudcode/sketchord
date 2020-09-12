@@ -107,12 +107,14 @@ class SmallNoteItem extends AbstractNoteItem {
 }
 
 class NoteItem extends AbstractNoteItem {
-  NoteItem(Note note, bool isSelected, bool isAnySelected)
+  final double padding;
+
+  NoteItem(Note note, bool isSelected, bool isAnySelected, {this.padding = 8})
       : super(note: note, isSelected: isSelected, isAnySelected: isAnySelected);
 
   _top() {
     return Padding(
-        padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+        padding: EdgeInsets.only(left: padding, right: padding, top: padding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -131,12 +133,12 @@ class NoteItem extends AbstractNoteItem {
             style: Theme.of(context).textTheme.headline6,
           )
         ]),
-        padding: EdgeInsets.all(10));
+        padding: EdgeInsets.all(padding));
   }
 
   _text() {
     return Padding(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(padding),
         child: Text(
           this.sectionText(),
           textAlign: TextAlign.left,
@@ -148,7 +150,7 @@ class NoteItem extends AbstractNoteItem {
 
   _bottom() {
     return Padding(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(padding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -164,7 +166,6 @@ class NoteItem extends AbstractNoteItem {
         onTap: () => _onTap(context),
         onLongPress: () => _onLongPress(context),
         child: Container(
-            padding: EdgeInsets.only(top: 5, left: 5, right: 5),
             child: Card(
                 color: (isSelected)
                     ? Theme.of(context).accentColor
@@ -202,14 +203,11 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
     return returns;
   }
 
-  _getItem(
-    List<Note> notes,
-    double width,
-    int index,
-  ) {
+  _getItem(List<Note> notes, double width, int index, {double padding = 8}) {
     if (!store.view) {
+      print("view");
       return Padding(
-          padding: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(padding),
           child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -225,8 +223,8 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
                                 n,
                                 store.isSelected(n),
                                 store.isAnyNoteSelected(),
-                                width / 2,
-                                EdgeInsets.only(left: 5)))
+                                width / 2 - padding,
+                                EdgeInsets.only(left: 0)))
                             .toList(),
                       )
                     ]),
@@ -241,15 +239,23 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
                                 n,
                                 store.isSelected(n),
                                 store.isAnyNoteSelected(),
-                                width / 2,
-                                EdgeInsets.only(right: 5)))
+                                width / 2 - padding,
+                                EdgeInsets.only(left: 0)))
                             .toList(),
                       )
                     ])
               ]));
     } else {
-      return NoteItem(notes[index], store.isSelected(notes[index]),
-          store.isAnyNoteSelected());
+      return Padding(
+          padding: EdgeInsets.only(
+              left: padding, right: padding, top: index == 0 ? padding : 0),
+          child: NoteItem(
+              notes[index],
+              store.isSelected(
+                notes[index],
+              ),
+              store.isAnyNoteSelected(),
+              padding: padding));
     }
   }
 
