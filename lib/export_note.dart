@@ -52,8 +52,6 @@ class ExportNoteState extends State<ExportNote> {
 
   @override
   Widget build(BuildContext context) {
-    print("note: ${note == null}");
-    print("notes: ${DB().notes.length}");
     return Wrap(
         //spacing: 20, // to apply margin in the main axis of the wra/p
         //runSpacing: 20, // apply margin in the cross axis of the wrap
