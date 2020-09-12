@@ -36,7 +36,7 @@ class LocalStorage {
     _controller.sink.add(await getNotes());
   }
 
-  Future<bool> deleteAudioFile(AudioFile audioFile) async {
+  Future<bool> _deleteAudioFile(AudioFile audioFile) async {
     FileSystemEntity e = await audioFile.file.delete();
     return !e.existsSync();
   }
@@ -45,9 +45,19 @@ class LocalStorage {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove(note.id);
     for (AudioFile f in note.audioFiles) {
-      await deleteAudioFile(f);
+      await _deleteAudioFile(f);
     }
     _controller.sink.add(await getNotes());
+  }
+
+  Future<void> discardNote(Note note) async {
+    note.discarded = true;
+    return await syncNote(note);
+  }
+
+  Future<void> restoreNote(Note note) async {
+    note.discarded = false;
+    return await syncNote(note);
   }
 
   Future<void> syncNoteAttr(Note note, String attr) async {

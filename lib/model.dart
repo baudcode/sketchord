@@ -144,6 +144,7 @@ class Note {
   bool starred;
   String capo;
   DateTime createdAt, lastModified;
+  bool discarded;
 
   factory Note.empty() {
     return Note(
@@ -176,6 +177,7 @@ class Note {
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
       "audioFiles":
           audioFiles.map<Map<dynamic, dynamic>>((a) => a.toJson()).toList(),
+      "discarded": discarded,
     };
   }
 
@@ -191,6 +193,7 @@ class Note {
       instrument: json['instrument'],
       label: json['label'],
       starred: json['starred'],
+      discarded: json.containsKey("discarded") ? json['discarded'] : false,
       sections:
           json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
       audioFiles: json['audioFiles']
@@ -223,9 +226,10 @@ class Note {
       this.capo,
       this.instrument,
       this.label,
-      this.starred,
       this.sections,
-      this.audioFiles}) {
+      this.audioFiles,
+      this.starred = false,
+      this.discarded = false}) {
     if (this.id == null) {
       this.id = Uuid().v4();
     }

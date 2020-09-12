@@ -129,6 +129,7 @@ class StaticStorage extends Store {
   List<Filter> get filters => _filters;
 
   List<Note> _selectedNotes;
+  List<Note> get selectedNotes => _selectedNotes;
 
   String _search;
   String get search => _search;
@@ -208,6 +209,22 @@ class StaticStorage extends Store {
         }
 
         LocalStorage().deleteNote(note);
+      }
+      _selectedNotes.clear();
+      trigger();
+    });
+
+    discardAllSelectedNotes.listen((_) {
+      for (Note note in _selectedNotes) {
+        LocalStorage().discardNote(note);
+      }
+      _selectedNotes.clear();
+      trigger();
+    });
+
+    restoreSelectedNotes.listen((_) {
+      for (Note note in _selectedNotes) {
+        LocalStorage().restoreNote(note);
       }
       _selectedNotes.clear();
       trigger();
@@ -306,6 +323,8 @@ Action openSettings = Action();
 
 Action<Note> triggerSelectNote = Action();
 Action removeAllSelectedNotes = Action();
+Action discardAllSelectedNotes = Action();
+Action restoreSelectedNotes = Action();
 Action clearSelection = Action();
 Action updateView = Action();
 

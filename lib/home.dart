@@ -31,9 +31,10 @@ class Home extends StatelessWidget {
 
     // fetch initial values
 
-    LocalStorage()
-        .getNotes()
-        .then((value) => LocalStorage().controller.sink.add(value));
+    LocalStorage().getNotes().then((value) => LocalStorage()
+        .controller
+        .sink
+        .add(value.where((e) => !e.discarded).toList()));
 
     var builder = StreamBuilder<List<Note>>(
       stream: LocalStorage().stream,
@@ -41,7 +42,7 @@ class Home extends StatelessWidget {
       builder: (context, snap) {
         print(snap);
         if (snap.hasData) {
-          DB().setNotes(snap.data);
+          DB().setNotes(snap.data.where((e) => !e.discarded).toList());
           return HomeContent(this.onMenuPressed);
         } else {
           return CircularProgressIndicator();
@@ -275,10 +276,11 @@ class HomeContentState extends State<HomeContent>
     return SliverAppBar(
       leading: IconButton(
           icon: Icon(Icons.clear), onPressed: () => clearSelection()),
+      title: Text(storage.selectedNotes.length.toString()),
       actions: <Widget>[
         IconButton(
             icon: Icon(Icons.delete),
-            onPressed: () => removeAllSelectedNotes()),
+            onPressed: () => discardAllSelectedNotes()),
       ],
     );
   }
@@ -290,7 +292,7 @@ class HomeContentState extends State<HomeContent>
         (storage.isAnyNoteSelected()
             ? _sliverNoteSelectionAppBar()
             : _sliverAppBar()),
-        NoteList(true)
+        NoteList(true, storage.view)
       ],
     );
   }

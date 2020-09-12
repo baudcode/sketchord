@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sound/home.dart';
 import 'package:sound/settings.dart';
+import 'package:sound/trash.dart';
 
 class Menu extends StatefulWidget {
   Menu();
@@ -94,9 +95,16 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
   }
 
   _getView() {
-    if (current == MenuItem.HOME) return Home(this._onMenuPressed);
-    if (current == MenuItem.SETTINGS) return Settings(this._onMenuPressed);
-    if (current == MenuItem.TRASH) return Container(child: Text("Trash"));
+    switch (current) {
+      case MenuItem.HOME:
+        return Home(this._onMenuPressed);
+      case MenuItem.SETTINGS:
+        return Settings(this._onMenuPressed);
+      case MenuItem.TRASH:
+        return Trash(this._onMenuPressed);
+      default:
+        return Container();
+    }
   }
 
   positioned(BuildContext context) {

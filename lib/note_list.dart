@@ -8,8 +8,9 @@ import 'storage.dart';
 
 class NoteList extends StatefulWidget {
   final bool sliver;
+  final bool singleView;
 
-  NoteList(this.sliver);
+  NoteList(this.sliver, this.singleView);
 
   @override
   State<StatefulWidget> createState() {
@@ -208,47 +209,7 @@ class NoteListState extends State<NoteList> with StoreWatcherMixin<NoteList> {
   }
 
   _getItem(List<Note> notes, double width, int index, {double padding = 8}) {
-    if (!store.view) {
-      create() {
-        return Container(
-            height: Random().nextDouble() * 50 + 10,
-            padding: EdgeInsets.all(8),
-            child: Card(
-              child: Text("test" * Random().nextInt(50),
-                  maxLines: 9, softWrap: true, overflow: TextOverflow.clip),
-            ));
-      }
-
-      List<Widget> left = [];
-      List<Widget> right = [];
-
-      for (var i = 0; i < 5; i++) {
-        left.add(create());
-      }
-      for (var i = 0; i < 10; i++) {
-        right.add(create());
-      }
-
-      // return Container(
-      //     child: Row(
-      //   crossAxisAlignment: CrossAxisAlignment.start,
-      //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      //   children: [
-      //     Flexible(
-      //         child: Column(
-      //       children: left,
-      //       mainAxisAlignment: MainAxisAlignment.start,
-      //       crossAxisAlignment: CrossAxisAlignment.start,
-      //     )),
-      //     Flexible(
-      //         child: Column(
-      //       children: right,
-      //       mainAxisAlignment: MainAxisAlignment.start,
-      //       crossAxisAlignment: CrossAxisAlignment.start,
-      //     )),
-      //   ],
-      // ));
-
+    if (!widget.singleView) {
       return Padding(
           padding: EdgeInsets.all(padding),
           child: Row(
