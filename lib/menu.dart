@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sound/home.dart';
+import 'package:sound/intent_receive.dart';
 import 'package:sound/settings.dart';
 import 'package:sound/trash.dart';
 
@@ -48,6 +49,8 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
         Tween<double>(begin: 0.5, end: 1.0).animate(_controller);
     _slideAnimation = Tween<Offset>(begin: Offset(-1.0, 0), end: Offset(0, 0))
         .animate(_controller);
+
+    setupIntentReceivers(context);
   }
 
   @override

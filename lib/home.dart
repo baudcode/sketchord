@@ -102,7 +102,6 @@ class HomeContentState extends State<HomeContent>
 
     // init filemanager
     FileManager();
-    setupIntentReceivers(context);
   }
 
   _filterSpecificView(
