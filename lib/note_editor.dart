@@ -75,7 +75,9 @@ class NoteEditorState extends State<NoteEditor>
   }
 
   _onAudioFileDelete(AudioFile file, int index) {
-    Flushbar(
+    Flushbar bar;
+
+    bar = Flushbar(
       //title: "Hey Ninja",
       message: "${file.name} was deleted",
       onStatusChanged: (status) {
@@ -88,10 +90,14 @@ class NoteEditorState extends State<NoteEditor>
       mainButton: FlatButton(
           child: Text("Undo"),
           onPressed: () {
-            restoreAudioFile(Tuple2(file, index));
+            if (!store.note.audioFiles.contains(file)) {
+              restoreAudioFile(Tuple2(file, index));
+            }
+            bar.dismiss();
           }),
       duration: Duration(seconds: 3),
-    )..show(context);
+    );
+    bar.show(context);
 
     softDeleteAudioFile(file);
   }
