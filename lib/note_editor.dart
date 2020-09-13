@@ -7,7 +7,7 @@ import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
-import 'package:sound/export_dialog.dart';
+import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';

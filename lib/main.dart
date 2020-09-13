@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:sound/menu.dart';
 import 'settings_store.dart';
 
@@ -13,7 +16,7 @@ Color mainColor = Colors.red.shade300;
 class App extends StatefulWidget {
   // This widget is the root of your application.
 
-  ThemeData dark = ThemeData.dark().copyWith(
+  final ThemeData dark = ThemeData.dark().copyWith(
       indicatorColor: mainColor,
       accentColor: mainColor,
       buttonColor: mainColor,
@@ -28,7 +31,7 @@ class App extends StatefulWidget {
       visualDensity: VisualDensity.adaptivePlatformDensity,
       floatingActionButtonTheme:
           FloatingActionButtonThemeData(backgroundColor: mainColor));
-  ThemeData light = ThemeData.light().copyWith(
+  final ThemeData light = ThemeData.light().copyWith(
       indicatorColor: mainColor,
       accentColor: mainColor,
       visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -48,6 +51,27 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
   void initState() {
     super.initState();
     store = listenToStore(settingsToken);
+
+    // _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
+    //     .listen((List<SharedMediaFile> value) {
+    //   setState(() {
+    //     print("shared media: $value");
+    //     _sharedFiles = value;
+    //     print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
+    //   });
+    // }, onError: (err) {
+    //   print("getIntentDataStream error: $err");
+    // });
+
+    // // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    // _intentDataStreamSubscription =
+    //     ReceiveSharingIntent.getTextStream().listen((String value) {
+    //   setState(() {
+    //     print("Shared text: $value");
+    //   });
+    // }, onError: (err) {
+    //   print("getLinkStream error: $err");
+    // });
   }
 
   @override

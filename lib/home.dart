@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:sound/settings.dart';
-import 'package:sound/ultimate.dart';
+import 'package:sound/intent_receive.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
@@ -104,6 +105,7 @@ class HomeContentState extends State<HomeContent>
     storage = listenToStore(storageToken);
     // init filemanager
     FileManager();
+    setupIntentReceivers(context);
   }
 
   _filterSpecificView(

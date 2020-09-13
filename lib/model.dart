@@ -42,6 +42,7 @@ class AudioFile {
           .last
           .replaceAll(".mp4", "")
           .replaceAll(".m4a", "")
+          .replaceAll(".mp3", "")
           .replaceAll('.wav', '');
   }
 
