@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'model.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,6 +86,18 @@ class LocalStorage {
 
   Future<List<Note>> getDiscardedNotes() async {
     return (await getNotes()).where((n) => n.discarded).toList();
+  }
+
+  Future<bool> syncSettings(Settings settings) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return await prefs.setString("settings", jsonEncode(settings.toJson()));
+  }
+
+  Future<Settings> getSettings() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String data = prefs.getString('settings');
+    if (data == null) return null;
+    return Settings.fromJson(jsonDecode(data));
   }
 
   Future<List<Note>> getNotes() async {

@@ -61,8 +61,8 @@ class NoteEditorState extends State<NoteEditor>
   @override
   void dispose() {
     recordingFinished.clearListeners();
-    store.dispose();
-    recorderStore.dispose();
+    //store.dispose();
+    //recorderStore.dispose();
     super.dispose();
   }
 

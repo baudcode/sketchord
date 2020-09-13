@@ -243,3 +243,29 @@ class Note {
     }
   }
 }
+
+enum SettingsTheme { dark, light }
+
+class Settings {
+  SettingsTheme theme;
+  String view; // single, double
+  String audioFormat;
+
+  Settings({this.theme, this.view, this.audioFormat});
+
+  Map<String, dynamic> toJson() {
+    return {
+      "theme": theme == SettingsTheme.dark ? "dark" : "light",
+      "view": view,
+      "audioFormat": audioFormat
+    };
+  }
+
+  factory Settings.fromJson(Map<String, dynamic> json) {
+    return Settings(
+        theme:
+            json['theme'] == 'dark' ? SettingsTheme.dark : SettingsTheme.light,
+        view: json['view'],
+        audioFormat: json['audioFormat']);
+  }
+}

@@ -160,7 +160,8 @@ class NoteEditorStore extends Store {
     });
 
     toggleStarred.listen((event) async {
-      note.starred = !note.starred;
+      _note.starred = !_note.starred;
+      await LocalStorage().syncNoteAttr(note, 'starred');
       trigger();
     });
   }

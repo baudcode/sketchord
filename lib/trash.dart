@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
-import 'package:sound/note_editor.dart';
 import 'package:sound/note_list.dart';
 import 'package:sound/storage.dart';
 
@@ -28,6 +25,9 @@ class _TrashState extends State<Trash> {
 
   List<Note> notes = [];
 
+  List<String> popupMenuActions = ["delete"];
+  List<String> longPopupMenuNames = ["Delete irrevocably"];
+
   @override
   void initState() {
     super.initState();
@@ -51,12 +51,35 @@ class _TrashState extends State<Trash> {
     });
   }
 
+  _runPopupAction(String action) {
+    print("action: $action");
+    if (action == "delete") {
+      for (Note note in selectedNotes) {
+        LocalStorage().deleteNote(note);
+      }
+      setState(() {
+        notes.removeWhere((n) => isSelected(n));
+      });
+    }
+  }
+
   _selectionAppBar() {
     return AppBar(
       leading: IconButton(icon: Icon(Icons.clear), onPressed: _clearSelection),
       title: Text(selectedNotes.length.toString()),
       actions: <Widget>[
         IconButton(icon: Icon(Icons.restore), onPressed: _restoreSelectedNotes),
+        PopupMenuButton<String>(
+          onSelected: _runPopupAction,
+          itemBuilder: (context) {
+            return popupMenuActions.map<PopupMenuItem<String>>((String action) {
+              return PopupMenuItem(
+                  value: action,
+                  child: Text(
+                      longPopupMenuNames[popupMenuActions.indexOf(action)]));
+            }).toList();
+          },
+        )
       ],
     );
   }

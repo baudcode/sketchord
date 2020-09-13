@@ -284,11 +284,6 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliver() {
-    List<NoteListItemModel> items = storage.filteredNotes
-        .map((n) =>
-            NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
-        .toList();
-
     onTap(Note note) {
       if (storage.isAnyNoteSelected()) {
         triggerSelectNote(note);
@@ -302,14 +297,59 @@ class HomeContentState extends State<HomeContent>
       triggerSelectNote(note);
     }
 
+    List<Widget> noteList = [];
+
+    if (storage.isAnyNoteStarred()) {
+      print("notes are starred");
+      List<NoteListItemModel> items = storage.filteredNotes
+          .where((n) => !n.starred)
+          .map((n) =>
+              NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
+          .toList();
+
+      List<NoteListItemModel> starrtedItems = storage.filteredNotes
+          .where((n) => n.starred)
+          .map((n) =>
+              NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
+          .toList();
+
+      noteList = [
+        SliverList(
+            delegate: SliverChildListDelegate([
+          Padding(
+              padding: EdgeInsets.only(left: 16, top: 16),
+              child: Row(children: [
+                Text("Starred", style: Theme.of(context).textTheme.caption),
+                Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.star, size: 16))
+              ]))
+        ])),
+        NoteList(true, storage.view, starrtedItems, onTap, onLongPress),
+        SliverList(
+            delegate: SliverChildListDelegate([
+          Padding(
+              padding: EdgeInsets.only(left: 16),
+              child: Text("Other", style: Theme.of(context).textTheme.caption))
+        ])),
+        NoteList(true, storage.view, items, onTap, onLongPress)
+      ];
+    } else {
+      List<NoteListItemModel> items = storage.filteredNotes
+          .map((n) =>
+              NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
+          .toList();
+
+      noteList = [NoteList(true, storage.view, items, onTap, onLongPress)];
+    }
+
     return CustomScrollView(
       //physics: ClampingScrollPhysics(),
       slivers: <Widget>[
         (storage.isAnyNoteSelected()
             ? _sliverNoteSelectionAppBar()
             : _sliverAppBar()),
-        NoteList(true, storage.view, items, onTap, onLongPress)
-      ],
+      ]..addAll(noteList),
     );
   }
 

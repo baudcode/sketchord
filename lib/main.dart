@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:sound/local_storage.dart';
 import 'package:sound/menu.dart';
+import 'package:sound/model.dart';
 import 'settings_store.dart';
 
 void main() {
@@ -51,6 +53,11 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
   void initState() {
     super.initState();
     store = listenToStore(settingsToken);
+
+    // initialize app with loaded settings
+    LocalStorage().getSettings().then((s) {
+      updateSettings(s);
+    });
 
     // _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
     //     .listen((List<SharedMediaFile> value) {
