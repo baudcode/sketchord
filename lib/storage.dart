@@ -143,7 +143,9 @@ class StaticStorage extends Store {
   }
 
   bool isSelected(Note note) => _selectedNotes.contains(note);
+
   bool isAnyNoteSelected() => _selectedNotes.length > 0;
+  bool isAnyNoteStarred() => _selectedNotes.any((n) => n.starred);
 
   bool showMore(FilterBy by) =>
       _showMore.containsKey(by) ? _showMore[by] : false;

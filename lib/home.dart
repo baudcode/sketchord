@@ -28,10 +28,6 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //print("user id: ${AuthHandler().user.uid}");
-
-    // fetch initial values
-
     LocalStorage().getNotes().then((value) => LocalStorage()
         .controller
         .sink
@@ -103,6 +99,7 @@ class HomeContentState extends State<HomeContent>
     filtersEnabled = false;
     _controller = TextEditingController();
     storage = listenToStore(storageToken);
+
     // init filemanager
     FileManager();
     setupIntentReceivers(context);

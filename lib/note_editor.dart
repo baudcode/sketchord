@@ -152,6 +152,17 @@ class NoteEditorState extends State<NoteEditor>
             ? Theme.of(context).accentColor
             : null);
 
+    List<Widget> actions = [
+      IconButton(
+          icon: Icon(Icons.share),
+          onPressed: () => showExportDialog(context, store.note)),
+      IconButton(
+          icon: Icon(Icons.star,
+              color: store.note.starred ? Theme.of(context).accentColor : null),
+          onPressed: toggleStarred),
+      IconButton(icon: icon, onPressed: _onFloatingActionButtonPress),
+    ];
+
     return WillPopScope(
         onWillPop: () async {
           stopAction();
@@ -160,12 +171,7 @@ class NoteEditorState extends State<NoteEditor>
         child: Scaffold(
             key: _globalKey,
             appBar: AppBar(
-              actions: [
-                IconButton(
-                    icon: Icon(Icons.share),
-                    onPressed: () => showExportDialog(context, store.note)),
-                IconButton(icon: icon, onPressed: _onFloatingActionButtonPress)
-              ],
+              actions: actions,
             ),
             bottomSheet:
                 showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,

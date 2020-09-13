@@ -158,6 +158,11 @@ class NoteEditorStore extends Store {
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');
       trigger();
     });
+
+    toggleStarred.listen((event) async {
+      note.starred = !note.starred;
+      trigger();
+    });
   }
 }
 
@@ -182,5 +187,6 @@ Action<AudioFile> addAudioFile = Action();
 Action<Tuple2<AudioFile, int>> restoreAudioFile = Action();
 Action<Tuple2<AudioFile, bool>> uploadCallback = Action();
 Action updateNoteEditorView = Action();
+Action toggleStarred = Action();
 
 StoreToken noteEditorStoreToken = StoreToken(NoteEditorStore());
