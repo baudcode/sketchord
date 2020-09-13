@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_flux/flutter_flux.dart';
 import 'model.dart';
 import 'package:flutter/material.dart';
@@ -25,18 +23,30 @@ class AbstractNoteItem extends StatelessWidget {
 
   AbstractNoteItem({this.note, this.isSelected, this.isAnySelected});
 
-  bool get empty => (note.title == null ||
-      (note.title.trim() == "" && this.sectionText().trim() == ""));
+  bool get empty => ((note.title == null || note.title.trim() == "") &&
+      this.sectionText().trim() == "");
 
-  Widget emptyText(BuildContext context) {
+  Widget singleText(BuildContext context, String text) {
     return Padding(
         padding: EdgeInsets.all(8.0),
-        child: Text("empty",
+        child: Text(text,
             style: Theme.of(context)
                 .textTheme
                 .headline5
                 .copyWith(fontWeight: FontWeight.w200)));
   }
+
+  Widget emptyText(BuildContext context) {
+    return singleText(context, "Empty");
+  }
+
+  Widget onlyTitle(BuildContext context) {
+    return singleText(context, note.title);
+  }
+
+  bool get hasOnlyTitle =>
+      (note.title != null && note.title != "") &&
+      this.sectionText().trim() == "";
 
   _onTap(context) {
     if (this.isAnySelected) {
@@ -88,26 +98,29 @@ class SmallNoteItem extends AbstractNoteItem {
                     : Theme.of(context).cardColor,
                 child: empty
                     ? emptyText(context)
-                    : Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: Text(
-                                    note.title,
-                                    textScaleFactor: .75,
-                                    style:
-                                        Theme.of(context).textTheme.headline6,
-                                  )),
-                              Text(this.sectionText(),
-                                  maxLines: 9,
-                                  textAlign: TextAlign.left,
-                                  softWrap: true,
-                                  overflow: TextOverflow.clip)
-                            ])))));
+                    : hasOnlyTitle
+                        ? onlyTitle(context)
+                        : Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  Padding(
+                                      padding: EdgeInsets.only(bottom: 10),
+                                      child: Text(
+                                        note.title,
+                                        textScaleFactor: .75,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline6,
+                                      )),
+                                  Text(this.sectionText(),
+                                      maxLines: 9,
+                                      textAlign: TextAlign.left,
+                                      softWrap: true,
+                                      overflow: TextOverflow.clip)
+                                ])))));
   }
 }
 
@@ -177,15 +190,17 @@ class NoteItem extends AbstractNoteItem {
                     : Theme.of(context).cardColor,
                 child: (empty)
                     ? emptyText(context)
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                            _top(),
-                            _title(context),
-                            _text(),
-                            _bottom(),
-                          ]))));
+                    : hasOnlyTitle
+                        ? onlyTitle(context)
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                                _top(),
+                                _title(context),
+                                _text(),
+                                _bottom(),
+                              ]))));
   }
 }
 
