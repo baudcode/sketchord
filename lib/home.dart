@@ -284,13 +284,31 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliver() {
+    List<NoteListItemModel> items = storage.filteredNotes
+        .map((n) =>
+            NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
+        .toList();
+
+    onTap(Note note) {
+      if (storage.isAnyNoteSelected()) {
+        triggerSelectNote(note);
+      } else {
+        Navigator.push(context,
+            new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+      }
+    }
+
+    onLongPress(Note note) {
+      triggerSelectNote(note);
+    }
+
     return CustomScrollView(
       //physics: ClampingScrollPhysics(),
       slivers: <Widget>[
         (storage.isAnyNoteSelected()
             ? _sliverNoteSelectionAppBar()
             : _sliverAppBar()),
-        NoteList(true, storage.view)
+        NoteList(true, storage.view, items, onTap, onLongPress)
       ],
     );
   }

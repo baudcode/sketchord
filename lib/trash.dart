@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_flux/flutter_flux.dart';
-import 'package:sound/db.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
+import 'package:sound/note_editor.dart';
 import 'package:sound/note_list.dart';
 import 'package:sound/storage.dart';
 
@@ -17,25 +18,45 @@ class Trash extends StatefulWidget {
   }
 }
 
-class _TrashState extends State<Trash> with StoreWatcherMixin {
-  StaticStorage storage;
-
+class _TrashState extends State<Trash> {
   final GlobalKey _globalKey = GlobalKey();
+
+  List<Note> selectedNotes = [];
+
+  bool isSelected(Note note) => selectedNotes.contains(note);
+  bool get isAnyNoteSelected => selectedNotes.length > 0;
+
+  List<Note> notes = [];
 
   @override
   void initState() {
     super.initState();
-    storage = listenToStore(storageToken);
+
+    LocalStorage().getDiscardedNotes().then((value) => setState(() {
+          notes = value;
+        }));
+  }
+
+  _clearSelection() {
+    setState(() {
+      selectedNotes.clear();
+    });
+  }
+
+  _restoreSelectedNotes() {
+    restoreNotes(selectedNotes);
+    setState(() {
+      notes.removeWhere((n) => isSelected(n));
+      selectedNotes = [];
+    });
   }
 
   _selectionAppBar() {
     return AppBar(
-      leading: IconButton(
-          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
-      title: Text(storage.selectedNotes.length.toString()),
+      leading: IconButton(icon: Icon(Icons.clear), onPressed: _clearSelection),
+      title: Text(selectedNotes.length.toString()),
       actions: <Widget>[
-        IconButton(
-            icon: Icon(Icons.delete), onPressed: () => restoreSelectedNotes()),
+        IconButton(icon: Icon(Icons.restore), onPressed: _restoreSelectedNotes),
       ],
     );
   }
@@ -47,32 +68,43 @@ class _TrashState extends State<Trash> with StoreWatcherMixin {
             icon: Icon(Icons.menu), onPressed: widget.onMenuPressed));
   }
 
+  _selectNote(Note note) {
+    if (!isSelected(note)) {
+      setState(() {
+        selectedNotes.add(note);
+      });
+    } else {
+      setState(() {
+        selectedNotes.remove(note);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // items.add(_title());
+    List<NoteListItemModel> items = notes
+        .map((n) => NoteListItemModel(note: n, isSelected: isSelected(n)))
+        .toList();
 
-    LocalStorage()
-        .getNotes()
-        .then((value) => LocalStorage().controller.sink.add(value));
+    onTap(Note note) {
+      if (isAnyNoteSelected) {
+        _selectNote(note);
+      } else {
+        // Navigator.push(context,
+        //     new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+      }
+    }
 
-    var builder = StreamBuilder<List<Note>>(
-      stream: LocalStorage().stream,
-      initialData: [],
-      builder: (context, snap) {
-        print(snap);
-        if (snap.hasData) {
-          return NoteList(false, false);
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
-    );
+    onLongPress(Note note) {
+      _selectNote(note);
+    }
 
     return Scaffold(
         key: _globalKey,
-        appBar: storage.isAnyNoteSelected() ? _selectionAppBar() : _appBar(),
+        appBar: isAnyNoteSelected ? _selectionAppBar() : _appBar(),
         body: Container(
-          child: builder,
+          child: NoteList(false, false, items, onTap, onLongPress),
         ));
   }
 }

@@ -83,6 +83,10 @@ class LocalStorage {
     return (await getNotes()).where((n) => !n.discarded).toList();
   }
 
+  Future<List<Note>> getDiscardedNotes() async {
+    return (await getNotes()).where((n) => n.discarded).toList();
+  }
+
   Future<List<Note>> getNotes() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> ids = await getNoteIDs(prefs);
