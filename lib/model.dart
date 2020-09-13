@@ -109,6 +109,8 @@ class Section {
     return {"title": title, "content": content, "id": id};
   }
 
+  bool get hasEmptyTitle => title == null || title.trim() == "";
+
   @override
   int get hashCode => id.hashCode;
 
