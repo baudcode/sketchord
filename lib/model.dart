@@ -146,6 +146,7 @@ class Note {
   String instrument;
   bool starred;
   String capo;
+  String artist;
   DateTime createdAt, lastModified;
   bool discarded;
 
@@ -160,6 +161,7 @@ class Note {
         capo: null,
         instrument: "Guitar",
         label: "",
+        artist: null,
         starred: false,
         sections: [Section(content: "", title: "")],
         audioFiles: []);
@@ -175,6 +177,7 @@ class Note {
       "capo": capo,
       "instrument": instrument,
       "label": label,
+      "artist": artist,
       "starred": starred,
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
@@ -197,6 +200,7 @@ class Note {
       label: json['label'],
       starred: json['starred'],
       discarded: json.containsKey("discarded") ? json['discarded'] : false,
+      artist: json.containsKey("artist") ? json['artist'] : null,
       sections:
           json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
       audioFiles: json['audioFiles']
@@ -231,6 +235,7 @@ class Note {
       this.label,
       this.sections,
       this.audioFiles,
+      this.artist,
       this.starred = false,
       this.discarded = false}) {
     if (this.id == null) {
