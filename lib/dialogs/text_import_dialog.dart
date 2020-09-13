@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_editor.dart';
@@ -90,8 +91,6 @@ showInvalidTextSnack(BuildContext context) {
 }
 
 showTextImportDialog(BuildContext context, String text) async {
-  List<Note> notes = await LocalStorage().getNotes();
-  print("received text: $text");
   ParsedNote parsed = parseText(text);
 
   if (parsed == null) {
@@ -99,83 +98,18 @@ showTextImportDialog(BuildContext context, String text) async {
     return;
   }
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      // if selected is null (use empty new note)
-      Note selected;
+  Note onNew() {
+    Note empty = Note.empty();
+    empty.sections = parsed.sections;
+    if (parsed.title != null) empty.title = parsed.title;
+    return empty;
+  }
 
-      _open(Note note) {
-        Navigator.push(context,
-            new MaterialPageRoute(builder: (context) => NoteEditor(note)));
-      }
+  onImport(Note note) {
+    note.sections.addAll(parsed.sections);
+    LocalStorage().syncNote(note);
+  }
 
-      _import() async {
-        // sync and pop current dialog
-        selected.sections.addAll(parsed.sections);
-        LocalStorage().syncNote(selected);
-        Navigator.of(context).pop();
-        _open(selected);
-      }
-
-      _onNew() async {
-        Note empty = Note.empty();
-        empty.sections = parsed.sections;
-        if (parsed.title != null) empty.title = parsed.title;
-
-        LocalStorage().syncNote(empty);
-        Navigator.of(context).pop();
-        _open(empty);
-      }
-
-      return StatefulBuilder(builder: (context, setState) {
-        return AlertDialog(
-          title: new Text("Import ${parsed.sections.length} Sections"),
-          content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Flexible(
-                    child: RaisedButton(
-                        child: Text('Import as NEW'), onPressed: _onNew)),
-                SizedBox(height: 10),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Container(child: Text("-- or select a note --"))
-                ]),
-                SizedBox(height: 10),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Padding(
-                        child: Text("Note:"),
-                        padding: EdgeInsets.only(right: 8, top: 8),
-                      ),
-                      new DropdownButton<Note>(
-                          value: selected,
-                          items: notes
-                              .map((e) => DropdownMenuItem<Note>(
-                                  child:
-                                      Text("${notes.indexOf(e)}: ${e.title}"),
-                                  value: e))
-                              .toList(),
-                          onChanged: (v) => setState(() => selected = v)),
-                    ])
-              ]),
-          actions: <Widget>[
-            new FlatButton(
-              child: Text("Cancel"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text("Import"),
-              onPressed: (selected != null) ? _import : null,
-            ),
-          ],
-        );
-      });
-    },
-  );
+  showImportDialog(
+      context, "Import ${parsed.sections.length} Sections", onNew, onImport);
 }

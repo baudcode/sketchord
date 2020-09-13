@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
@@ -49,59 +50,17 @@ showAudioImportDialog(BuildContext context, List<File> files) {
 }
 
 _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
-  List<Note> notes = await LocalStorage().getNotes();
+  Note onNew() {
+    Note note = Note.empty();
+    note.audioFiles = files;
+    return note;
+  }
 
-  Note empty = Note.empty();
-  empty.title = "NEW";
+  onImport(Note note) {
+    note.audioFiles.addAll(files);
+    LocalStorage().syncNote(note);
+  }
 
-  notes.insert(0, empty);
-
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      // if selected is null (use empty new note)
-      Note selected = empty;
-
-      _import() async {
-        selected.audioFiles.addAll(files);
-        LocalStorage().syncNote(selected);
-        print("${selected.id} ${selected.title}");
-        Navigator.of(context).pop();
-      }
-
-      return StatefulBuilder(builder: (context, setState) {
-        return AlertDialog(
-          title: new Text("Import ${files.length} audio files"),
-          content:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            Padding(
-              child: Text("Note:"),
-              padding: EdgeInsets.only(right: 8, top: 8),
-            ),
-            new DropdownButton<Note>(
-                value: selected,
-                items: notes
-                    .map((e) => DropdownMenuItem<Note>(
-                        child: Text("${notes.indexOf(e)}: ${e.title}"),
-                        value: e))
-                    .toList(),
-                onChanged: (v) => setState(() => selected = v)),
-          ]),
-          actions: <Widget>[
-            new FlatButton(
-              child: Text("Cancel"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text("Import"),
-              onPressed: _import,
-            ),
-          ],
-        );
-      });
-    },
-  );
+  showImportDialog(
+      context, "Import ${files.length} Audio Files", onNew, onImport);
 }
