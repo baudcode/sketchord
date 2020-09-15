@@ -141,7 +141,6 @@ class _PlayerSliderState extends State<PlayerSlider>
         child: Column(children: [
           Expanded(
               child: Slider(
-            inactiveColor: Colors.amber,
             min: 0.0,
             max: store.currentLength == null
                 ? 0.0
@@ -152,7 +151,7 @@ class _PlayerSliderState extends State<PlayerSlider>
               print("on changed to $value");
               skipTo(Duration(milliseconds: (value * 1000).floor()));
             },
-            label: "Playing",
+            //activeColor: Colors.yellow,
           ))
         ]));
   }
@@ -192,9 +191,9 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     if (store.state == RecorderState.PLAYING ||
         store.state == RecorderState.PAUSING) {
-      color = Theme.of(context).primaryColor;
+      color = Theme.of(context).bottomAppBarColor;
     } else if (store.state == RecorderState.RECORDING) {
-      color = Colors.redAccent;
+      color = Theme.of(context).primaryColor;
     }
 
     double width = MediaQuery.of(context).size.width;
@@ -204,9 +203,18 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     if (showLooper) {
       return Container(
+          decoration: BoxDecoration(
+              color: Theme.of(context).bottomAppBarColor,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).appBarTheme.color,
+                  spreadRadius: 1,
+                  blurRadius: 15,
+                ),
+              ]),
           height: 300,
           width: width,
-          color: color,
           child: Column(children: [
             SizedBox(height: 10),
             looper,

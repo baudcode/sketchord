@@ -163,8 +163,7 @@ class NoteEditorState extends State<NoteEditor>
           icon: Icon(Icons.share),
           onPressed: () => showExportDialog(context, store.note)),
       IconButton(
-          icon: Icon(Icons.star,
-              color: store.note.starred ? Theme.of(context).accentColor : null),
+          icon: Icon((store.note.starred) ? Icons.star : Icons.star_border),
           onPressed: toggleStarred),
       IconButton(icon: icon, onPressed: _onFloatingActionButtonPress),
     ];

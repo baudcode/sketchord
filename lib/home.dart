@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:sound/intent_receive.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
@@ -75,6 +72,7 @@ class HomeContentState extends State<HomeContent>
     with StoreWatcherMixin, SingleTickerProviderStateMixin {
   TextEditingController _controller;
   StaticStorage storage;
+  // settings store, use view and set recording format
 
   bool isSearching;
   bool filtersEnabled;
@@ -122,7 +120,7 @@ class HomeContentState extends State<HomeContent>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(title.toUpperCase(),
-                      style: Theme.of(context).textTheme.caption),
+                      style: Theme.of(context).appBarTheme.textTheme.caption),
                   (storage.mustShowMore(by))
                       ? GestureDetector(
                           onTap: () => toggleShowMore(by),
@@ -150,13 +148,15 @@ class HomeContentState extends State<HomeContent>
                       print(data);
                       Filter filter = Filter(by: by, content: data[index]);
                       bool isFilterApplied = storage.isFilterApplied(filter);
-                      Color color = (isFilterApplied)
-                          ? Theme.of(context).indicatorColor
-                          : Theme.of(context).disabledColor;
+
+                      Color backgroundColor = (isFilterApplied)
+                          ? Theme.of(context).chipTheme.selectedColor
+                          : Theme.of(context).chipTheme.backgroundColor;
+
                       return Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                           child: ActionChip(
-                              backgroundColor: color,
+                              backgroundColor: backgroundColor,
                               label: Text(data[index]),
                               onPressed: () => (isFilterApplied)
                                   ? removeFilter(filter)
@@ -181,13 +181,15 @@ class HomeContentState extends State<HomeContent>
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (context, index) {
                       Filter filter = storage.filters[index];
-                      Color color = Theme.of(context).indicatorColor;
+                      Color color = Theme.of(context).chipTheme.selectedColor;
 
                       return Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                           child: ActionChip(
                               backgroundColor: color,
-                              label: Text(filter.content),
+                              label: Text(
+                                filter.content,
+                              ),
                               onPressed: () => removeFilter(filter)));
                     },
                   ))
@@ -249,11 +251,24 @@ class HomeContentState extends State<HomeContent>
     ];
   }
 
+  _sliverNoteSelectionAppBar() {
+    return SliverAppBar(
+      leading: IconButton(
+          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
+      title: Text(storage.selectedNotes.length.toString()),
+      actions: <Widget>[
+        IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => discardAllSelectedNotes()),
+      ],
+    );
+  }
+
   _sliverAppBar() {
     return SliverAppBar(
       titleSpacing: 5.0,
       actions: isSearching ? _searchActionButtons() : _listActionButtons(),
-      flexibleSpace: filtersEnabled
+      flexibleSpace: (filtersEnabled && isSearching)
           ? _filtersView()
           : (isFiltering ? _activeFiltersView() : Container()),
       leading: isSearching
@@ -267,19 +282,6 @@ class HomeContentState extends State<HomeContent>
           (isSearching && filtersEnabled) ? 360 : (isFiltering ? 100 : 0),
       floating: false,
       pinned: true,
-    );
-  }
-
-  _sliverNoteSelectionAppBar() {
-    return SliverAppBar(
-      leading: IconButton(
-          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
-      title: Text(storage.selectedNotes.length.toString()),
-      actions: <Widget>[
-        IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => discardAllSelectedNotes()),
-      ],
     );
   }
 
@@ -343,13 +345,12 @@ class HomeContentState extends State<HomeContent>
       noteList = [NoteList(true, storage.view, items, onTap, onLongPress)];
     }
 
+    SliverAppBar appBar = storage.isAnyNoteSelected()
+        ? _sliverNoteSelectionAppBar()
+        : _sliverAppBar();
+
     return CustomScrollView(
-      //physics: ClampingScrollPhysics(),
-      slivers: <Widget>[
-        (storage.isAnyNoteSelected()
-            ? _sliverNoteSelectionAppBar()
-            : _sliverAppBar()),
-      ]..addAll(noteList),
+      slivers: [appBar]..addAll(noteList),
     );
   }
 
@@ -357,10 +358,13 @@ class HomeContentState extends State<HomeContent>
     return TextField(
       controller: _controller,
       autofocus: false,
+      style: Theme.of(context).accentTextTheme.subtitle1,
       onTap: () => _toggleIsSearching(searching: true),
       onSubmitted: (s) => _toggleIsSearching(searching: false),
-      decoration:
-          InputDecoration(border: InputBorder.none, hintText: "Search..."),
+      decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: "Search...",
+          hintStyle: Theme.of(context).accentTextTheme.subtitle1),
       maxLines: 1,
       minLines: 1,
       onChanged: (s) => searchNotes(s),

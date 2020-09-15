@@ -24,7 +24,6 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   SettingsStore store;
-  RecorderBottomSheetStore recorderStore;
 
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
 
@@ -32,7 +31,6 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   void initState() {
     super.initState();
     store = listenToStore(settingsToken);
-    recorderStore = listenToStore(recorderBottomSheetStoreToken);
   }
 
   _themeAsString() {
@@ -64,7 +62,17 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   }
 
   _audioFormatAsString() {
-    return recorderStore.audioFormat == AudioFormat.AAC ? "AAC" : "WAV";
+    return store.audioFormat == AudioFormat.AAC ? "AAC" : "WAV";
+  }
+
+  _toggleAudioFormat() {
+    AudioFormat newAudioFormat;
+    if (store.audioFormat == AudioFormat.AAC) {
+      newAudioFormat = AudioFormat.WAV;
+    } else {
+      newAudioFormat = AudioFormat.AAC;
+    }
+    setDefaultAudioFormat(newAudioFormat);
   }
 
   _audioFormatItem() {
@@ -74,9 +82,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       children: [
         Expanded(child: Text("AudioFormat: ")),
         RaisedButton(
-          child: Text(_audioFormatAsString()),
-          onPressed: toggleAudioFormat,
-        ),
+            child: Text(_audioFormatAsString()), onPressed: _toggleAudioFormat),
       ],
     ));
   }

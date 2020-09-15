@@ -1,48 +1,55 @@
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart' show Action, Store, StoreToken;
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
+import 'package:sound/recorder_store.dart';
 
 class SettingsStore extends Store {
-  SettingsTheme _theme = SettingsTheme.dark;
+  // default values
 
-  // getters
-  SettingsTheme get theme => _theme;
+  Settings _settings = Settings(
+      audioFormat: AudioFormat.WAV,
+      theme: SettingsTheme.dark,
+      view: EditorView.single);
 
-  String _audioFormat = "aac";
-  String _view = 'single';
+  // getter
+  SettingsTheme get theme => _settings.theme;
 
-  Settings get settings =>
-      Settings(audioFormat: _audioFormat, theme: _theme, view: _view);
+  EditorView get view => _settings.view;
+
+  AudioFormat get audioFormat => _settings.audioFormat;
+
+  Settings get settings => _settings;
 
   SettingsStore() {
     // init listener
     toggleTheme.listen((_) async {
       if (theme == SettingsTheme.dark) {
-        _theme = SettingsTheme.light;
+        _settings.theme = SettingsTheme.light;
       } else {
-        _theme = SettingsTheme.dark;
+        _settings.theme = SettingsTheme.dark;
       }
       await LocalStorage().syncSettings(settings);
       trigger();
     });
 
     setDefaultAudioFormat.listen((format) async {
-      _audioFormat = format;
+      _settings.audioFormat = format;
       await LocalStorage().syncSettings(settings);
       trigger();
     });
 
     setDefaultView.listen((view) async {
-      _view = view;
+      _settings.view = view;
       await LocalStorage().syncSettings(settings);
       trigger();
     });
 
+    // this will be called when the app initializes
     updateSettings.listen((s) {
       if (s != null) {
-        _theme = s.theme;
-        _view = s.view;
-        _audioFormat = s.audioFormat;
+        _settings = s;
+        print("settings audio format");
         trigger();
       }
     });
@@ -50,8 +57,9 @@ class SettingsStore extends Store {
 }
 
 Action toggleTheme = Action();
-Action<String> setDefaultView = Action();
-Action<String> setDefaultAudioFormat = Action();
+
+Action<EditorView> setDefaultView = Action();
+Action<AudioFormat> setDefaultAudioFormat = Action();
 Action<Settings> updateSettings = Action();
 
 StoreToken settingsToken = StoreToken(SettingsStore());

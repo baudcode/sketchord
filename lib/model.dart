@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
@@ -245,19 +246,20 @@ class Note {
 }
 
 enum SettingsTheme { dark, light }
+enum EditorView { single, double }
 
 class Settings {
   SettingsTheme theme;
-  String view; // single, double
-  String audioFormat;
+  EditorView view; // single, double
+  AudioFormat audioFormat; // aac, wav
 
   Settings({this.theme, this.view, this.audioFormat});
 
   Map<String, dynamic> toJson() {
     return {
       "theme": theme == SettingsTheme.dark ? "dark" : "light",
-      "view": view,
-      "audioFormat": audioFormat
+      "view": view == EditorView.single ? "single" : "double",
+      "audioFormat": audioFormat == AudioFormat.AAC ? "aac" : "wav"
     };
   }
 
@@ -265,7 +267,8 @@ class Settings {
     return Settings(
         theme:
             json['theme'] == 'dark' ? SettingsTheme.dark : SettingsTheme.light,
-        view: json['view'],
-        audioFormat: json['audioFormat']);
+        view: json['view'] == "single" ? EditorView.single : EditorView.double,
+        audioFormat:
+            json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV);
   }
 }

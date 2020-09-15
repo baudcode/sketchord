@@ -88,8 +88,7 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
                       children: options
                           .map((e) => FlatButton.icon(
                                 label: Text(e.name,
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 20)),
+                                    style: TextStyle(fontSize: 20)),
                                 icon: Icon(e.icon),
                                 onPressed: () => _switch(e.item),
                               ))
@@ -128,8 +127,11 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
                 child: Material(
                   animationDuration: animateMenuDuration,
                   child: _getView(),
-                  borderRadius: BorderRadius.all(Radius.circular(40)),
-                  elevation: 8,
+                  borderRadius:
+                      BorderRadius.all(Radius.circular(isCollapsed ? 0 : 10)),
+                  color: Theme.of(context).appBarTheme.color,
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 5,
                 ))));
   }
 

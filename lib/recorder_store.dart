@@ -6,6 +6,7 @@ import 'package:flutter_flux/flutter_flux.dart' show Store, Action, StoreToken;
 // import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sound/settings_store.dart';
 import 'dart:async';
 import 'model.dart';
 import 'dart:io';
@@ -303,12 +304,8 @@ class RecorderBottomSheetStore extends Store {
       trigger();
     });
 
-    toggleAudioFormat.listen((event) {
-      if (_audioFormat == AudioFormat.WAV) {
-        _audioFormat = AudioFormat.AAC;
-      } else {
-        _audioFormat = AudioFormat.WAV;
-      }
+    setAudioFormat.listen((format) {
+      _audioFormat = format;
       print("setting audio format to $_audioFormat");
       trigger();
     });
@@ -324,6 +321,13 @@ class RecorderBottomSheetStore extends Store {
       _loopRange = range;
       trigger();
     });
+
+    setDefaultAudioFormat.listen((format) {
+      _audioFormat = format;
+      print("ping");
+      trigger();
+    });
+    print("editor store created");
   }
 }
 
@@ -340,8 +344,7 @@ Action<Duration> skipTo = Action();
 Action<AudioFile> recordingFinished = Action();
 Action resetRecorderState = Action();
 Action<RangeValues> setLoopRange = Action();
+Action<AudioFormat> setAudioFormat = Action();
 
 StoreToken recorderBottomSheetStoreToken =
     StoreToken(RecorderBottomSheetStore());
-
-Action toggleAudioFormat = Action<AudioFormat>();

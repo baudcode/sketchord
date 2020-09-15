@@ -14,28 +14,53 @@ void main() {
 
 // ffe57c73
 Color mainColor = Colors.red.shade300;
+Color appBarColor = Colors.grey[900];
 
 class App extends StatefulWidget {
   // This widget is the root of your application.
-
   final ThemeData dark = ThemeData.dark().copyWith(
       indicatorColor: mainColor,
+      primaryColor: mainColor,
       accentColor: mainColor,
-      buttonColor: mainColor,
+      cursorColor: mainColor,
+      appBarTheme: ThemeData.dark()
+          .appBarTheme
+          .copyWith(color: appBarColor, textTheme: ThemeData.dark().textTheme),
+      buttonTheme:
+          ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
+      chipTheme: ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
       sliderTheme: ThemeData.dark().sliderTheme.copyWith(
           trackHeight: 5,
           activeTickMarkColor: Colors.green,
           showValueIndicator: ShowValueIndicator.always,
           valueIndicatorTextStyle: ThemeData.dark().primaryTextTheme.bodyText1,
 
-          //overlayColor: mainColor,
+          //overlayColor: mainColor
           inactiveTrackColor: Colors.redAccent),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       floatingActionButtonTheme:
           FloatingActionButtonThemeData(backgroundColor: mainColor));
+
   final ThemeData light = ThemeData.light().copyWith(
+      primaryColor: mainColor,
+      cursorColor: mainColor,
+      textSelectionColor: mainColor,
+      appBarTheme: ThemeData.light().appBarTheme.copyWith(
+          color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
+      chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
       indicatorColor: mainColor,
       accentColor: mainColor,
+      highlightColor: Colors.yellow,
+      sliderTheme: ThemeData.light().sliderTheme.copyWith(
+          trackHeight: 4,
+          thumbColor: mainColor,
+          showValueIndicator: ShowValueIndicator.always,
+          valueIndicatorTextStyle: ThemeData.light().primaryTextTheme.bodyText1,
+          //overlayColor: mainColor,
+          valueIndicatorColor: mainColor,
+          activeTickMarkColor: mainColor,
+          activeTrackColor: mainColor, // inactive loop area
+          inactiveTrackColor: appBarColor),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       floatingActionButtonTheme:
           FloatingActionButtonThemeData(backgroundColor: mainColor));
