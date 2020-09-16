@@ -233,6 +233,14 @@ class StaticStorage extends Store {
       _selectedNotes.clear();
       trigger();
     });
+    unstarAllSelectedNotes.listen((_) {
+      for (Note note in _selectedNotes) {
+        note.starred = false;
+        LocalStorage().syncNoteAttr(note, 'starred');
+      }
+      _selectedNotes.clear();
+      trigger();
+    });
 
     restoreNotes.listen((_notes) {
       for (Note note in _notes) {
@@ -336,6 +344,7 @@ Action<Note> triggerSelectNote = Action();
 Action removeAllSelectedNotes = Action();
 Action discardAllSelectedNotes = Action();
 Action starAllSelectedNotes = Action();
+Action unstarAllSelectedNotes = Action();
 Action<List<Note>> restoreNotes = Action();
 Action clearSelection = Action();
 Action updateView = Action();

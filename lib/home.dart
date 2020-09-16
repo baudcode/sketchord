@@ -252,6 +252,12 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliverNoteSelectionAppBar() {
+    print((storage.selectedNotes
+            .map((e) => e.starred)
+            .toList()
+            .length
+            .toDouble() /
+        storage.selectedNotes.length.toDouble()));
     return SliverAppBar(
       pinned: true,
       leading: IconButton(
@@ -262,7 +268,28 @@ class HomeContentState extends State<HomeContent>
             icon: Icon(Icons.delete),
             onPressed: () => discardAllSelectedNotes()),
         IconButton(
-            icon: Icon(Icons.star), onPressed: () => starAllSelectedNotes()),
+            icon: Icon((storage.selectedNotes
+                            .where((e) => e.starred)
+                            .toList()
+                            .length
+                            .toDouble() /
+                        storage.selectedNotes.length.toDouble()) <
+                    0.5
+                ? Icons.star
+                : Icons.star_border),
+            onPressed: () {
+              if ((storage.selectedNotes
+                          .where((e) => e.starred)
+                          .toList()
+                          .length
+                          .toDouble() /
+                      storage.selectedNotes.length.toDouble()) <
+                  0.5) {
+                starAllSelectedNotes();
+              } else {
+                unstarAllSelectedNotes();
+              }
+            }),
       ],
     );
   }
