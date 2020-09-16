@@ -261,6 +261,8 @@ class HomeContentState extends State<HomeContent>
         IconButton(
             icon: Icon(Icons.delete),
             onPressed: () => discardAllSelectedNotes()),
+        IconButton(
+            icon: Icon(Icons.star), onPressed: () => starAllSelectedNotes()),
       ],
     );
   }
