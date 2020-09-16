@@ -45,8 +45,9 @@ class App extends StatefulWidget {
       primaryColor: mainColor,
       cursorColor: mainColor,
       textSelectionColor: mainColor,
-      appBarTheme: ThemeData.light().appBarTheme.copyWith(
-          color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
+      appBarTheme: ThemeData.light()
+          .appBarTheme
+          .copyWith(color: appBarColor, textTheme: ThemeData.light().textTheme),
       chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
       indicatorColor: mainColor,
       accentColor: mainColor,

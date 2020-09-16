@@ -40,9 +40,9 @@ class AbstractNoteItem extends StatelessWidget {
       } else {
         spans.add(TextSpan(text: title.substring(0, start)));
         spans.add(TextSpan(
-            text: title.substring(start, start + title.length),
+            text: title.substring(start, start + highlight.length),
             style: TextStyle(backgroundColor: Theme.of(context).primaryColor)));
-        spans.add(TextSpan(text: title.substring(start + title.length)));
+        spans.add(TextSpan(text: title.substring(start + highlight.length)));
       }
     }
 
@@ -82,11 +82,12 @@ class AbstractNoteItem extends StatelessWidget {
           }
           k += sections[i].length + 1;
         }
+
         print("section: ${sections[inSection]}, text: $highlight");
         // start at the start of the found section
         int sectionStart = text.indexOf(sections[inSection]);
+        print("$sectionStart, $start, ${text.length}");
         int end = start + highlight.length;
-        print("$sectionStart, $start, $end, ${text.length}");
 
         spans.add(TextSpan(text: text.substring(sectionStart, start)));
         spans.add(TextSpan(

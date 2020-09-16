@@ -131,7 +131,7 @@ class StaticStorage extends Store {
   List<Note> _selectedNotes;
   List<Note> get selectedNotes => _selectedNotes;
 
-  String _search;
+  String _search = "";
   String get search => _search;
 
   bool mustShowMore(FilterBy by) {

@@ -329,7 +329,7 @@ class HomeContentState extends State<HomeContent>
               ]))
         ])),
         NoteList(true, storage.view, starrtedItems, onTap, onLongPress,
-            highlight: storage.search.trim() == "" ? null : storage.search),
+            highlight: storage.search == "" ? null : storage.search.trim()),
         SliverList(
             delegate: SliverChildListDelegate([
           Padding(
@@ -337,7 +337,7 @@ class HomeContentState extends State<HomeContent>
               child: Text("Other", style: Theme.of(context).textTheme.caption))
         ])),
         NoteList(true, storage.view, items, onTap, onLongPress,
-            highlight: storage.search.trim() == "" ? null : storage.search)
+            highlight: storage.search == "" ? null : storage.search.trim())
       ];
     } else {
       List<NoteListItemModel> items = storage.filteredNotes
@@ -361,13 +361,13 @@ class HomeContentState extends State<HomeContent>
     return TextField(
       controller: _controller,
       autofocus: false,
-      style: Theme.of(context).accentTextTheme.subtitle1,
+      style: Theme.of(context).appBarTheme.textTheme.subtitle1,
       onTap: () => _toggleIsSearching(searching: true),
       onSubmitted: (s) => _toggleIsSearching(searching: false),
       decoration: InputDecoration(
           border: InputBorder.none,
           hintText: "Search...",
-          hintStyle: Theme.of(context).accentTextTheme.subtitle1),
+          hintStyle: Theme.of(context).appBarTheme.textTheme.subtitle1),
       maxLines: 1,
       minLines: 1,
       onChanged: (s) => searchNotes(s),
