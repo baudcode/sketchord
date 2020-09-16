@@ -6,8 +6,9 @@ import 'storage.dart';
 class NoteListItemModel {
   final Note note;
   final bool isSelected;
+  final String highlight; // a test to highlight
 
-  NoteListItemModel({this.note, this.isSelected});
+  NoteListItemModel({this.note, this.isSelected, this.highlight});
 }
 
 class NoteList extends StatefulWidget {
@@ -15,10 +16,12 @@ class NoteList extends StatefulWidget {
   final bool singleView;
   final ValueChanged<Note> onTap;
   final ValueChanged<Note> onLongPress;
+  final String highlight;
 
   final List<NoteListItemModel> items;
   NoteList(
-      this.sliver, this.singleView, this.items, this.onTap, this.onLongPress);
+      this.sliver, this.singleView, this.items, this.onTap, this.onLongPress,
+      {this.highlight});
 
   @override
   State<StatefulWidget> createState() {
@@ -65,6 +68,7 @@ class NoteListState extends State<NoteList> {
                                     i.isSelected,
                                     () => widget.onTap(i.note),
                                     () => widget.onLongPress(i.note),
+                                    widget.highlight,
                                     width / 2 - padding,
                                     EdgeInsets.only(left: 0)))
                                 .toList(),
@@ -83,6 +87,7 @@ class NoteListState extends State<NoteList> {
                                 i.isSelected,
                                 () => widget.onTap(i.note),
                                 () => widget.onLongPress(i.note),
+                                widget.highlight,
                                 width / 2 - padding,
                                 EdgeInsets.only(left: 0)))
                             .toList(),
@@ -100,6 +105,7 @@ class NoteListState extends State<NoteList> {
               item.isSelected,
               () => widget.onTap(item.note),
               () => widget.onLongPress(item.note),
+              widget.highlight,
               padding: padding));
     }
   }

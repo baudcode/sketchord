@@ -6,8 +6,14 @@ class AbstractNoteItem extends StatelessWidget {
   final Note note;
   final bool isSelected;
   final Function onTap, onLongPress;
+  final String highlight;
 
-  AbstractNoteItem({this.note, this.isSelected, this.onTap, this.onLongPress});
+  AbstractNoteItem(
+      {this.note,
+      this.isSelected,
+      this.onTap,
+      this.onLongPress,
+      this.highlight});
 
   bool get empty => ((note.title == null || note.title.trim() == "") &&
       this.sectionText().trim() == "");
@@ -20,6 +26,86 @@ class AbstractNoteItem extends StatelessWidget {
                 .textTheme
                 .headline5
                 .copyWith(fontWeight: FontWeight.w200)));
+  }
+
+  Widget highlightTitle(BuildContext context, String title, String highlight) {
+    List<TextSpan> spans = [];
+
+    if (highlight == null) {
+      spans.add(TextSpan(text: title));
+    } else {
+      int start = title.indexOf(highlight);
+      if (start == -1) {
+        spans.add(TextSpan(text: title));
+      } else {
+        spans.add(TextSpan(text: title.substring(0, start)));
+        spans.add(TextSpan(
+            text: title.substring(start, start + title.length),
+            style: TextStyle(backgroundColor: Theme.of(context).primaryColor)));
+        spans.add(TextSpan(text: title.substring(start + title.length)));
+      }
+    }
+
+    return Text.rich(
+      TextSpan(
+        children: spans,
+      ),
+      //softWrap: true,
+      //overflow: TextOverflow.clip,
+      //maxLines: 1,
+      style: Theme.of(context).textTheme.headline6,
+      textScaleFactor: 0.75,
+      textAlign: TextAlign.left,
+    );
+  }
+
+  Widget highlightSectionText(
+      BuildContext context, String text, String highlight,
+      {int maxLines = 9}) {
+    List<TextSpan> spans = [];
+
+    if (highlight == null) {
+      spans.add(TextSpan(text: text));
+    } else {
+      List<String> sections = text.split("\n");
+      int start = text.indexOf(highlight);
+
+      if (start == -1)
+        spans.add(TextSpan(text: text));
+      else {
+        int k = 0;
+        int inSection = 0;
+        for (var i = 0; i < sections.length; i++) {
+          if (start >= k && start <= (k + sections[i].length)) {
+            inSection = i;
+            break;
+          }
+          k += sections[i].length + 1;
+        }
+        print("section: ${sections[inSection]}, text: $highlight");
+        // start at the start of the found section
+        int sectionStart = text.indexOf(sections[inSection]);
+        int end = start + highlight.length;
+        print("$sectionStart, $start, $end, ${text.length}");
+
+        spans.add(TextSpan(text: text.substring(sectionStart, start)));
+        spans.add(TextSpan(
+            text: text.substring(start, end),
+            style: TextStyle(backgroundColor: Theme.of(context).primaryColor)));
+        spans.add(TextSpan(text: text.substring(end)));
+      }
+    }
+
+    return Text.rich(
+      TextSpan(
+        //text: 'TEST',
+        children: spans,
+      ),
+      softWrap: true,
+      overflow: TextOverflow.clip,
+      maxLines: maxLines,
+      textAlign: TextAlign.left,
+    );
   }
 
   Widget emptyText(BuildContext context) {
@@ -53,12 +139,13 @@ class SmallNoteItem extends AbstractNoteItem {
   final EdgeInsets padding;
 
   SmallNoteItem(Note note, bool isSelected, Function onTap,
-      Function onLongPress, this.width, this.padding)
+      Function onLongPress, String highlight, this.width, this.padding)
       : super(
             note: note,
             isSelected: isSelected,
             onTap: onTap,
-            onLongPress: onLongPress);
+            onLongPress: onLongPress,
+            highlight: highlight);
 
   @override
   Widget build(BuildContext context) {
@@ -85,18 +172,10 @@ class SmallNoteItem extends AbstractNoteItem {
                                 children: <Widget>[
                                   Padding(
                                       padding: EdgeInsets.only(bottom: 10),
-                                      child: Text(
-                                        note.title,
-                                        textScaleFactor: .75,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline6,
-                                      )),
-                                  Text(this.sectionText(),
-                                      maxLines: 9,
-                                      textAlign: TextAlign.left,
-                                      softWrap: true,
-                                      overflow: TextOverflow.clip)
+                                      child: highlightTitle(
+                                          context, note.title, highlight)),
+                                  highlightSectionText(
+                                      context, this.sectionText(), highlight),
                                 ])))));
   }
 }
@@ -105,12 +184,13 @@ class NoteItem extends AbstractNoteItem {
   final double padding;
 
   NoteItem(Note note, bool isSelected, Function onTap, Function onLongPress,
-      {this.padding = 8})
+      String highlight, {this.padding = 8})
       : super(
             note: note,
             isSelected: isSelected,
             onTap: onTap,
-            onLongPress: onLongPress);
+            onLongPress: onLongPress,
+            highlight: highlight);
 
   _top() {
     return Padding(

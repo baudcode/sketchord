@@ -50,7 +50,7 @@ class App extends StatefulWidget {
       chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
       indicatorColor: mainColor,
       accentColor: mainColor,
-      highlightColor: Colors.yellow,
+      highlightColor: mainColor,
       sliderTheme: ThemeData.light().sliderTheme.copyWith(
           trackHeight: 4,
           thumbColor: mainColor,

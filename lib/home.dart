@@ -328,14 +328,16 @@ class HomeContentState extends State<HomeContent>
                     child: Icon(Icons.star, size: 16))
               ]))
         ])),
-        NoteList(true, storage.view, starrtedItems, onTap, onLongPress),
+        NoteList(true, storage.view, starrtedItems, onTap, onLongPress,
+            highlight: storage.search.trim() == "" ? null : storage.search),
         SliverList(
             delegate: SliverChildListDelegate([
           Padding(
               padding: EdgeInsets.only(left: 16),
               child: Text("Other", style: Theme.of(context).textTheme.caption))
         ])),
-        NoteList(true, storage.view, items, onTap, onLongPress)
+        NoteList(true, storage.view, items, onTap, onLongPress,
+            highlight: storage.search.trim() == "" ? null : storage.search)
       ];
     } else {
       List<NoteListItemModel> items = storage.filteredNotes
