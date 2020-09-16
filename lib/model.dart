@@ -252,14 +252,16 @@ class Settings {
   SettingsTheme theme;
   EditorView view; // single, double
   AudioFormat audioFormat; // aac, wav
+  String name;
 
-  Settings({this.theme, this.view, this.audioFormat});
+  Settings({this.theme, this.view, this.audioFormat, this.name});
 
   Map<String, dynamic> toJson() {
     return {
       "theme": theme == SettingsTheme.dark ? "dark" : "light",
       "view": view == EditorView.single ? "single" : "double",
-      "audioFormat": audioFormat == AudioFormat.AAC ? "aac" : "wav"
+      "audioFormat": audioFormat == AudioFormat.AAC ? "aac" : "wav",
+      "name": name
     };
   }
 
@@ -268,6 +270,7 @@ class Settings {
         theme:
             json['theme'] == 'dark' ? SettingsTheme.dark : SettingsTheme.light,
         view: json['view'] == "single" ? EditorView.single : EditorView.double,
+        name: json.containsKey("name") ? json['name'] : null,
         audioFormat:
             json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV);
   }

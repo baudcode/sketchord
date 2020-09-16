@@ -87,6 +87,54 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     ));
   }
 
+  _setName() {
+    return _wrapItem(Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Expanded(child: Text("Name:")),
+        RaisedButton(child: Text(store.name), onPressed: _showEditNameDialog),
+      ],
+    ));
+  }
+
+  _showEditNameDialog() {
+    TextEditingController _controller = TextEditingController.fromValue(
+        TextEditingValue(text: store.name == null ? "Edit" : store.name));
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: new Text("Set Name"),
+          content: new TextField(
+            autofocus: true,
+            maxLines: 1,
+            minLines: 1,
+            onSubmitted: (s) => print("submit $s"),
+            controller: _controller,
+          ),
+          actions: <Widget>[
+            new FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            // usually buttons at the bottom of the dialog
+            new FlatButton(
+              child: new Text("Apply"),
+              onPressed: () {
+                setName(_controller.value.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   _onExport() async {
     String path = await Backup().exportZip(await LocalStorage().getNotes());
     showSnack(_globalKey.currentState, "Exported zip to $path");
@@ -112,6 +160,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
 
   _list() {
     var items = [
+      _setName(),
       _themeItem(),
       _audioFormatItem(),
       SizedBox(height: 10),

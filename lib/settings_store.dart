@@ -10,6 +10,7 @@ class SettingsStore extends Store {
   Settings _settings = Settings(
       audioFormat: AudioFormat.WAV,
       theme: SettingsTheme.dark,
+      name: null,
       view: EditorView.single);
 
   // getter
@@ -18,6 +19,7 @@ class SettingsStore extends Store {
   EditorView get view => _settings.view;
 
   AudioFormat get audioFormat => _settings.audioFormat;
+  String get name => _settings.name;
 
   Settings get settings => _settings;
 
@@ -35,13 +37,19 @@ class SettingsStore extends Store {
 
     setDefaultAudioFormat.listen((format) async {
       _settings.audioFormat = format;
-      await LocalStorage().syncSettings(settings);
+      await LocalStorage().syncSettings(_settings);
       trigger();
     });
 
     setDefaultView.listen((view) async {
       _settings.view = view;
-      await LocalStorage().syncSettings(settings);
+      await LocalStorage().syncSettings(_settings);
+      trigger();
+    });
+
+    setName.listen((name) async {
+      _settings.name = name;
+      await LocalStorage().syncSettings(_settings);
       trigger();
     });
 
@@ -57,6 +65,7 @@ class SettingsStore extends Store {
 }
 
 Action toggleTheme = Action();
+Action<String> setName = Action();
 
 Action<EditorView> setDefaultView = Action();
 Action<AudioFormat> setDefaultAudioFormat = Action();
