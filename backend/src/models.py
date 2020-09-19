@@ -2,11 +2,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
-
 class ID(BaseModel):
     id: str
-    created_at: datetime
-    last_modified: datetime
 
 
 class AudioFile(ID):
@@ -28,5 +25,6 @@ class Note(ID):
     instrument: Optional[str]
     starred: bool
     capo: Optional[str]
-    seections: List[Section]
+    sections: List[Section]
+    artist: Optional[str]
     # has audiofiles and sections attached

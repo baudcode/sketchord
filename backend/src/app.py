@@ -13,7 +13,7 @@ from .utils import logger
 from . import v1
 from .db import RethinkClient
 
-app = FastAPI(title="IOT Server",
+app = FastAPI(title="Sound App Server",
               openapi_url="/rest/v1/openapi.json",
               redoc_url='/redoc',
               debug=config.is_debug(),
@@ -35,11 +35,13 @@ async def log_requests(request: Request, call_next):
         f"rid={idem} start request path={request.url.path}, params={request.query_params}")
     start_time = time.time()
 
+    """
     # set namespace vars
     initial_g = requestvars.Context(
         db=RethinkClient(config.get_database_uri()))
     requestvars.request_global.set(initial_g)
-
+    """
+    
     response = await call_next(request)
 
     process_time = (time.time() - start_time) * 1000

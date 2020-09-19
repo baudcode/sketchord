@@ -1,14 +1,14 @@
 version: '2'
 services:
   rethinkdb:
-    iamge: rethinkdb:latest
+    image: rethinkdb:latest
     ports:
       - "8084:8080"
       - "29015:29015"
       - "28015:28015"
     volumes:
       - ./data:/data
-    command: rethinkdb --bind all --data /data
+    command: rethinkdb --bind all # --data /data
   backend:
     build:
       context: ./

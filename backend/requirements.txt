@@ -1,0 +1,5 @@
+fastapi
+rethinkdb
+uvicorn
+bs4
+requests
