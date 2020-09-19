@@ -269,6 +269,10 @@ class StaticStorage extends Store {
           note.capo.toString().toLowerCase().contains(search)) return true;
       if (note.title != null && note.title.toLowerCase().contains(search))
         return true;
+
+      if (note.artist != null && note.artist.toLowerCase().contains(search))
+        return true;
+
       if (note.tuning != null && note.tuning.toLowerCase().contains(search))
         return true;
       if (note.sections.any((s) =>

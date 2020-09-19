@@ -141,6 +141,7 @@ List<int> serializeColor(Color color) {
 }
 
 Color deserializeColor(List<dynamic> data) {
+  if (data == null) return null;
   return Color.fromARGB(data[0], data[1], data[2], data[3]);
 }
 
@@ -190,7 +191,7 @@ class Note {
       "label": label,
       "artist": artist,
       "starred": starred,
-      "color": serializeColor(color),
+      "color": color == null ? null : serializeColor(color),
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
       "audioFiles":

@@ -197,12 +197,27 @@ class HomeContentState extends State<HomeContent>
   }
 
   _filtersView() {
-    List<Widget> items = [
-      _filterSpecificView("keys", DB().uniqueKeys, FilterBy.KEY),
-      _filterSpecificView("capos", DB().uniqueCapos, FilterBy.CAPO),
-      _filterSpecificView("tunings", DB().uniqueTunings, FilterBy.TUNING),
-      _filterSpecificView("labels", DB().uniqueLabels, FilterBy.LABEL),
-    ];
+    List<Widget> items = [];
+    List<String> uniqueKeys = DB().uniqueKeys;
+    List<String> uniqueCapos = DB().uniqueCapos;
+    List<String> uniqueTunings = DB().uniqueTunings;
+    List<String> uniqueLabels = DB().uniqueLabels;
+
+    if (uniqueKeys.length >= 0) {
+      items.add(_filterSpecificView("keys", uniqueKeys, FilterBy.KEY));
+    }
+
+    if (uniqueCapos.length >= 0) {
+      items.add(_filterSpecificView("capos", uniqueCapos, FilterBy.CAPO));
+    }
+
+    if (uniqueTunings.length >= 0) {
+      items.add(_filterSpecificView("tunings", uniqueTunings, FilterBy.TUNING));
+    }
+
+    if (uniqueLabels.length >= 0) {
+      items.add(_filterSpecificView("labels", uniqueLabels, FilterBy.LABEL));
+    }
 
     return Padding(
         padding: EdgeInsets.only(left: 25, top: 60),
@@ -309,7 +324,7 @@ class HomeContentState extends State<HomeContent>
           child: Center(child: _searchView()),
           padding: EdgeInsets.only(left: 5)),
       expandedHeight:
-          (isSearching && filtersEnabled) ? 360 : (isFiltering ? 100 : 0),
+          (isSearching && filtersEnabled) ? 370 : (isFiltering ? 100 : 0),
       floating: false,
       pinned: true,
     );
