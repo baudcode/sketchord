@@ -52,7 +52,7 @@ class EditableState extends State<Editable> {
             (widget.multiline) ? TextInputType.multiline : TextInputType.text,
         expands: false,
         minLines: 1,
-        maxLines: 10,
+        maxLines: widget.maxLines,
 
         //maxLines: widget.maxLines,
         enableInteractiveSelection: true,
@@ -148,7 +148,6 @@ class SectionListItem extends StatelessWidget {
                                     fontWeight: FontWeight.normal),
                             onChange: (s) => changeContent(Tuple2(section, s)),
                             hintText: 'Content',
-                            maxLines: 100,
                             multiline: true)
                       ])
                     ]))),

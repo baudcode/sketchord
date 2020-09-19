@@ -202,25 +202,31 @@ class Note {
 
   factory Note.fromJson(Map<String, dynamic> json, String id) {
     return Note(
-      id: id,
-      title: json['title'],
-      createdAt: deserializeDateTime(json['createdAt']),
-      lastModified: deserializeDateTime(json['lastModified']),
-      key: json['key'],
-      tuning: json['tuning'],
-      capo: json['capo'],
-      instrument: json['instrument'],
-      label: json['label'],
-      starred: json['starred'],
-      color: json.containsKey("color") ? deserializeColor(json['color']) : null,
-      discarded: json.containsKey("discarded") ? json['discarded'] : false,
-      artist: json.containsKey("artist") ? json['artist'] : null,
-      sections:
-          json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
-      audioFiles: json['audioFiles']
-          .map<AudioFile>((s) => AudioFile.fromJson(s))
-          .toList(),
-    );
+        id: id,
+        title: json['title'],
+        createdAt: json.containsKey(json['createdAt'])
+            ? deserializeDateTime(json['createdAt'])
+            : DateTime.now(),
+        lastModified: json.containsKey(json['lastModified'])
+            ? deserializeDateTime(json['lastModified'])
+            : DateTime.now(),
+        key: json.containsKey("key") ? json['key'] : null,
+        tuning: json.containsKey("tuning") ? json['tuning'] : null,
+        capo: json.containsKey("capo") ? json['capo'] : null,
+        instrument: json.containsKey("instrument") ? json['instrument'] : null,
+        label: json.containsKey("label") ? json['label'] : null,
+        starred: json.containsKey("starred") ? json['starred'] : false,
+        color:
+            json.containsKey("color") ? deserializeColor(json['color']) : null,
+        discarded: json.containsKey("discarded") ? json['discarded'] : false,
+        artist: json.containsKey("artist") ? json['artist'] : null,
+        sections:
+            json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
+        audioFiles: json.containsKey("audioFiles")
+            ? json['audioFiles']
+                .map<AudioFile>((s) => AudioFile.fromJson(s))
+                .toList()
+            : []);
   }
   String getInfoText() {
     List<String> info = [];

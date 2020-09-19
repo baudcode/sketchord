@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
-import 'package:sound/note_editor.dart';
+import 'package:sound/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class ParsedNote {
   final String title;
@@ -90,26 +95,64 @@ showInvalidTextSnack(BuildContext context) {
   Scaffold.of(context).showSnackBar(snackbar);
 }
 
+Future<String> readResponse(HttpClientResponse response) {
+  final completer = Completer<String>();
+  final contents = StringBuffer();
+  response.transform(utf8.decoder).listen((data) {
+    contents.write(data);
+  }, onDone: () => completer.complete(contents.toString()));
+  return completer.future;
+}
+// Abby
+
 showTextImportDialog(BuildContext context, String text) async {
-  ParsedNote parsed = parseText(text);
+  if (text.startsWith("https://tabs.ultimate-guitar.com/tab/")) {
+    String url = "http://207.154.196.37:8009/ultimate?url=$text";
 
-  if (parsed == null) {
-    showInvalidTextSnack(context);
-    return;
+    HttpClient client = HttpClient();
+    HttpClientRequest req = await client.getUrl(Uri.parse(url));
+    HttpClientResponse r = await req.close();
+
+    if (r.statusCode == 200) {
+      String content = await readResponse(r);
+      Map<String, dynamic> data = jsonDecode(content);
+      Note ultimateNote = Note.fromJson(data, Uuid().v4());
+
+      Note onNew() {
+        return ultimateNote;
+      }
+
+      onImport(Note note) {
+        note.sections.addAll(ultimateNote.sections);
+        LocalStorage().syncNote(note);
+      }
+
+      showImportDialog(
+          context, "Import ${ultimateNote.title}", onNew, onImport);
+    } else {
+      showSnack(Scaffold.of(context), "Cannot retrieve note from $text");
+    }
+  } else {
+    ParsedNote parsed = parseText(text);
+
+    if (parsed == null) {
+      showInvalidTextSnack(context);
+      return;
+    }
+
+    Note onNew() {
+      Note empty = Note.empty();
+      empty.sections = parsed.sections;
+      if (parsed.title != null) empty.title = parsed.title;
+      return empty;
+    }
+
+    onImport(Note note) {
+      note.sections.addAll(parsed.sections);
+      LocalStorage().syncNote(note);
+    }
+
+    showImportDialog(
+        context, "Import ${parsed.sections.length} Sections", onNew, onImport);
   }
-
-  Note onNew() {
-    Note empty = Note.empty();
-    empty.sections = parsed.sections;
-    if (parsed.title != null) empty.title = parsed.title;
-    return empty;
-  }
-
-  onImport(Note note) {
-    note.sections.addAll(parsed.sections);
-    LocalStorage().syncNote(note);
-  }
-
-  showImportDialog(
-      context, "Import ${parsed.sections.length} Sections", onNew, onImport);
 }

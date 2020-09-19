@@ -175,9 +175,9 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       _themeItem(),
       _audioFormatItem(),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Export"), onPressed: _onExport),
+      RaisedButton(child: Text("Backup"), onPressed: _onExport),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Import"), onPressed: _onImport),
+      RaisedButton(child: Text("Restore"), onPressed: _onImport),
       SizedBox(height: 10),
     ];
 
@@ -199,6 +199,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     return Scaffold(
         key: _globalKey,
         appBar: AppBar(
+            title: Text("Settings"),
             leading: IconButton(
                 icon: Icon(Icons.menu), onPressed: widget.onMenuPressed)),
         floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
