@@ -92,7 +92,15 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Expanded(child: Text("Name:")),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text("Name:"),
+          Text(
+            "Used for copyright in exported files",
+            textScaleFactor: 0.4,
+          )
+        ])),
         RaisedButton(
             child: Text(store.name == null ? "Edit" : store.name),
             onPressed: _showEditNameDialog),

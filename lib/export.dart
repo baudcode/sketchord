@@ -4,6 +4,7 @@ import 'package:flutter_share/flutter_share.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:sound/backup.dart';
+import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
 import 'package:path/path.dart' as p;
@@ -24,7 +25,12 @@ String getExtension(ExportType t) {
 }
 
 class Exporter {
-  static Future<String> export(Note note, ExportType t) {
+  static Future<String> export(Note note, ExportType t) async {
+    if (note.artist == null) {
+      Settings settings = await LocalStorage().getSettings();
+      note.artist = settings.name;
+    }
+
     switch (t) {
       case ExportType.JSON:
         return json(note);
@@ -50,7 +56,12 @@ class Exporter {
     String path = p.join(d.path, "${note.title}.txt");
 
     String info = note.getInfoText();
-    String contents = note.title + "\n";
+    String contents = "";
+
+    if (note.artist != null) {
+      contents += "© ${note.artist} \n";
+    }
+    contents += note.title + "\n";
 
     if (info != null) {
       contents += info;
@@ -104,9 +115,18 @@ class Exporter {
     pdf.addPage(pw.Page(
         pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
-          return pw.Padding(
-              padding: pw.EdgeInsets.all(10.0),
-              child: pw.Column(children: titleRows..addAll(sections)));
+          return pw.Stack(children: [
+            (note.artist == null)
+                ? pw.Container()
+                : pw.Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: pw.Text("© ${note.artist}"),
+                  ),
+            pw.Padding(
+                padding: pw.EdgeInsets.all(10.0),
+                child: pw.Column(children: titleRows..addAll(sections)))
+          ]);
         })); // Page
 
     final file = File(path);
