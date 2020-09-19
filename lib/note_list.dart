@@ -95,11 +95,16 @@ class NoteListState extends State<NoteList> {
                     ]))
               ]));
     } else {
+      print("index: $index");
+      print(widget.items);
       var item = widget.items[index];
 
       return Padding(
           padding: EdgeInsets.only(
-              left: padding, right: padding, top: index == 0 ? padding : 0),
+              left: padding,
+              right: padding,
+              top: index == 0 ? padding : 0,
+              bottom: index == widget.items.length - 1 ? padding : 0),
           child: NoteItem(
               item.note,
               item.isSelected,
@@ -112,7 +117,7 @@ class NoteListState extends State<NoteList> {
 
   _body(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    int childCount = (widget.singleView) ? notes.length : 1;
+    int childCount = (widget.singleView) ? widget.items.length : 1;
 
     if (widget.sliver) {
       return SliverList(
