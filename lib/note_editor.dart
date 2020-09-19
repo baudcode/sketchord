@@ -4,6 +4,7 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:flutter_share/flutter_share.dart';
+import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
@@ -166,8 +167,12 @@ class NoteEditorState extends State<NoteEditor>
           icon: Icon((store.note.starred) ? Icons.star : Icons.star_border),
           onPressed: toggleStarred),
       IconButton(icon: icon, onPressed: _onFloatingActionButtonPress),
+      IconButton(
+          icon: Icon(Icons.color_lens),
+          onPressed: () =>
+              showColorPickerDialog(context, store.note.color, changeColor))
     ];
-
+    print(store.note.color);
     return WillPopScope(
         onWillPop: () async {
           stopAction();
@@ -176,11 +181,12 @@ class NoteEditorState extends State<NoteEditor>
         child: Scaffold(
             key: _globalKey,
             appBar: AppBar(
+              backgroundColor: store.note.color,
               actions: actions,
             ),
             bottomSheet:
                 showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
-            body: Stack(children: stackChildren)));
+            body: Container(child: Stack(children: stackChildren))));
   }
 }
 

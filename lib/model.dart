@@ -136,6 +136,14 @@ String serializeDateTime(DateTime t) {
   return "${t.year}-${t.month}-${t.day}-${t.hour}-${t.minute}-${t.second}-${t.microsecond}-${t.millisecond}";
 }
 
+List<int> serializeColor(Color color) {
+  return [color.alpha, color.red, color.green, color.blue];
+}
+
+Color deserializeColor(List<dynamic> data) {
+  return Color.fromARGB(data[0], data[1], data[2], data[3]);
+}
+
 class Note {
   List<Section> sections;
   String id;
@@ -150,6 +158,7 @@ class Note {
   String artist;
   DateTime createdAt, lastModified;
   bool discarded;
+  Color color;
 
   factory Note.empty() {
     return Note(
@@ -165,6 +174,7 @@ class Note {
         artist: null,
         starred: false,
         sections: [Section(content: "", title: "")],
+        color: null,
         audioFiles: []);
   }
 
@@ -180,6 +190,7 @@ class Note {
       "label": label,
       "artist": artist,
       "starred": starred,
+      "color": serializeColor(color),
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
       "audioFiles":
@@ -200,6 +211,7 @@ class Note {
       instrument: json['instrument'],
       label: json['label'],
       starred: json['starred'],
+      color: json.containsKey("color") ? deserializeColor(json['color']) : null,
       discarded: json.containsKey("discarded") ? json['discarded'] : false,
       artist: json.containsKey("artist") ? json['artist'] : null,
       sections:
@@ -237,6 +249,7 @@ class Note {
       this.sections,
       this.audioFiles,
       this.artist,
+      this.color,
       this.starred = false,
       this.discarded = false}) {
     if (this.id == null) {

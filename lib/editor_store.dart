@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_flux/flutter_flux.dart' show Action, Store, StoreToken;
 import 'local_storage.dart';
 import 'file_manager.dart';
@@ -161,7 +162,13 @@ class NoteEditorStore extends Store {
 
     toggleStarred.listen((event) async {
       _note.starred = !_note.starred;
-      await LocalStorage().syncNoteAttr(note, 'starred');
+      await LocalStorage().syncNoteAttr(_note, 'starred');
+      trigger();
+    });
+
+    changeColor.listen((Color event) async {
+      _note.color = event;
+      await LocalStorage().syncNoteAttr(_note, 'color');
       trigger();
     });
   }
@@ -189,5 +196,6 @@ Action<Tuple2<AudioFile, int>> restoreAudioFile = Action();
 Action<Tuple2<AudioFile, bool>> uploadCallback = Action();
 Action updateNoteEditorView = Action();
 Action toggleStarred = Action();
+Action<Color> changeColor = Action();
 
 StoreToken noteEditorStoreToken = StoreToken(NoteEditorStore());

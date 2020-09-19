@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/model.dart';
@@ -26,6 +28,11 @@ class AbstractNoteItem extends StatelessWidget {
                 .textTheme
                 .headline5
                 .copyWith(fontWeight: FontWeight.w200)));
+  }
+
+  BoxDecoration getSelectedDecoration(BuildContext context) {
+    return BoxDecoration(
+        color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.4));
   }
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
@@ -150,6 +157,30 @@ class SmallNoteItem extends AbstractNoteItem {
 
   @override
   Widget build(BuildContext context) {
+    Widget child = Card(
+        color: note.color,
+        child: Container(
+            decoration: isSelected ? getSelectedDecoration(context) : null,
+            child: empty
+                ? emptyText(context)
+                : hasOnlyTitle
+                    ? onlyTitle(context)
+                    : Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: highlightTitle(
+                                      context, note.title, highlight)),
+                              highlightSectionText(
+                                  context, this.sectionText(), highlight),
+                            ]))));
+    List<Widget> stackChildren = [];
+    stackChildren.add(child);
+
     return GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -157,27 +188,7 @@ class SmallNoteItem extends AbstractNoteItem {
             width: this.width,
             height: (empty) ? 50 : null,
             padding: this.padding,
-            child: Card(
-                color: (isSelected)
-                    ? Theme.of(context).accentColor
-                    : Theme.of(context).cardColor,
-                child: empty
-                    ? emptyText(context)
-                    : hasOnlyTitle
-                        ? onlyTitle(context)
-                        : Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Padding(
-                                      padding: EdgeInsets.only(bottom: 10),
-                                      child: highlightTitle(
-                                          context, note.title, highlight)),
-                                  highlightSectionText(
-                                      context, this.sectionText(), highlight),
-                                ])))));
+            child: Stack(children: stackChildren)));
   }
 }
 
@@ -248,21 +259,22 @@ class NoteItem extends AbstractNoteItem {
         onLongPress: onLongPress,
         child: Container(
             child: Card(
-                color: (isSelected)
-                    ? Theme.of(context).accentColor
-                    : Theme.of(context).cardColor,
-                child: (empty)
-                    ? emptyText(context)
-                    : hasOnlyTitle
-                        ? onlyTitle(context)
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                                _top(),
-                                _title(context),
-                                _text(),
-                                _bottom(),
-                              ]))));
+                color: note.color,
+                child: Container(
+                    decoration:
+                        isSelected ? getSelectedDecoration(context) : null,
+                    child: (empty)
+                        ? emptyText(context)
+                        : hasOnlyTitle
+                            ? onlyTitle(context)
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                    _top(),
+                                    _title(context),
+                                    _text(),
+                                    _bottom(),
+                                  ])))));
   }
 }

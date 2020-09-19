@@ -23,6 +23,7 @@ class App extends StatefulWidget {
       primaryColor: mainColor,
       accentColor: mainColor,
       cursorColor: mainColor,
+      cardColor: Colors.grey.shade800,
       appBarTheme: ThemeData.dark()
           .appBarTheme
           .copyWith(color: appBarColor, textTheme: ThemeData.dark().textTheme),
@@ -45,9 +46,9 @@ class App extends StatefulWidget {
       primaryColor: mainColor,
       cursorColor: mainColor,
       textSelectionColor: mainColor,
-      appBarTheme: ThemeData.light()
-          .appBarTheme
-          .copyWith(color: appBarColor, textTheme: ThemeData.light().textTheme),
+      cardColor: Colors.grey.shade200,
+      appBarTheme: ThemeData.light().appBarTheme.copyWith(
+          color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
       chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
       indicatorColor: mainColor,
       accentColor: mainColor,

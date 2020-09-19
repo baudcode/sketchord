@@ -93,14 +93,17 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(child: Text("Name:")),
-        RaisedButton(child: Text(store.name), onPressed: _showEditNameDialog),
+        RaisedButton(
+            child: Text(store.name == null ? "Edit" : store.name),
+            onPressed: _showEditNameDialog),
       ],
     ));
   }
 
   _showEditNameDialog() {
+    print(store.name);
     TextEditingController _controller = TextEditingController.fromValue(
-        TextEditingValue(text: store.name == null ? "Edit" : store.name));
+        TextEditingValue(text: (store.name == null ? "Edit" : store.name)));
     showDialog(
       context: context,
       builder: (BuildContext context) {
