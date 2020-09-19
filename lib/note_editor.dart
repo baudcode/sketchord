@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
@@ -9,6 +10,7 @@ import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/dialogs/export_dialog.dart';
+import 'package:sound/export.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
@@ -103,6 +105,17 @@ class NoteEditorState extends State<NoteEditor>
     softDeleteAudioFile(file);
   }
 
+  _copyToClipboard(BuildContext context) {
+    String text = Exporter.getText(store.note);
+
+    ClipboardManager.copyToClipBoard(text).then((result) {
+      final snackBar = SnackBar(
+        content: Text('Copied to Clipboard'),
+      );
+      _globalKey.currentState.showSnackBar(snackBar);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> items = [];
@@ -170,7 +183,10 @@ class NoteEditorState extends State<NoteEditor>
       IconButton(
           icon: Icon(Icons.color_lens),
           onPressed: () =>
-              showColorPickerDialog(context, store.note.color, changeColor))
+              showColorPickerDialog(context, store.note.color, changeColor)),
+      IconButton(
+          icon: Icon(Icons.content_copy),
+          onPressed: () => _copyToClipboard(context))
     ];
     print(store.note.color);
     return WillPopScope(

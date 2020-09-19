@@ -39,6 +39,7 @@ dependencies:
   flushbar: ^1.10.4
   pdf: ^1.11.1
   receive_sharing_intent: ^1.4.1
+  clipboard_manager: ^0.0.4
   # html: ^0.14.0+3
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

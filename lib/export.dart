@@ -51,10 +51,7 @@ class Exporter {
         filePath: path);
   }
 
-  static Future<String> text(Note note) async {
-    Directory d = await Backup().getFilesDir();
-    String path = p.join(d.path, "${note.title}.txt");
-
+  static String getText(Note note) {
     String info = note.getInfoText();
     String contents = "";
 
@@ -72,6 +69,14 @@ class Exporter {
       contents += section.content;
       contents += "\n\n";
     }
+    return contents;
+  }
+
+  static Future<String> text(Note note) async {
+    Directory d = await Backup().getFilesDir();
+    String path = p.join(d.path, "${note.title}.txt");
+
+    String contents = getText(note);
     File(path).writeAsStringSync(contents);
     return path;
   }
