@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:sound/editor_views/additional_info.dart';
+import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
 class NoteViewer extends StatefulWidget {
   final Note note;
-  NoteViewer({this.note, Key key}) : super(key: key);
+  final bool showAudioFiles, showAdditionalInformation, showTitle;
+
+  NoteViewer(this.note,
+      {this.showAudioFiles = true,
+      this.showTitle = true,
+      this.showAdditionalInformation = true,
+      Key key})
+      : super(key: key);
 
   @override
   _NoteViewerState createState() => _NoteViewerState();
@@ -55,6 +64,10 @@ class _NoteViewerState extends State<NoteViewer> {
   @override
   Widget build(BuildContext context) {
     List<Widget> items = [];
+
+    if (widget.showTitle) {
+      items.add(NoteEditorTitle(widget.note.title, allowEdit: false));
+    }
 
     for (Section section in widget.note.sections) {
       items
@@ -140,6 +153,29 @@ class _NoteViewerState extends State<NoteViewer> {
         child: Row(
           children: (isPlaying) ? playingActions : actions,
         ));
+
+    if (widget.showAdditionalInformation) {
+      items.add(NoteEditorAdditionalInfo(
+        widget.note,
+        allowEdit: false,
+      ));
+    }
+
+    // add audio files
+    if (widget.showAudioFiles) {
+      items.add(Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'Audio Files',
+            style: Theme.of(context).textTheme.subtitle1,
+          )));
+
+      items.addAll(widget.note.audioFiles.map<Widget>((e) {
+        return AudioFileListItem(e, onPressed: () {
+          playInDialog(context, e);
+        });
+      }));
+    }
 
     return Scaffold(
         body: Container(

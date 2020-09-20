@@ -121,7 +121,7 @@ class NoteEditorState extends State<NoteEditor>
   Widget build(BuildContext context) {
     List<Widget> items = [];
 
-    items.add(NoteEditorTitle(title: store.note.title));
+    items.add(NoteEditorTitle(store.note.title));
 
     for (var i = 0; i < store.note.sections.length; i++) {
       if (!dismissables.containsKey(store.note.sections[i]))
@@ -191,7 +191,7 @@ class NoteEditorState extends State<NoteEditor>
             Navigator.push(
                 context,
                 new MaterialPageRoute(
-                    builder: (context) => NoteViewer(note: store.note)));
+                    builder: (context) => NoteViewer(store.note)));
           }),
       IconButton(
           icon: Icon(Icons.content_copy),

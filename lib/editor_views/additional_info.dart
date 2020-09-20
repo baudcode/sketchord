@@ -4,14 +4,17 @@ import 'package:sound/model.dart';
 
 class NoteEditorTitle extends StatelessWidget {
   final String title;
+  final bool allowEdit;
 
-  const NoteEditorTitle({this.title, Key key}) : super(key: key);
+  const NoteEditorTitle(this.title, {this.allowEdit = true, Key key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
         visualDensity: VisualDensity.comfortable,
         title: TextFormField(
+            enabled: allowEdit,
             initialValue: title,
             decoration: InputDecoration(
                 labelText: "Title",
@@ -24,15 +27,18 @@ class NoteEditorTitle extends StatelessWidget {
 
 class NoteEditorAdditionalInfo extends StatelessWidget {
   final Note note;
+  final bool allowEdit;
 
-  const NoteEditorAdditionalInfo(this.note, {Key key}) : super(key: key);
+  const NoteEditorAdditionalInfo(this.note, {this.allowEdit = true, Key key})
+      : super(key: key);
 
   _edit({initial, title, hint, onChanged}) {
     return TextFormField(
         initialValue: initial,
         decoration: InputDecoration(
             labelText: title, border: InputBorder.none, hintText: hint),
-        onChanged: (V) => onChanged(V),
+        enabled: allowEdit,
+        onChanged: (v) => onChanged(v),
         maxLines: 1);
   }
 

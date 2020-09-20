@@ -1,13 +1,39 @@
 import 'dart:io';
 
-import 'package:flushbar/flushbar.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
 import 'package:sound/share.dart';
 import 'package:sound/utils.dart';
-import 'package:tuple/tuple.dart';
+
+class AudioFileListItem extends StatelessWidget {
+  final Function onLongPress, onPressed;
+  final AudioFile file;
+
+  AudioFileListItem(this.file, {this.onLongPress, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget subTitle = Text(file.createdAt.toIso8601String());
+    Widget trailing = Text(file.durationString);
+
+    if (file.loopRange != null)
+      trailing = Text("${file.loopString} / ${file.durationString}");
+
+    return ListTile(
+      onLongPress: onLongPress,
+      trailing: trailing,
+      subtitle: subTitle,
+      dense: true,
+      visualDensity: VisualDensity.comfortable,
+      contentPadding: EdgeInsets.all(2),
+      leading: IconButton(icon: Icon(Icons.play_arrow), onPressed: onPressed),
+      title: Text(file.name),
+    );
+  }
+}
 
 class AudioFileView extends StatelessWidget {
   final AudioFile file;
@@ -60,36 +86,16 @@ class AudioFileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget subTitle;
-
-    if (file.downloadURL != null)
-      subTitle = Text("synced " + file.createdAt.toIso8601String());
-    else
-      subTitle = Text(file.createdAt.toIso8601String());
-
-    Widget trailing = Text(file.durationString);
-    if (file.loopRange != null)
-      trailing = Text("${file.loopString} / ${file.durationString}");
-
-    var view = ListTile(
-      onLongPress: () => _onAudioFileLongPress(context, file),
-      trailing: trailing,
-      subtitle: subTitle,
-      dense: true,
-      visualDensity: VisualDensity.comfortable,
-      contentPadding: EdgeInsets.all(2),
-      leading: IconButton(
-          icon: Icon(Icons.play_arrow),
-          onPressed: () {
-            print("trying to play ${file.path}");
-            if (File(file.path).existsSync()) {
-              startPlaybackAction(file);
-            } else {
-              showSnack(globalKey.currentState, "This files was removed!");
-            }
-          }),
-      title: Text(file.name),
-    );
+    var view = AudioFileListItem(file,
+        onLongPress: () => _onAudioFileLongPress(context, file),
+        onPressed: () {
+          print("trying to play ${file.path}");
+          if (File(file.path).existsSync()) {
+            startPlaybackAction(file);
+          } else {
+            showSnack(globalKey.currentState, "This files was removed!");
+          }
+        });
 
     return Dismissible(
       child: view,
@@ -122,4 +128,96 @@ class AudioFileView extends StatelessWidget {
               padding: EdgeInsets.all(10))),
     );
   }
+}
+
+playInDialog(BuildContext context, AudioFile f) {
+  Duration position = Duration(seconds: 0);
+  Duration duration = f.duration;
+
+  RecorderState state = RecorderState.PLAYING;
+  AudioPlayer player = AudioPlayer();
+
+  Future.delayed(Duration(milliseconds: 100), () => player.play(f.path));
+
+  showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          void onPlay() async {
+            await player.resume();
+            setState(() => state = RecorderState.PLAYING);
+          }
+
+          void onPause() async {
+            await player.pause();
+            setState(() => state = RecorderState.PAUSING);
+          }
+
+          void onSeek(Duration duration) async {
+            await player.seek(duration);
+          }
+
+          void onStop() async {
+            await player.stop();
+            Navigator.of(context).pop();
+          }
+
+          player.onAudioPositionChanged.listen((event) {
+            print(event);
+            setState(() => position = event);
+          });
+
+          player.onDurationChanged.listen((event) {
+            if (event != null &&
+                event.inMilliseconds != duration.inMilliseconds) {
+              setState(() {
+                duration = event;
+              });
+            }
+          });
+
+          player.onPlayerCompletion.listen((event) {
+            setState(() {
+              state = RecorderState.STOP;
+            });
+            onPlay();
+          });
+
+          return AlertDialog(
+            title: Text(f.name, textScaleFactor: 0.8),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    height: 50,
+                    child: Expanded(
+                        child: Slider(
+                      min: 0.0,
+                      max: (f.duration.inMilliseconds / 1000).toDouble(),
+                      value: (position.inMilliseconds / 1000).toDouble(),
+                      onChanged: (value) {
+                        print("on changed to $value");
+                        onSeek(Duration(milliseconds: (value * 1000).floor()));
+                      },
+                      //activeColor: Colors.yellow,
+                    ))), // slider
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                        icon: Icon(state == RecorderState.PLAYING
+                            ? Icons.pause
+                            : Icons.play_arrow),
+                        onPressed:
+                            state == RecorderState.PLAYING ? onPause : onPlay),
+                    IconButton(icon: Icon(Icons.stop), onPressed: onStop),
+                  ],
+                ) // controls
+              ],
+            ),
+            contentPadding: EdgeInsets.all(8),
+            titlePadding: EdgeInsets.all(16),
+          );
+        });
+      });
 }
