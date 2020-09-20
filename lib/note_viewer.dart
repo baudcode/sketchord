@@ -76,6 +76,7 @@ class _NoteViewerState extends State<NoteViewer> {
 
     List<Widget> playingActions = [
       IconButton(
+          color: Theme.of(context).accentColor,
           icon: Icon(Icons.stop),
           onPressed: () {
             setState(() {
@@ -83,6 +84,7 @@ class _NoteViewerState extends State<NoteViewer> {
             });
           }),
       IconButton(
+          color: Theme.of(context).accentColor,
           icon: Icon(Icons.fast_rewind),
           onPressed: () {
             setState(() {
@@ -91,6 +93,7 @@ class _NoteViewerState extends State<NoteViewer> {
             _updateScrollOffset();
           }),
       IconButton(
+          color: Theme.of(context).accentColor,
           icon: Icon(Icons.fast_forward),
           onPressed: () {
             setState(() {
@@ -103,6 +106,7 @@ class _NoteViewerState extends State<NoteViewer> {
     List<Widget> actions = [
       IconButton(
           icon: Icon(Icons.play_arrow),
+          color: Theme.of(context).accentColor,
           onPressed: () {
             if (!isPlaying) {
               setState(() {
@@ -122,6 +126,7 @@ class _NoteViewerState extends State<NoteViewer> {
             }
           }),
       IconButton(
+          color: Theme.of(context).accentColor,
           icon: Icon(Icons.zoom_in),
           onPressed: () {
             setState(() {
@@ -130,6 +135,7 @@ class _NoteViewerState extends State<NoteViewer> {
             _updateZoom();
           }),
       IconButton(
+          color: Theme.of(context).accentColor,
           icon: Icon(Icons.zoom_out),
           onPressed: () {
             setState(() {
@@ -142,12 +148,7 @@ class _NoteViewerState extends State<NoteViewer> {
     Widget overlay = Container(
         decoration: BoxDecoration(
           shape: BoxShape.rectangle,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).accentColor.withAlpha(100),
-              blurRadius: 10.0,
-            ),
-          ],
+
           //border: Border.all(width: 1, color: Theme.of(context).accentColor)),
         ),
         child: Row(
