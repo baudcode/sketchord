@@ -1,6 +1,7 @@
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
@@ -160,10 +161,12 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       for (Note note in notes) {
         // update id
         note.id = Uuid().v4();
-        await LocalStorage().syncNote(note);
+        //await LocalStorage().syncNote(note);
       }
-      showSnack(_globalKey.currentState,
-          "Successfully imported ${notes.length} notes");
+      showSelectNotesImportDialog(context, (List<Note> restoredNotes) {
+        showSnack(_globalKey.currentState,
+            "Successfully restored ${restoredNotes.length} notes");
+      }, notes, title: "Which songs would you like to restore?");
     } on ImportException {
       showSnack(_globalKey.currentState, "Error while importing zip");
     }

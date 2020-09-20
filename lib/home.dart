@@ -30,7 +30,7 @@ class Home extends StatelessWidget {
     Future.delayed(Duration(milliseconds: 100), () async {
       bool initialStart = await LocalStorage().isInitialStart();
       if (initialStart) {
-        showInitialImportDialog(context, () {
+        showInitialImportDialog(context, (_) {
           LocalStorage().setInitialStartDone();
         });
       }

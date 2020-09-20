@@ -12,12 +12,34 @@ Future<List<Note>> getExampleNotes() async {
   return _notes.map<Note>((s) => Note.fromJson(s, s['id'])).toList();
 }
 
-showInitialImportDialog(BuildContext context, Function onDone) async {
+showInitialImportDialog(
+    BuildContext context, ValueChanged<List<Note>> onDone) async {
   List<Note> exampleNotes = await getExampleNotes();
+  showSelectNotesImportDialog(context, onDone, exampleNotes);
+}
+
+showSelectNotesImportDialog(
+    BuildContext context, ValueChanged<List<Note>> onDone, List<Note> notes,
+    {String title =
+        "Would you like to import any of these example songs?"}) async {
+  showSelectNotestDialog(context, (List<Note> selected) async {
+    for (Note note in selected) {
+      await LocalStorage().syncNote(note);
+      Future.delayed(Duration(milliseconds: 50));
+    }
+    onDone(selected);
+  }, onDone, notes, title: title);
+}
+
+typedef NoteListCallback = Future<void> Function(List<Note>);
+
+showSelectNotestDialog(BuildContext context, NoteListCallback onApply,
+    Function onCancel, List<Note> notes,
+    {String title = "Select Notes"}) async {
   Map<Note, bool> checked = {};
   bool isImporting = false;
 
-  for (Note note in exampleNotes) {
+  for (Note note in notes) {
     checked[note] = true;
   }
 
@@ -26,16 +48,13 @@ showInitialImportDialog(BuildContext context, Function onDone) async {
         .where((element) => element.value)
         .map((v) => v.key)
         .toList();
-    for (Note note in checkedNotes) {
-      await LocalStorage().syncNote(note);
-      Future.delayed(Duration(milliseconds: 50));
-    }
-    onDone();
+
+    await onApply(checkedNotes);
     Navigator.of(context).pop();
   }
 
   _onCancel() {
-    onDone();
+    onCancel();
     Navigator.of(context).pop();
   }
 
@@ -47,13 +66,12 @@ showInitialImportDialog(BuildContext context, Function onDone) async {
           return AlertDialog(
               titlePadding: EdgeInsets.all(16),
               contentPadding: EdgeInsets.all(18),
-              title:
-                  Text("Would you like to import any of these example songs?"),
+              title: Text(title),
               content: isImporting
                   ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
                       itemBuilder: (context, index) {
-                        Note note = exampleNotes[index];
+                        Note note = notes[index];
                         return CheckboxListTile(
                             activeColor: Theme.of(context).accentColor,
                             value: checked[note],
@@ -62,7 +80,7 @@ showInitialImportDialog(BuildContext context, Function onDone) async {
                             },
                             title: Text(note.title));
                       },
-                      itemCount: exampleNotes.length,
+                      itemCount: notes.length,
                     ),
               actions: isImporting
                   ? []
