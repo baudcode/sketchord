@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_list.dart';
+import 'package:sound/note_viewer.dart';
 import 'package:sound/storage.dart';
 
 class Trash extends StatefulWidget {
@@ -60,6 +61,13 @@ class _TrashState extends State<Trash> {
       setState(() {
         notes.removeWhere((n) => isSelected(n));
       });
+    } else if (action == 'delete_all') {
+      for (Note note in notes) {
+        LocalStorage().deleteNote(note);
+      }
+      setState(() {
+        notes = [];
+      });
     }
   }
 
@@ -86,6 +94,16 @@ class _TrashState extends State<Trash> {
 
   _appBar() {
     return AppBar(
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _runPopupAction,
+            itemBuilder: (context) {
+              return [
+                PopupMenuItem(value: "delete_all", child: Text("Empty trash"))
+              ];
+            },
+          )
+        ],
         title: Text("Trash"),
         leading: IconButton(
             icon: Icon(Icons.menu), onPressed: widget.onMenuPressed));
@@ -110,12 +128,45 @@ class _TrashState extends State<Trash> {
         .map((n) => NoteListItemModel(note: n, isSelected: isSelected(n)))
         .toList();
 
+    _restore(Note note) {
+      restoreNotes([note]);
+
+      setState(() {
+        notes.removeWhere((n) => n.id == note.id);
+      });
+
+      Navigator.of(context).pop();
+    }
+
+    _deleteForever(Note note) {
+      LocalStorage().deleteNote(note);
+
+      setState(() {
+        notes.removeWhere((n) => n.id == note.id);
+      });
+      Navigator.of(context).pop();
+    }
+
     onTap(Note note) {
       if (isAnyNoteSelected) {
         _selectNote(note);
       } else {
-        // Navigator.push(context,
-        //     new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+        Navigator.push(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => NoteViewer(
+                      note,
+                      actions: [
+                        IconButton(
+                            icon: Icon(Icons.restore),
+                            onPressed: () => _restore(note)),
+                        IconButton(
+                          icon: Icon(Icons.delete_forever),
+                          onPressed: () => _deleteForever(note),
+                        )
+                      ],
+                      showZoomPlayback: false,
+                    )));
       }
     }
 
