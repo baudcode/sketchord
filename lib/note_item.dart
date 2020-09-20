@@ -221,25 +221,29 @@ class NoteItem extends AbstractNoteItem {
   _title(context) {
     return Padding(
         child: Row(children: [
-          Text(
-            note.title,
-            textScaleFactor: .8,
-            style: Theme.of(context).textTheme.headline6,
-          )
+          highlightTitle(context, note.title, highlight)
+          // Text(
+          //   note.title,
+          //   textScaleFactor: .8,
+          //   style: Theme.of(context).textTheme.headline6,
+          // )
         ]),
         padding: EdgeInsets.all(padding));
   }
 
-  _text() {
+  _text(context) {
     return Padding(
         padding: EdgeInsets.all(padding),
-        child: Text(
-          this.sectionText(),
-          textAlign: TextAlign.left,
-          softWrap: true,
-          maxLines: 5,
-          overflow: TextOverflow.clip,
-        ));
+        child: highlightSectionText(context, this.sectionText(), highlight,
+            maxLines: 6)
+        // Text(
+        //   this.sectionText(),
+        //   textAlign: TextAlign.left,
+        //   softWrap: true,
+        //   maxLines: 5,
+        //   overflow: TextOverflow.clip,
+        // )
+        );
   }
 
   _bottom() {
@@ -275,7 +279,7 @@ class NoteItem extends AbstractNoteItem {
                                 children: <Widget>[
                                     _top(),
                                     _title(context),
-                                    _text(),
+                                    _text(context),
                                     _bottom(),
                                   ])))));
   }
