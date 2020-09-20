@@ -32,12 +32,15 @@ class App extends StatefulWidget {
       chipTheme: ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
       sliderTheme: ThemeData.dark().sliderTheme.copyWith(
           trackHeight: 5,
-          activeTickMarkColor: Colors.green,
           showValueIndicator: ShowValueIndicator.always,
+          activeTrackColor: mainColor,
+          valueIndicatorColor: mainColor,
+          activeTickMarkColor: mainColor,
+          thumbColor: mainColor,
           valueIndicatorTextStyle: ThemeData.dark().primaryTextTheme.bodyText1,
 
           //overlayColor: mainColor
-          inactiveTrackColor: Colors.redAccent),
+          inactiveTrackColor: Colors.white),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       floatingActionButtonTheme:
           FloatingActionButtonThemeData(backgroundColor: mainColor));
