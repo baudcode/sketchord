@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
@@ -25,6 +26,15 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Future.delayed(Duration(milliseconds: 100), () async {
+      bool initialStart = await LocalStorage().isInitialStart();
+      if (initialStart) {
+        showInitialImportDialog(context, () async {
+          await LocalStorage().setInitialStartDone();
+        });
+      }
+    });
+
     LocalStorage().getNotes().then((value) => LocalStorage()
         .controller
         .sink
