@@ -28,16 +28,18 @@ class AudioFile {
 
   Duration duration; // duration is milliseconds
   AudioFile(
-      {this.path,
-      this.duration,
+      {@required this.path,
+      @required this.duration,
       this.id,
       this.createdAt,
       this.lastModified,
       this.name,
       this.loopRange}) {
+    print("creating audio file with ${this.name} ${this.id}");
     if (id == null) id = Uuid().v4().toString();
     if (createdAt == null) createdAt = DateTime.now();
-    if (name == null)
+    if (lastModified == null) lastModified = DateTime.now();
+    if (name == null) {
       name = path
           .split('/')
           .last
@@ -45,6 +47,7 @@ class AudioFile {
           .replaceAll(".m4a", "")
           .replaceAll(".mp3", "")
           .replaceAll('.wav', '');
+    }
   }
 
   factory AudioFile.create(
@@ -65,6 +68,7 @@ class AudioFile {
         duration: deserializeDuration(map["duration"]),
         loopRange: deserializeRangeValues(map['loopRange']),
         id: map["id"],
+        name: map['name'],
         path: map["path"]);
   }
 
@@ -75,6 +79,7 @@ class AudioFile {
       "loopRange": serializeRangeValues(loopRange),
       "id": id,
       "path": path,
+      "name": name,
       "duration": serializeDuration(duration)
     };
   }

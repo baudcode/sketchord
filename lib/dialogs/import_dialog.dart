@@ -4,10 +4,13 @@ import 'package:sound/model.dart';
 import 'package:sound/note_editor.dart';
 
 typedef FutureNoteCallback = Future<Note> Function();
-typedef FutureNoteImportCallback = Future<void> Function(Note);
+typedef FutureNoteImportCallback = Future<Note> Function(Note);
 
 showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
-    FutureNoteImportCallback onImport) async {
+    FutureNoteImportCallback onImport,
+    {String newButtonText = 'Import as NEW',
+    String importButtonText = "Import",
+    bool openNote = true}) async {
   List<Note> notes = await LocalStorage().getActiveNotes();
 
   showDialog(
@@ -17,15 +20,18 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
       Note selected;
 
       _open(Note note) {
-        Navigator.push(context,
-            new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+        if (openNote) {
+          Navigator.push(context,
+              new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+        }
       }
 
       _import() async {
         // sync and pop current dialog
-        await onImport(selected);
+        Note note = await onImport(selected);
+        LocalStorage().syncNote(note);
         Navigator.of(context).pop();
-        _open(selected);
+        _open(note);
       }
 
       _onNew() async {
@@ -46,7 +52,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
                 children: [
                   Flexible(
                       child: RaisedButton(
-                          child: Text('Import as NEW'), onPressed: _onNew)),
+                          child: Text(newButtonText), onPressed: _onNew)),
                   SizedBox(height: 10),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Container(child: Text("-- or select a note --"))
@@ -78,7 +84,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
             ),
             // usually buttons at the bottom of the dialog
             new FlatButton(
-              child: new Text("Import"),
+              child: new Text(importButtonText),
               onPressed: (selected != null) ? _import : null,
             ),
           ],

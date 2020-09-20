@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
+import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/export.dart';
+import 'package:sound/file_manager.dart';
 import 'package:sound/note_viewer.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
@@ -149,7 +151,38 @@ class NoteEditorState extends State<NoteEditor>
 
     store.note.audioFiles.asMap().forEach((int index, AudioFile f) {
       items.add(AudioFileView(
-          f, index, () => _onAudioFileDelete(f, index), _globalKey));
+          file: f,
+          index: index,
+          onDelete: () => _onAudioFileDelete(f, index),
+          onMove: () {
+            showImportDialog(context, "Copy audio to", () async {
+              // new audio file
+
+              AudioFile copy = await FileManager().copyToNew(f);
+              Future.delayed(Duration(milliseconds: 200), () {
+                showSnack(_globalKey.currentState,
+                    "The audio file as copiedr to a new note");
+              });
+              Note note = Note.empty();
+              note.audioFiles.add(copy);
+              return note;
+            }, (Note note) async {
+              AudioFile copy = await FileManager().copyToNew(f);
+
+              Future.delayed(Duration(milliseconds: 200), () {
+                showSnack(_globalKey.currentState,
+                    "The audio file as copied to a ${note.title}");
+              });
+
+              note.audioFiles.add(copy);
+              return note;
+            },
+                openNote: false,
+                importButtonText: "Copy",
+                newButtonText: "Copy as NEW");
+          },
+          onShare: () => shareFile(f.path),
+          globalKey: _globalKey));
     });
 
     List<Widget> stackChildren = [];

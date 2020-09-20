@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/audio_action_dialog.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
@@ -39,9 +40,16 @@ class AudioFileView extends StatelessWidget {
   final AudioFile file;
   final int index;
   final GlobalKey globalKey;
-  final Function onDelete;
-  const AudioFileView(this.file, this.index, this.onDelete, this.globalKey,
-      {Key key})
+  final Function onDelete, onMove, onShare;
+
+  const AudioFileView(
+      {@required this.file,
+      @required this.index,
+      @required this.onDelete,
+      @required this.onShare,
+      @required this.onMove,
+      @required this.globalKey,
+      Key key})
       : super(key: key);
 
   _onAudioFileLongPress(BuildContext context, AudioFile file) {
@@ -108,7 +116,20 @@ class AudioFileView extends StatelessWidget {
         if (d == DismissDirection.endToStart) {
           return true;
         } else {
-          shareFile(file.path);
+          showAudioActionDialog(context, [
+            AudioAction(0, Icons.share, "Share"),
+            AudioAction(1, Icons.move_to_inbox, "Move"),
+          ], (action) {
+            Navigator.of(context).pop();
+
+            if (action.id == 0) {
+              // shareFile(file.path);
+              onShare();
+            } else if (action.id == 1) {
+              onMove();
+            }
+          });
+          // shareFile(file.path);
           return false;
         }
       },

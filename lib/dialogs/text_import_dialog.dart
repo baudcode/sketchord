@@ -122,9 +122,9 @@ showTextImportDialog(BuildContext context, String text) async {
         return ultimateNote;
       }
 
-      onImport(Note note) async {
+      Future<Note> onImport(Note note) async {
         note.sections.addAll(ultimateNote.sections);
-        LocalStorage().syncNote(note);
+        return note;
       }
 
       showImportDialog(
@@ -149,7 +149,7 @@ showTextImportDialog(BuildContext context, String text) async {
 
     onImport(Note note) async {
       note.sections.addAll(parsed.sections);
-      LocalStorage().syncNote(note);
+      return note;
     }
 
     showImportDialog(

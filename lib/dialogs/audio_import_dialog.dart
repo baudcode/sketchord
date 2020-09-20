@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/backup.dart';
 import 'package:sound/dialogs/import_dialog.dart';
+import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:path/path.dart' as p;
@@ -51,20 +52,6 @@ showAudioImportDialog(BuildContext context, List<File> files) {
   });
 }
 
-Future<File> moveFile(File sourceFile, String newPath) async {
-  print("Move file from ${sourceFile.path} to $newPath");
-  try {
-    /// prefer using rename as it is probably faster
-    /// if same directory path
-    return await sourceFile.rename(newPath);
-  } catch (e) {
-    /// if rename fails, copy the source file and then delete it
-    final newFile = await sourceFile.copy(newPath);
-    await sourceFile.delete();
-    return newFile;
-  }
-}
-
 _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
   _prepareFiles() async {
     List<AudioFile> copied = [];
@@ -72,18 +59,8 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
     for (AudioFile f in files) {
       Directory filesDir = await Backup().getFilesDir();
       String newPath = p.join(filesDir.path, p.basename(f.path));
-      File fileCopy = await moveFile(File(f.path), newPath);
-
-      AudioFile copy = AudioFile(
-          createdAt: f.createdAt,
-          duration: f.duration,
-          lastModified: f.lastModified,
-          loopRange: f.loopRange,
-          id: f.id,
-          path: fileCopy.path,
-          name: f.name);
-
-      copied.add(copy);
+      AudioFile move = await FileManager().move(f, newPath, id: f.id);
+      copied.add(move);
     }
     return copied;
   }
@@ -94,9 +71,9 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
     return note;
   }
 
-  onImport(Note note) async {
+  Future<Note> onImport(Note note) async {
     note.audioFiles.addAll(await _prepareFiles());
-    LocalStorage().syncNote(note);
+    return note;
   }
 
   showImportDialog(
