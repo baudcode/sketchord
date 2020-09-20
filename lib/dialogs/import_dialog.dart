@@ -3,8 +3,11 @@ import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_editor.dart';
 
-showImportDialog(BuildContext context, String title, Function onNew,
-    ValueChanged<Note> onImport) async {
+typedef FutureNoteCallback = Future<Note> Function();
+typedef FutureNoteImportCallback = Future<void> Function(Note);
+
+showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
+    FutureNoteImportCallback onImport) async {
   List<Note> notes = await LocalStorage().getActiveNotes();
 
   showDialog(
@@ -20,13 +23,13 @@ showImportDialog(BuildContext context, String title, Function onNew,
 
       _import() async {
         // sync and pop current dialog
-        onImport(selected);
+        await onImport(selected);
         Navigator.of(context).pop();
         _open(selected);
       }
 
       _onNew() async {
-        Note newNote = onNew();
+        Note newNote = await onNew();
         LocalStorage().syncNote(newNote);
         Navigator.of(context).pop();
         _open(newNote);

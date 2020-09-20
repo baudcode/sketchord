@@ -118,11 +118,11 @@ showTextImportDialog(BuildContext context, String text) async {
       Map<String, dynamic> data = jsonDecode(content);
       Note ultimateNote = Note.fromJson(data, Uuid().v4());
 
-      Note onNew() {
+      Future<Note> onNew() async {
         return ultimateNote;
       }
 
-      onImport(Note note) {
+      onImport(Note note) async {
         note.sections.addAll(ultimateNote.sections);
         LocalStorage().syncNote(note);
       }
@@ -140,14 +140,14 @@ showTextImportDialog(BuildContext context, String text) async {
       return;
     }
 
-    Note onNew() {
+    Future<Note> onNew() async {
       Note empty = Note.empty();
       empty.sections = parsed.sections;
       if (parsed.title != null) empty.title = parsed.title;
       return empty;
     }
 
-    onImport(Note note) {
+    onImport(Note note) async {
       note.sections.addAll(parsed.sections);
       LocalStorage().syncNote(note);
     }
