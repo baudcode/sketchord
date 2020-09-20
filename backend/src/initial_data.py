@@ -30,7 +30,8 @@ if __name__ == "__main__":
         "https://tabs.ultimate-guitar.com/tab/green-day/boulevard-of-broken-dreams-chords-146744",
         "https://tabs.ultimate-guitar.com/tab/mumford-sons/guiding-light-chords-2475920",
         "https://tabs.ultimate-guitar.com/tab/abba/mamma-mia-chords-709013",
-        "https://tabs.ultimate-guitar.com/tab/sons-of-the-east/into-the-sun-chords-1994861"
+        "https://tabs.ultimate-guitar.com/tab/sons-of-the-east/into-the-sun-chords-1994861",
+        "https://tabs.ultimate-guitar.com/tab/passenger/lifes-for-the-living-chords-1196622"
     ];
     parser =argparse.ArgumentParser()
     parser.add_argument('-o', '--output', default='../assets/initial_data.json')
