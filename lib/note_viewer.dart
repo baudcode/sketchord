@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:sound/editor_views/section.dart';
+import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
 class NoteViewer extends StatefulWidget {
@@ -26,15 +27,29 @@ class _NoteViewerState extends State<NoteViewer> {
         bool upDirection =
             _controller.position.userScrollDirection == ScrollDirection.forward;
       });
+
+    textScaleFactor = widget.note.zoom;
+    offset = widget.note.scrollOffset;
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     setState(() {
       isPlaying = false;
     });
     super.dispose();
+  }
+
+  _updateZoom() async {
+    Note note = widget.note;
+    note.zoom = textScaleFactor;
+    await LocalStorage().syncNoteAttr(note, "zoom");
+  }
+
+  _updateScrollOffset() async {
+    Note note = widget.note;
+    note.scrollOffset = offset;
+    await LocalStorage().syncNoteAttr(note, "scrollOffset");
   }
 
   @override
@@ -60,6 +75,7 @@ class _NoteViewerState extends State<NoteViewer> {
             setState(() {
               offset = 0.85 * offset;
             });
+            _updateScrollOffset();
           }),
       IconButton(
           icon: Icon(Icons.fast_forward),
@@ -67,6 +83,7 @@ class _NoteViewerState extends State<NoteViewer> {
             setState(() {
               offset = 1.15 * offset;
             });
+            _updateScrollOffset();
           }),
     ];
 
@@ -97,6 +114,7 @@ class _NoteViewerState extends State<NoteViewer> {
             setState(() {
               textScaleFactor *= 1.05;
             });
+            _updateZoom();
           }),
       IconButton(
           icon: Icon(Icons.zoom_out),
@@ -104,6 +122,7 @@ class _NoteViewerState extends State<NoteViewer> {
             setState(() {
               textScaleFactor *= 0.95;
             });
+            _updateZoom();
           })
     ];
 

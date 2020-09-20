@@ -161,6 +161,9 @@ class Note {
   bool discarded;
   Color color;
 
+  double scrollOffset;
+  double zoom; // text scaling factor
+
   factory Note.empty() {
     return Note(
         title: "",
@@ -176,6 +179,8 @@ class Note {
         starred: false,
         sections: [Section(content: "", title: "")],
         color: null,
+        zoom: 1.0,
+        scrollOffset: 1.0,
         audioFiles: []);
   }
 
@@ -191,6 +196,8 @@ class Note {
       "label": label,
       "artist": artist,
       "starred": starred,
+      "scrollOffset": scrollOffset,
+      "zoom": zoom,
       "color": color == null ? null : serializeColor(color),
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
@@ -202,6 +209,7 @@ class Note {
 
   factory Note.fromJson(Map<String, dynamic> json, String id) {
     return Note(
+        // general info
         id: id,
         title: json['title'],
         createdAt: json.containsKey(json['createdAt'])
@@ -210,6 +218,8 @@ class Note {
         lastModified: json.containsKey(json['lastModified'])
             ? deserializeDateTime(json['lastModified'])
             : DateTime.now(),
+
+        // additional info
         key: json.containsKey("key") ? json['key'] : null,
         tuning: json.containsKey("tuning") ? json['tuning'] : null,
         capo: json.containsKey("capo") ? json['capo'] : null,
@@ -220,6 +230,13 @@ class Note {
             json.containsKey("color") ? deserializeColor(json['color']) : null,
         discarded: json.containsKey("discarded") ? json['discarded'] : false,
         artist: json.containsKey("artist") ? json['artist'] : null,
+
+        // viewer info
+        zoom: json.containsKey("zoom") ? json['zoom'] : 1.0,
+        scrollOffset:
+            json.containsKey("scrollOffset") ? json['scrollOffset'] : 1.0,
+
+        // sections/audiofiles
         sections:
             json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
         audioFiles: json.containsKey("audioFiles")
@@ -257,6 +274,8 @@ class Note {
       this.audioFiles,
       this.artist,
       this.color,
+      this.zoom = 1.0,
+      this.scrollOffset = 1.0,
       this.starred = false,
       this.discarded = false}) {
     if (this.id == null) {
