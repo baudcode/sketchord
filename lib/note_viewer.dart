@@ -8,10 +8,16 @@ import 'package:sound/model.dart';
 
 class NoteViewer extends StatefulWidget {
   final Note note;
-  final bool showAudioFiles, showAdditionalInformation, showTitle;
+  final List<Widget> actions;
+  final bool showAudioFiles,
+      showAdditionalInformation,
+      showTitle,
+      showZoomPlayback;
 
   NoteViewer(this.note,
-      {this.showAudioFiles = true,
+      {this.actions,
+      this.showZoomPlayback = true,
+      this.showAudioFiles = true,
       this.showTitle = true,
       this.showAdditionalInformation = true,
       Key key})
@@ -179,22 +185,27 @@ class _NoteViewerState extends State<NoteViewer> {
     }
 
     return Scaffold(
+        appBar: widget.actions == null
+            ? null
+            : AppBar(
+                actions: widget.actions,
+              ),
         body: Container(
-      //color: Theme.of(context).scaffoldBackgroundColor,
-      child: Stack(children: [
-        Container(
-            padding: EdgeInsets.all(16),
-            child: ListView.builder(
-              controller: _controller,
-              itemBuilder: (context, index) => items[index],
-              itemCount: items.length,
-            )),
-        Positioned(
-          child: Container(child: overlay),
-          top: 32,
-          right: 8,
-        ),
-      ]),
-    ));
+          //color: Theme.of(context).scaffoldBackgroundColor,
+          child: Stack(children: [
+            Container(
+                padding: EdgeInsets.all(16),
+                child: ListView.builder(
+                  controller: _controller,
+                  itemBuilder: (context, index) => items[index],
+                  itemCount: items.length,
+                )),
+            Positioned(
+              child: widget.showZoomPlayback ? overlay : Container(),
+              top: 32,
+              right: 8,
+            ),
+          ]),
+        ));
   }
 }
