@@ -249,7 +249,10 @@ class NoteEditorState extends State<NoteEditor>
             Navigator.push(
                 context,
                 new MaterialPageRoute(
-                    builder: (context) => NoteViewer(store.note)));
+                    builder: (context) => NoteViewer(store.note,
+                        showAdditionalInformation: false,
+                        showAudioFiles: false,
+                        showTitle: false)));
           }),
       IconButton(
           icon: Icon(Icons.content_copy),
