@@ -20,8 +20,8 @@ def get_note(url: str) -> Note:
     soup = bs4.BeautifulSoup(t, "html.parser")
     t = soup.find('div', {'class' :"js-store"})
     data = t.get("data-content")
-    with open("data.json", 'w') as w:
-        w.write(data)
+    #with open("data.json", 'w') as w:
+    #    w.write(data)
 
     k = json.loads(data)
 
