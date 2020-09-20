@@ -13,6 +13,7 @@ import 'package:sound/editor_views/section.dart';
 import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/export.dart';
 import 'package:sound/file_manager.dart';
+import 'package:sound/local_storage.dart';
 import 'package:sound/note_viewer.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
@@ -165,6 +166,9 @@ class NoteEditorState extends State<NoteEditor>
               });
               Note note = Note.empty();
               note.audioFiles.add(copy);
+
+              // manual sync
+              LocalStorage().syncNote(note);
               return note;
             }, (Note note) async {
               AudioFile copy = await FileManager().copyToNew(f);
@@ -174,10 +178,20 @@ class NoteEditorState extends State<NoteEditor>
                     "The audio file as copied to a ${note.title}");
               });
 
-              note.audioFiles.add(copy);
+              if (note.id == widget.note.id) {
+                copy.name += " - copy";
+                addAudioFile(copy);
+              } else {
+                // manual sync
+                note.audioFiles.add(copy);
+                LocalStorage().syncNote(note);
+              }
+
               return note;
             },
                 openNote: false,
+                syncNote:
+                    false, // do not sync note, because otherwise this component gets updated twice
                 importButtonText: "Copy",
                 newButtonText: "Copy as NEW");
           },

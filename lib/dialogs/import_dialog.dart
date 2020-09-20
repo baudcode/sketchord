@@ -10,7 +10,8 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     FutureNoteImportCallback onImport,
     {String newButtonText = 'Import as NEW',
     String importButtonText = "Import",
-    bool openNote = true}) async {
+    bool openNote = true,
+    bool syncNote = true}) async {
   List<Note> notes = await LocalStorage().getActiveNotes();
 
   showDialog(
@@ -29,14 +30,19 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
       _import() async {
         // sync and pop current dialog
         Note note = await onImport(selected);
-        LocalStorage().syncNote(note);
+        if (syncNote) {
+          LocalStorage().syncNote(note);
+        }
         Navigator.of(context).pop();
         _open(note);
       }
 
       _onNew() async {
         Note newNote = await onNew();
-        LocalStorage().syncNote(newNote);
+        if (syncNote) {
+          LocalStorage().syncNote(newNote);
+        }
+
         Navigator.of(context).pop();
         _open(newNote);
       }
