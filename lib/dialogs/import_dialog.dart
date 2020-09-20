@@ -38,36 +38,37 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
           title: new Text(title),
-          content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Flexible(
-                    child: RaisedButton(
-                        child: Text('Import as NEW'), onPressed: _onNew)),
-                SizedBox(height: 10),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Container(child: Text("-- or select a note --"))
-                ]),
-                SizedBox(height: 10),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Padding(
-                        child: Text("Note:"),
-                        padding: EdgeInsets.only(right: 8, top: 8),
-                      ),
-                      new DropdownButton<Note>(
-                          value: selected,
-                          items: notes
-                              .map((e) => DropdownMenuItem<Note>(
-                                  child:
-                                      Text("${notes.indexOf(e)}: ${e.title}"),
-                                  value: e))
-                              .toList(),
-                          onChanged: (v) => setState(() => selected = v)),
-                    ])
-              ]),
+          content: Builder(builder: (context) {
+            double width = MediaQuery.of(context).size.width;
+            return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Flexible(
+                      child: RaisedButton(
+                          child: Text('Import as NEW'), onPressed: _onNew)),
+                  SizedBox(height: 10),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Container(child: Text("-- or select a note --"))
+                  ]),
+                  SizedBox(height: 15),
+                  Row(mainAxisSize: MainAxisSize.max, children: [
+                    new DropdownButton<Note>(
+                        value: selected,
+                        isDense: true,
+                        items: notes
+                            .map((e) => DropdownMenuItem<Note>(
+                                child: SizedBox(
+                                    width: width - 152,
+                                    child: Text(
+                                        "${notes.indexOf(e)}: ${e.title}",
+                                        overflow: TextOverflow.ellipsis)),
+                                value: e))
+                            .toList(),
+                        onChanged: (v) => setState(() => selected = v)),
+                  ])
+                ]);
+          }),
           actions: <Widget>[
             new FlatButton(
               child: Text("Cancel"),
