@@ -181,10 +181,21 @@ class NoteEditorState extends State<NoteEditor>
           icon: Icon((store.note.starred) ? Icons.star : Icons.star_border),
           onPressed: toggleStarred),
       IconButton(icon: icon, onPressed: _onFloatingActionButtonPress),
-      IconButton(
-          icon: Icon(Icons.color_lens),
-          onPressed: () =>
-              showColorPickerDialog(context, store.note.color, changeColor)),
+      Stack(alignment: Alignment.center, children: [
+        IconButton(
+            icon: Icon(Icons.color_lens),
+            onPressed: () =>
+                showColorPickerDialog(context, store.note.color, changeColor)),
+        Positioned(
+            bottom: 17,
+            right: 14,
+            child: Container(
+                decoration: BoxDecoration(
+                    color: store.note.color,
+                    borderRadius: BorderRadius.circular(10)),
+                height: 10,
+                width: 10)),
+      ]),
       IconButton(
           icon: Icon(Icons.play_circle_filled),
           onPressed: () {
@@ -206,7 +217,7 @@ class NoteEditorState extends State<NoteEditor>
         child: Scaffold(
             key: _globalKey,
             appBar: AppBar(
-              backgroundColor: store.note.color,
+              //backgroundColor: store.note.color,
               actions: actions,
             ),
             bottomSheet:
