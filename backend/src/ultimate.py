@@ -43,6 +43,9 @@ def get_note(url: str) -> Note:
 
             if "value" in meta['tuning']:
                 tuning = meta['tuning']['value']
+                if tuning.lower() == "e a d g b e":
+                    tuning = None
+                    
             elif "name" in meta['tuning']:
                 tuning = meta['tuning']['name']
 

@@ -22,7 +22,15 @@ if __name__ == "__main__":
         return s.split(",")
 
     urls = [
-        "https://tabs.ultimate-guitar.com/tab/passenger/new-until-its-old-chords-2621235"
+        "https://tabs.ultimate-guitar.com/tab/passenger/new-until-its-old-chords-2621235",
+        "https://tabs.ultimate-guitar.com/tab/ben-howard/keep-your-head-up-chords-1180866",
+        "https://tabs.ultimate-guitar.com/tab/john-mayer/slow-dancing-in-a-burning-room-chords-706621",
+        "https://tabs.ultimate-guitar.com/tab/fleetwood-mac/landslide-chords-1729327",
+        "https://tabs.ultimate-guitar.com/tab/fleetwood-mac/go-your-own-way-chords-13586",
+        "https://tabs.ultimate-guitar.com/tab/green-day/boulevard-of-broken-dreams-chords-146744",
+        "https://tabs.ultimate-guitar.com/tab/mumford-sons/guiding-light-chords-2475920",
+        "https://tabs.ultimate-guitar.com/tab/abba/mamma-mia-chords-709013",
+        "https://tabs.ultimate-guitar.com/tab/sons-of-the-east/into-the-sun-chords-1994861"
     ];
     parser =argparse.ArgumentParser()
     parser.add_argument('-o', '--output', default='../assets/initial_data.json')
