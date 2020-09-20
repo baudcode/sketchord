@@ -11,6 +11,7 @@ import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/export.dart';
+import 'package:sound/note_viewer.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
@@ -184,6 +185,14 @@ class NoteEditorState extends State<NoteEditor>
           icon: Icon(Icons.color_lens),
           onPressed: () =>
               showColorPickerDialog(context, store.note.color, changeColor)),
+      IconButton(
+          icon: Icon(Icons.play_circle_filled),
+          onPressed: () {
+            Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (context) => NoteViewer(note: store.note)));
+          }),
       IconButton(
           icon: Icon(Icons.content_copy),
           onPressed: () => _copyToClipboard(context))

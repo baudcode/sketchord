@@ -34,7 +34,7 @@ ParsedNote parseText(String text) {
     // do not add empty parts
     if (isEmpty) {
       print("$s => isEmpty, ${part.length}");
-      if (part.length == 0)
+      if (part.length == 0 || part.length == 1 && part[0].startsWith("["))
         continue;
       else {
         print(part);
@@ -64,7 +64,7 @@ ParsedNote parseText(String text) {
   String title;
 
   // skip the start, cause it was the title
-  if (parts[0].length == 1) {
+  if (parts[0].length == 1 && !parts[0][0].startsWith("[")) {
     title = parts[0][0];
     start += 1;
   }

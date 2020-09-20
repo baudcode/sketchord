@@ -174,3 +174,49 @@ class SectionListItem extends StatelessWidget {
     );
   }
 }
+
+class SectionView extends StatelessWidget {
+  final Section section;
+  final double textScaleFactor;
+
+  SectionView({this.section, this.textScaleFactor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+        elevation: 0,
+        child: Container(
+            child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Expanded(
+                child: Container(
+                    padding: EdgeInsets.all(10),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                              child: Text(section.title,
+                                  style: Theme.of(context).textTheme.subtitle1,
+                                  textScaleFactor: textScaleFactor,
+                                  maxLines: 1)),
+                          Wrap(children: [
+                            Text(
+                              section.content,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .subtitle2
+                                  .copyWith(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.normal),
+                              textScaleFactor: textScaleFactor,
+                              maxLines: null,
+                            )
+                          ])
+                        ]))),
+          ],
+        )));
+  }
+}
