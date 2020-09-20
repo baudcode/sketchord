@@ -6,6 +6,12 @@ from  pprint import pprint
 from .models import Note
 import uuid
 
+def clean_content(content: str) -> str:
+    content = content.strip()
+    if content[-1] == '\n':
+        content = content[:-1].strip()
+    return content
+
 def get_note(url: str) -> Note:
     # url = "https://tabs.ultimate-guitar.com/tab/passenger/27-ukulele-2190875"
     # url = "https://tabs.ultimate-guitar.com/tab/passenger/and-i-love-her-tabs-1709320"
@@ -74,7 +80,7 @@ def get_note(url: str) -> Note:
                     if title is not None and content != "":
                         sections.append({
                             "title": title,
-                            "content": content,
+                            "content": clean_content(content),
                             "id": str(uuid.uuid4())
                         })
                         content = ""
@@ -87,7 +93,7 @@ def get_note(url: str) -> Note:
         if title is not None and content is not None:
             sections.append({
                 "title": title,
-                "content": content,
+                "content": clean_content(content),
                 "id": str(uuid.uuid4())
             })
 
