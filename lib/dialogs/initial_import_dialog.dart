@@ -12,7 +12,7 @@ Future<List<Note>> getExampleNotes() async {
   return _notes.map<Note>((s) => Note.fromJson(s, s['id'])).toList();
 }
 
-showInitialImportDialog(BuildContext context, Function onSuccess) async {
+showInitialImportDialog(BuildContext context, Function onDone) async {
   List<Note> exampleNotes = await getExampleNotes();
   Map<Note, bool> checked = {};
   bool isImporting = false;
@@ -28,18 +28,20 @@ showInitialImportDialog(BuildContext context, Function onSuccess) async {
         .toList();
     for (Note note in checkedNotes) {
       await LocalStorage().syncNote(note);
-      Future.delayed(Duration(milliseconds: 100));
+      Future.delayed(Duration(milliseconds: 50));
     }
+    onDone();
     Navigator.of(context).pop();
-    onSuccess();
   }
 
   _onCancel() {
+    onDone();
     Navigator.of(context).pop();
   }
 
   showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
@@ -53,6 +55,7 @@ showInitialImportDialog(BuildContext context, Function onSuccess) async {
                       itemBuilder: (context, index) {
                         Note note = exampleNotes[index];
                         return CheckboxListTile(
+                            activeColor: Theme.of(context).accentColor,
                             value: checked[note],
                             onChanged: (v) {
                               setState(() => checked[note] = v);
@@ -65,15 +68,15 @@ showInitialImportDialog(BuildContext context, Function onSuccess) async {
                   ? []
                   : [
                       FlatButton(
+                        child: Text("Cancel"),
+                        onPressed: _onCancel,
+                      ),
+                      FlatButton(
                           child: Text("Import"),
                           onPressed: () {
                             setState(() => isImporting = true);
                             _onImport();
                           }),
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: _onCancel,
-                      ),
                     ]);
         });
       });

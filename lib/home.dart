@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
@@ -29,8 +30,8 @@ class Home extends StatelessWidget {
     Future.delayed(Duration(milliseconds: 100), () async {
       bool initialStart = await LocalStorage().isInitialStart();
       if (initialStart) {
-        showInitialImportDialog(context, () async {
-          await LocalStorage().setInitialStartDone();
+        showInitialImportDialog(context, () {
+          LocalStorage().setInitialStartDone();
         });
       }
     });
@@ -283,6 +284,7 @@ class HomeContentState extends State<HomeContent>
             .length
             .toDouble() /
         storage.selectedNotes.length.toDouble()));
+
     return SliverAppBar(
       pinned: true,
       leading: IconButton(
@@ -292,6 +294,13 @@ class HomeContentState extends State<HomeContent>
         IconButton(
             icon: Icon(Icons.delete),
             onPressed: () => discardAllSelectedNotes()),
+        IconButton(
+            icon: Icon(Icons.color_lens),
+            onPressed: () {
+              showColorPickerDialog(context, null, (c) {
+                colorAllSelectedNotes(c);
+              });
+            }),
         IconButton(
             icon: Icon((storage.selectedNotes
                             .where((e) => e.starred)

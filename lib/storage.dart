@@ -3,6 +3,7 @@ import 'local_storage.dart';
 import 'file_manager.dart';
 import 'model.dart';
 import 'db.dart';
+import 'package:flutter/material.dart' show Color;
 
 List<Note> notes = [
   Note(
@@ -242,6 +243,15 @@ class StaticStorage extends Store {
       trigger();
     });
 
+    colorAllSelectedNotes.listen((Color color) {
+      for (Note note in _selectedNotes) {
+        note.color = color;
+        LocalStorage().syncNoteAttr(note, 'color');
+      }
+      _selectedNotes.clear();
+      trigger();
+    });
+
     restoreNotes.listen((_notes) {
       for (Note note in _notes) {
         LocalStorage().restoreNote(note);
@@ -349,6 +359,8 @@ Action removeAllSelectedNotes = Action();
 Action discardAllSelectedNotes = Action();
 Action starAllSelectedNotes = Action();
 Action unstarAllSelectedNotes = Action();
+Action<Color> colorAllSelectedNotes = Action();
+
 Action<List<Note>> restoreNotes = Action();
 Action clearSelection = Action();
 Action updateView = Action();
