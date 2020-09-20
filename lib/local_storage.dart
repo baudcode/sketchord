@@ -66,6 +66,16 @@ class LocalStorage {
     _controller.sink.add(await getNotes());
   }
 
+  Future<bool> isInitialStart() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('initialStart');
+  }
+
+  Future<void> setInitialStartDone() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('initialStart', true);
+  }
+
   Future<List<String>> getNoteIDs(SharedPreferences prefs) async {
     var ids = prefs.getStringList('notes');
     if (ids == null)
