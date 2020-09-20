@@ -408,7 +408,10 @@ class HomeContentState extends State<HomeContent>
               NoteListItemModel(note: n, isSelected: storage.isSelected(n)))
           .toList();
 
-      noteList = [NoteList(true, storage.view, items, onTap, onLongPress)];
+      noteList = [
+        NoteList(true, storage.view, items, onTap, onLongPress,
+            highlight: storage.search == "" ? null : storage.search)
+      ];
     }
 
     SliverAppBar appBar = storage.isAnyNoteSelected()

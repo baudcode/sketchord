@@ -37,18 +37,19 @@ class AbstractNoteItem extends StatelessWidget {
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
     List<TextSpan> spans = [];
-
+    print("$highlight $title");
     if (highlight == null) {
       spans.add(TextSpan(text: title));
     } else {
-      int start = title.indexOf(highlight);
+      int start = title.toLowerCase().indexOf(highlight);
       if (start == -1) {
         spans.add(TextSpan(text: title));
       } else {
         spans.add(TextSpan(text: title.substring(0, start)));
         spans.add(TextSpan(
             text: title.substring(start, start + highlight.length),
-            style: TextStyle(backgroundColor: Theme.of(context).primaryColor)));
+            style:
+                TextStyle(backgroundColor: Theme.of(context).highlightColor)));
         spans.add(TextSpan(text: title.substring(start + highlight.length)));
       }
     }
@@ -99,7 +100,8 @@ class AbstractNoteItem extends StatelessWidget {
         spans.add(TextSpan(text: text.substring(sectionStart, start)));
         spans.add(TextSpan(
             text: text.substring(start, end),
-            style: TextStyle(backgroundColor: Theme.of(context).primaryColor)));
+            style:
+                TextStyle(backgroundColor: Theme.of(context).highlightColor)));
         spans.add(TextSpan(text: text.substring(end)));
       }
     }

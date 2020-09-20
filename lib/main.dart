@@ -23,6 +23,7 @@ class App extends StatefulWidget {
       primaryColor: mainColor,
       accentColor: mainColor,
       cursorColor: mainColor,
+      highlightColor: Colors.black54,
       cardColor: Colors.grey.shade800,
       appBarTheme: ThemeData.dark()
           .appBarTheme
