@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -85,6 +86,17 @@ class Exporter {
     return await Backup().exportNote(note);
   }
 
+  static Future<Size> getSize(String text, TextStyle textStyle,
+      {double textScaleFactor = 1.0}) async {
+    return (TextPainter(
+            text: TextSpan(text: text, style: textStyle),
+            maxLines: 1,
+            textScaleFactor: textScaleFactor,
+            textDirection: TextDirection.ltr)
+          ..layout())
+        .size;
+  }
+
   static Future<String> pdf(Note note) async {
     Directory d = await Backup().getFilesDir();
     String path = p.join(d.path, "${note.title}.pdf");
@@ -94,8 +106,14 @@ class Exporter {
     // final ttf = pw.Font.ttf(fontData.buffer.asByteData());
     final pdf = pw.Document();
     List<pw.Row> sections = [];
+    List<List<pw.Row>> sectionRows = [];
+
+    int rows = 0;
 
     for (var section in note.sections) {
+      rows += 3;
+      rows += section.content.split("\n").length;
+
       sections.add(pw.Row(children: [
         pw.Text(section.title,
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold))
@@ -103,7 +121,17 @@ class Exporter {
       sections.add(pw.Row(children: [pw.Container(height: 5)]));
       sections.add(pw.Row(children: [pw.Text(section.content)]));
       sections.add(pw.Row(children: [pw.Container(height: 25)]));
+
+      if (rows > 20) {
+        sectionRows.add(sections);
+        sections = [];
+        rows = 0;
+      }
     }
+    if (sections.length > 0) {
+      sectionRows.add(sections);
+    }
+
     List<pw.Row> titleRows = [];
     if (info != null) {
       titleRows.addAll([
@@ -116,24 +144,37 @@ class Exporter {
     ]));
 
     titleRows.add(pw.Row(children: [pw.Container(height: 50)]));
+    for (var i = 0; i < sectionRows.length; i++) {
+      sections = sectionRows[i];
 
-    pdf.addPage(pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        build: (pw.Context context) {
-          return pw.Stack(children: [
-            (note.artist == null)
-                ? pw.Container()
-                : pw.Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: pw.Text("© ${note.artist}"),
-                  ),
-            pw.Padding(
-                padding: pw.EdgeInsets.all(10.0),
-                child: pw.Column(children: titleRows..addAll(sections)))
-          ]);
-        })); // Page
-
+      if (i == 0) {
+        pdf.addPage(pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            build: (pw.Context context) {
+              return pw.Stack(children: [
+                (note.artist == null)
+                    ? pw.Container()
+                    : pw.Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: pw.Text("© ${note.artist}"),
+                      ),
+                pw.Padding(
+                    padding: pw.EdgeInsets.all(10.0),
+                    child: pw.Column(children: titleRows..addAll(sections)))
+              ]);
+            })); // Page
+      } else {
+        pdf.addPage(pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            build: (pw.Context context) {
+              return pw.Container(
+                  child: pw.Padding(
+                      padding: pw.EdgeInsets.all(10.0),
+                      child: pw.Column(children: sections)));
+            }));
+      }
+    }
     final file = File(path);
     await file.writeAsBytes(pdf.save());
     return path;
