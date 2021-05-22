@@ -116,7 +116,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
   Widget build(BuildContext context) {
     return MaterialApp(
         //debugShowCheckedModeBanner: false,
-        title: 'Sound',
+        title: 'SketChord',
         theme: store.theme == SettingsTheme.dark ? widget.dark : widget.light,
         home: Menu());
   }

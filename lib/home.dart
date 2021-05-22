@@ -27,12 +27,13 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration(milliseconds: 100), () async {
+    Future.delayed(Duration(milliseconds: 1000), () async {
       bool initialStart = await LocalStorage().isInitialStart();
       if (initialStart) {
-        showInitialImportDialog(context, (_) {
-          LocalStorage().setInitialStartDone();
-        });
+        // TODO: fix it
+        // showInitialImportDialog(context, (_) {
+        //   LocalStorage().setInitialStartDone();
+        // });
       }
     });
 

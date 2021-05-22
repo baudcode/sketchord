@@ -60,7 +60,7 @@ class NoteListState extends State<NoteList> {
                         children: <Widget>[
                           Wrap(
                             direction: Axis.vertical,
-                            alignment: WrapAlignment.spaceEvenly,
+                            alignment: WrapAlignment.spaceBetween,
                             crossAxisAlignment: WrapCrossAlignment.start,
                             children: processList(widget.items, true)
                                 .map((i) => SmallNoteItem(

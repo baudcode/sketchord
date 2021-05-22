@@ -38,11 +38,28 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.sound"
+        applicationId "de.onenightproductions.sketchord"
         minSdkVersion 16
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+    }
+
+    flavorDimensions "app"
+    productFlavors {
+ 
+        dev {
+            dimension "app"
+            resValue "string", "app_name", "SketChord Dev"
+            versionNameSuffix "-dev"
+            applicationId "de.onenightproductions.sketchord.dev"
+        }
+        prod {
+            dimension "app"
+            resValue "string", "app_name", "SketChord"
+            applicationId "de.onenightproductions.sketchord.prod"
+            versionNameSuffix "-prod"
+        }
     }
 
     buildTypes {
