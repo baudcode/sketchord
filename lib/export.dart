@@ -111,8 +111,15 @@ class Exporter {
     int rows = 0;
 
     for (var section in note.sections) {
+      int sectionLength = section.content.split("\n").length;
+      if ((rows + sectionLength) > 50) {
+        sectionRows.add(sections);
+        sections = [];
+        rows = 0;
+      }
+
       rows += 3;
-      rows += section.content.split("\n").length;
+      rows += sectionLength;
 
       sections.add(pw.Row(children: [
         pw.Text(section.title,
@@ -120,60 +127,56 @@ class Exporter {
       ]));
       sections.add(pw.Row(children: [pw.Container(height: 5)]));
       sections.add(pw.Row(children: [pw.Text(section.content)]));
-      sections.add(pw.Row(children: [pw.Container(height: 25)]));
+      sections.add(pw.Row(children: [pw.Container(height: 10)]));
 
-      if (rows > 20) {
-        sectionRows.add(sections);
-        sections = [];
-        rows = 0;
-      }
+      print("rows: $rows");
     }
+
     if (sections.length > 0) {
       sectionRows.add(sections);
     }
 
+    print("Got ${sectionRows.length} section rows");
+
     List<pw.Row> titleRows = [];
+
+    // add capo information / artist information...
     if (info != null) {
       titleRows.addAll([
         pw.Row(children: [pw.Text(info, style: pw.TextStyle(fontSize: 12))]),
         pw.Row(children: [pw.Container(height: 10)])
       ]);
     }
+    // add title
     titleRows.add(pw.Row(children: [
       pw.Center(child: pw.Text(note.title, style: pw.TextStyle(fontSize: 20)))
     ]));
+    // spacing between title and content
+    titleRows.add(pw.Row(children: [pw.Container(height: 20)]));
 
-    titleRows.add(pw.Row(children: [pw.Container(height: 50)]));
+    String artist = (note.artist != null ? note.artist : Settings().name);
+
+    var copyright = (artist == null)
+        ? pw.Container()
+        : pw.Positioned(
+            bottom: 0,
+            right: 0,
+            child: pw.Text("© $artist"),
+          );
+
     for (var i = 0; i < sectionRows.length; i++) {
-      sections = sectionRows[i];
-
-      if (i == 0) {
-        pdf.addPage(pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (pw.Context context) {
-              return pw.Stack(children: [
-                (note.artist == null)
-                    ? pw.Container()
-                    : pw.Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: pw.Text("© ${note.artist}"),
-                      ),
-                pw.Padding(
-                    padding: pw.EdgeInsets.all(10.0),
-                    child: pw.Column(children: titleRows..addAll(sections)))
-              ]);
-            })); // Page
-      } else {
-        pdf.addPage(pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (pw.Context context) {
-              return pw.Container(
-                  child: pw.Padding(
-                      padding: pw.EdgeInsets.all(10.0),
-                      child: pw.Column(children: sections)));
-            }));
-      }
+      pdf.addPage(pw.Page(
+          margin: pw.EdgeInsets.all(20),
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Stack(children: [
+              copyright,
+              pw.Column(
+                  children: (i == 0)
+                      ? (titleRows..addAll(sectionRows[i]))
+                      : sectionRows[i])
+            ]);
+          })); // Page
     }
     final file = File(path);
     await file.writeAsBytes(pdf.save());
