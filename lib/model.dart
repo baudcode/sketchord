@@ -166,6 +166,7 @@ class Note {
   bool discarded;
   Color color;
   int bpm;
+  bool isIdea;
 
   double scrollOffset;
   double zoom; // text scaling factor
@@ -177,7 +178,7 @@ class Note {
         lastModified: DateTime.now(),
         key: null,
         tuning: null,
-        id: null,
+        id: Uuid().v4(),
         capo: null,
         instrument: "Guitar",
         label: "",
@@ -186,9 +187,16 @@ class Note {
         sections: [Section(content: "", title: "")],
         color: null,
         bpm: null,
+        isIdea: false,
         zoom: 1.0,
         scrollOffset: 1.0,
         audioFiles: []);
+  }
+
+  factory Note.emptyIdea() {
+    Note empty = Note.empty();
+    empty.isIdea = true;
+    return empty;
   }
 
   Map<String, dynamic> toJson() {
@@ -206,6 +214,7 @@ class Note {
       "scrollOffset": scrollOffset,
       "zoom": zoom,
       "bpm": bpm,
+      "isIdea": isIdea,
       "color": color == null ? null : serializeColor(color),
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
@@ -239,7 +248,9 @@ class Note {
             json.containsKey("color") ? deserializeColor(json['color']) : null,
         discarded: json.containsKey("discarded") ? json['discarded'] : false,
         artist: json.containsKey("artist") ? json['artist'] : null,
-
+        isIdea: json.containsKey("isIdea") && json['isIdea'] != null
+            ? json['isIdea']
+            : false,
         // viewer info
         zoom: json.containsKey("zoom") ? json['zoom'] : 1.0,
         scrollOffset:
@@ -287,10 +298,75 @@ class Note {
       this.zoom = 1.0,
       this.scrollOffset = 1.0,
       this.starred = false,
+      this.isIdea = false,
       this.discarded = false}) {
     if (this.id == null) {
       this.id = Uuid().v4();
     }
+  }
+}
+
+class NoteSet {
+  List<Note> notes;
+  String name, id;
+  bool starred;
+  Color color;
+  DateTime createdAt, lastModified;
+
+  String getName() {
+    if (name == null || name.trim() == "") {
+      return "A set with ${notes.length} notes";
+    } else
+      return name;
+  }
+
+  NoteSet(
+      {this.id,
+      this.name,
+      this.notes,
+      this.starred,
+      this.color,
+      this.createdAt,
+      this.lastModified});
+
+  factory NoteSet.empty() {
+    return NoteSet(
+        name: "",
+        color: null,
+        id: Uuid().v4(),
+        notes: [],
+        starred: false,
+        createdAt: DateTime.now(),
+        lastModified: DateTime.now());
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "ids": this.notes.map((n) => n.id).toList(),
+      "name": this.name,
+      "createdAt": serializeDateTime(createdAt),
+      "lastModified": serializeDateTime(lastModified),
+      "starred": starred,
+      "color": color == null ? null : serializeColor(color),
+    };
+  }
+
+  factory NoteSet.fromJson(Map<String, dynamic> json) {
+    return NoteSet(
+        id: json.containsKey('id') ? json['id'] : Uuid().v4(),
+        createdAt: json.containsKey('createdAt')
+            ? deserializeDateTime(json['createdAt'])
+            : DateTime.now(),
+        lastModified: json.containsKey('lastModified')
+            ? deserializeDateTime(json['lastModified'])
+            : DateTime.now(),
+        notes:
+            json['notes'].map<Note>((n) => Note.fromJson(n, n['id'])).toList(),
+        starred: json.containsKey('starred') ? json['starred'] : false,
+        color:
+            json.containsKey("color") ? deserializeColor(json['color']) : null,
+        name: json.containsKey("name") ? json['name'] : null);
   }
 }
 

@@ -27,6 +27,11 @@ showSelectNotesImportDialog(
       await LocalStorage().syncNote(note);
       Future.delayed(Duration(milliseconds: 50));
     }
+    NoteSet noteset = NoteSet.empty();
+    noteset.notes = selected;
+    noteset.name = 'All';
+    await LocalStorage().syncSet(noteset);
+
     onDone(selected);
   }, onDone, notes, title: title);
 }

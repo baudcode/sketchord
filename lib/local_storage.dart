@@ -37,6 +37,22 @@ class LocalStorage {
     _controller.sink.add(await getNotes());
   }
 
+  Future<void> syncSet(NoteSet noteset) async {
+    print("syncing noteset ${noteset.id}, ${noteset.name}");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    noteset.lastModified = DateTime.now();
+
+    await prefs.setString(noteset.id.toString(), jsonEncode(noteset.toJson()));
+
+    var setIDs = await getSetIDs(prefs);
+    if (!setIDs.contains(noteset.id.toString())) {
+      setIDs.add(noteset.id.toString());
+      prefs.setStringList('sets', setIDs);
+    }
+
+    //_controller.sink.add(await getNotes());
+  }
+
   Future<bool> _deleteAudioFile(AudioFile audioFile) async {
     FileSystemEntity e = await audioFile.file.delete();
     return !e.existsSync();
@@ -49,6 +65,11 @@ class LocalStorage {
       await _deleteAudioFile(f);
     }
     _controller.sink.add(await getNotes());
+  }
+
+  Future<void> deleteSet(NoteSet noteset) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(noteset.id);
   }
 
   Future<void> discardNote(Note note) async {
@@ -85,6 +106,14 @@ class LocalStorage {
       return ids;
   }
 
+  Future<List<String>> getSetIDs(SharedPreferences prefs) async {
+    var ids = prefs.getStringList('sets');
+    if (ids == null)
+      return [];
+    else
+      return ids;
+  }
+
   Note getNote(String id, SharedPreferences prefs) {
     var str = prefs.get(id);
     if (str == null) return null;
@@ -92,11 +121,41 @@ class LocalStorage {
   }
 
   Future<List<Note>> getActiveNotes() async {
-    return (await getNotes()).where((n) => !n.discarded).toList();
+    return (await getNotes()).where((n) => !n.discarded && !n.isIdea).toList();
   }
 
   Future<List<Note>> getDiscardedNotes() async {
     return (await getNotes()).where((n) => n.discarded).toList();
+  }
+
+  Future<List<Note>> getIdeas() async {
+    return (await getNotes()).where((n) => n.isIdea == true).toList();
+  }
+
+  Future<NoteSet> getSet(String id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var str = prefs.get(id);
+    if (str == null) return null;
+    var data = jsonDecode(str);
+    data['notes'] = [];
+
+    for (var noteId in data['ids']) {
+      var noteData = prefs.get(noteId);
+      if (noteData != null) data['notes'].add(jsonDecode(noteData));
+    }
+
+    return NoteSet.fromJson(data);
+  }
+
+  Future<List<NoteSet>> getSets() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> ids = await getSetIDs(prefs);
+    // print(ids);
+    List<NoteSet> sets = [];
+    for (String id in ids) {
+      sets.add(await getSet(id));
+    }
+    return sets;
   }
 
   Future<bool> syncSettings(Settings settings) async {
