@@ -16,3 +16,11 @@ showSnack(var state, String message, {Duration duration = defaultDuration}) {
 
   state.showSnackBar(snackbar);
 }
+
+Color getSelectedCardColor(BuildContext context) {
+  return Theme.of(context).textTheme.bodyText1.color.withOpacity(0.4);
+}
+
+BoxDecoration getSelectedDecoration(BuildContext context) {
+  return BoxDecoration(color: getSelectedCardColor(context));
+}

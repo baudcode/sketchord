@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/model.dart';
+import 'package:sound/utils.dart';
 
 class AbstractNoteItem extends StatelessWidget {
   final Note note;
@@ -28,11 +29,6 @@ class AbstractNoteItem extends StatelessWidget {
                 .textTheme
                 .headline5
                 .copyWith(fontWeight: FontWeight.w200)));
-  }
-
-  BoxDecoration getSelectedDecoration(BuildContext context) {
-    return BoxDecoration(
-        color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.4));
   }
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
