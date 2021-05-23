@@ -22,7 +22,7 @@ showSelectNotesImportDialog(
     BuildContext context, ValueChanged<List<Note>> onDone, List<Note> notes,
     {String title =
         "Would you like to import any of these example songs?"}) async {
-  showSelectNotestDialog(context, (List<Note> selected) async {
+  showSelectNotesDialog(context, (List<Note> selected) async {
     for (Note note in selected) {
       await LocalStorage().syncNote(note);
       Future.delayed(Duration(milliseconds: 50));
@@ -33,7 +33,7 @@ showSelectNotesImportDialog(
 
 typedef NoteListCallback = Future<void> Function(List<Note>);
 
-showSelectNotestDialog(BuildContext context, NoteListCallback onApply,
+showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
     Function onCancel, List<Note> notes,
     {String title = "Select Notes"}) async {
   Map<Note, bool> checked = {};
@@ -63,39 +63,43 @@ showSelectNotestDialog(BuildContext context, NoteListCallback onApply,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-              titlePadding: EdgeInsets.all(16),
-              contentPadding: EdgeInsets.all(18),
-              title: Text(title),
-              content: isImporting
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemBuilder: (context, index) {
-                        Note note = notes[index];
-                        return CheckboxListTile(
-                            activeColor: Theme.of(context).accentColor,
-                            value: checked[note],
-                            onChanged: (v) {
-                              setState(() => checked[note] = v);
-                            },
-                            title: Text(note.title));
-                      },
-                      itemCount: notes.length,
-                    ),
-              actions: isImporting
-                  ? []
-                  : [
-                      FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: _onCancel,
-                      ),
-                      FlatButton(
-                          child: Text("Import"),
-                          onPressed: () {
-                            setState(() => isImporting = true);
-                            _onImport();
-                          }),
-                    ]);
+          return Center(
+              child: AlertDialog(
+                  titlePadding: EdgeInsets.all(16),
+                  contentPadding: EdgeInsets.all(18),
+                  title: Text(title),
+                  content: isImporting
+                      ? Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          itemBuilder: (context, index) {
+                            Note note = notes[index];
+                            return CheckboxListTile(
+                                activeColor: Theme.of(context).accentColor,
+                                value: checked[note],
+                                onChanged: (v) {
+                                  setState(() => checked[note] = v);
+                                },
+                                title: ListTile(
+                                  title: Text(note.title),
+                                  subtitle: Text(note.artist),
+                                ));
+                          },
+                          itemCount: notes.length,
+                        ),
+                  actions: isImporting
+                      ? []
+                      : [
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: _onCancel,
+                          ),
+                          TextButton(
+                              child: Text("Import"),
+                              onPressed: () {
+                                setState(() => isImporting = true);
+                                _onImport();
+                              }),
+                        ]));
         });
       });
 }
