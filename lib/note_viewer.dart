@@ -72,7 +72,7 @@ class _NoteViewerState extends State<NoteViewer> {
     List<Widget> items = [];
 
     if (widget.showTitle) {
-      items.add(NoteEditorTitle(widget.note.title, allowEdit: false));
+      items.add(NoteEditorTitle(title: widget.note.title, allowEdit: false));
     }
 
     for (Section section in widget.note.sections) {
@@ -203,7 +203,6 @@ class _NoteViewerState extends State<NoteViewer> {
                 actions: widget.actions,
               ),
         body: Container(
-          //color: Theme.of(context).scaffoldBackgroundColor,
           child: Stack(children: [
             Container(
                 padding: EdgeInsets.all(16),

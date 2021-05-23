@@ -3,10 +3,17 @@ import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 
 class NoteEditorTitle extends StatelessWidget {
-  final String title;
+  final String title, hintText, labelText;
   final bool allowEdit;
+  final ValueChanged<String> onChange;
 
-  const NoteEditorTitle(this.title, {this.allowEdit = true, Key key})
+  NoteEditorTitle(
+      {@required this.title,
+      @required this.onChange,
+      this.allowEdit = true,
+      this.hintText = 'Enter Title',
+      this.labelText = 'Title',
+      Key key})
       : super(key: key);
 
   @override
@@ -17,10 +24,10 @@ class NoteEditorTitle extends StatelessWidget {
             enabled: allowEdit,
             initialValue: title,
             decoration: InputDecoration(
-                labelText: "Title",
+                labelText: labelText,
                 border: InputBorder.none,
-                hintText: 'Enter Title'),
-            onChanged: (s) => changeTitle(s),
+                hintText: hintText),
+            onChanged: onChange,
             maxLines: 1));
   }
 }

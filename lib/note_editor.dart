@@ -138,8 +138,13 @@ class NoteEditorState extends State<NoteEditor>
   Widget build(BuildContext context) {
     List<Widget> items = [];
 
-    items.add(NoteEditorTitle(store.note.title));
+    items.add(NoteEditorTitle(
+      title: store.note.title,
+      onChange: changeTitle,
+      allowEdit: true,
+    ));
 
+    // sections
     for (var i = 0; i < store.note.sections.length; i++) {
       if (!dismissables.containsKey(store.note.sections[i]))
         dismissables[store.note.sections[i]] = GlobalKey();
@@ -152,10 +157,13 @@ class NoteEditorState extends State<NoteEditor>
           moveDown: showMoveDown,
           moveUp: showMoveUp));
     }
-
+    // add section item
     items.add(AddSectionItem());
+
+    // all additional info
     items.add(NoteEditorAdditionalInfo(store.note));
 
+    // audio files as stack
     if (store.note.audioFiles.length > 0)
       items.add(Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
@@ -222,6 +230,7 @@ class NoteEditorState extends State<NoteEditor>
           itemCount: items.length,
         )));
 
+    // bottom sheets
     bool showSheet = recorderStore.state == RecorderState.PAUSING ||
         recorderStore.state == RecorderState.PLAYING ||
         recorderStore.state == RecorderState.RECORDING;
@@ -241,6 +250,8 @@ class NoteEditorState extends State<NoteEditor>
         }).toList();
       },
     );
+
+    // actions
     List<Widget> actions = [
       // IconButton(
       //     icon: Icon(Icons.share),
@@ -280,7 +291,8 @@ class NoteEditorState extends State<NoteEditor>
       //     onPressed: () => _copyToClipboard(context))
       popup,
     ];
-    print(store.note.color);
+
+    // will pop score
     return WillPopScope(
         onWillPop: () async {
           stopAction();
