@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
+import 'package:sound/note_views/appbar.dart';
+import 'package:sound/note_views/seach.dart';
+import 'package:tuple/tuple.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
@@ -40,7 +43,7 @@ class Home extends StatelessWidget {
     LocalStorage().getNotes().then((value) => LocalStorage()
         .controller
         .sink
-        .add(value.where((e) => !e.discarded).toList()));
+        .add(value.where((e) => !e.discarded && !e.isIdea).toList()));
 
     var builder = StreamBuilder<List<Note>>(
       stream: LocalStorage().stream,
@@ -114,121 +117,32 @@ class HomeContentState extends State<HomeContent>
     FileManager();
   }
 
-  _filterSpecificView(
-    String title,
-    List<String> data,
-    FilterBy by,
-  ) {
-    if (!storage.showMore(by)) data = data.take(3).toList();
-    return Container(
-        padding: EdgeInsets.only(bottom: 10),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title.toUpperCase(),
-                      style: Theme.of(context).appBarTheme.textTheme.caption),
-                  (storage.mustShowMore(by))
-                      ? GestureDetector(
-                          onTap: () => toggleShowMore(by),
-                          child: Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Text(
-                                  (storage.showMore(by))
-                                      ? 'Show Less'
-                                      : 'Show More',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .caption
-                                      .copyWith(
-                                          color:
-                                              Theme.of(context).accentColor))))
-                      : Container(height: 0, width: 0),
-                ],
-              ),
-              Container(
-                  height: 50,
-                  child: ListView.builder(
-                    itemCount: data.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      print(data);
-                      Filter filter = Filter(by: by, content: data[index]);
-                      bool isFilterApplied = storage.isFilterApplied(filter);
-
-                      Color backgroundColor = (isFilterApplied)
-                          ? Theme.of(context).chipTheme.selectedColor
-                          : Theme.of(context).chipTheme.backgroundColor;
-
-                      return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: ActionChip(
-                              backgroundColor: backgroundColor,
-                              label: Text(data[index]),
-                              onPressed: () => (isFilterApplied)
-                                  ? removeFilter(filter)
-                                  : addFilter(filter)));
-                    },
-                  ))
-            ]));
-  }
-
   _activeFiltersView() {
-    return Padding(
-        padding: EdgeInsets.only(left: 25, top: 70),
-        child: Container(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-              Container(
-                  height: 50,
-                  child: ListView.builder(
-                    itemCount: storage.filters.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      Filter filter = storage.filters[index];
-                      Color color = Theme.of(context).chipTheme.selectedColor;
-
-                      return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: ActionChip(
-                              backgroundColor: color,
-                              label: Text(
-                                filter.content,
-                              ),
-                              onPressed: () => removeFilter(filter)));
-                    },
-                  ))
-            ])));
+    return ActiveFiltersView(
+        filters: storage.filters, removeFilter: removeFilter);
   }
 
   _filtersView() {
     List<Widget> items = [];
-    List<String> uniqueKeys = DB().uniqueKeys;
-    List<String> uniqueCapos = DB().uniqueCapos;
-    List<String> uniqueTunings = DB().uniqueTunings;
-    List<String> uniqueLabels = DB().uniqueLabels;
 
-    if (uniqueKeys.length >= 0) {
-      items.add(_filterSpecificView("keys", uniqueKeys, FilterBy.KEY));
-    }
+    List<Tuple3<List<String>, FilterBy, String>> filterOptions = [
+      Tuple3(DB().uniqueKeys, FilterBy.KEY, "keys"),
+      Tuple3(DB().uniqueCapos, FilterBy.CAPO, "capos"),
+      Tuple3(DB().uniqueTunings, FilterBy.TUNING, "tunings"),
+      Tuple3(DB().uniqueLabels, FilterBy.LABEL, "labels"),
+    ];
 
-    if (uniqueCapos.length >= 0) {
-      items.add(_filterSpecificView("capos", uniqueCapos, FilterBy.CAPO));
-    }
-
-    if (uniqueTunings.length >= 0) {
-      items.add(_filterSpecificView("tunings", uniqueTunings, FilterBy.TUNING));
-    }
-
-    if (uniqueLabels.length >= 0) {
-      items.add(_filterSpecificView("labels", uniqueLabels, FilterBy.LABEL));
+    for (Tuple3<List<String>, FilterBy, String> option in filterOptions) {
+      if (option.item1.length >= 0) {
+        items.add(FilterOptionsView(
+          title: option.item3,
+          data: option.item1,
+          by: option.item2,
+          showMore: storage.showMore(option.item2),
+          mustShowMore: storage.mustShowMore(option.item2),
+          isFilterApplied: storage.isFilterApplied,
+        ));
+      }
     }
 
     return Padding(
@@ -425,19 +339,9 @@ class HomeContentState extends State<HomeContent>
   }
 
   _searchView() {
-    return TextField(
-      controller: _controller,
-      autofocus: false,
-      style: Theme.of(context).appBarTheme.textTheme.subtitle1,
-      onTap: () => _toggleIsSearching(searching: true),
-      onSubmitted: (s) => _toggleIsSearching(searching: false),
-      decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: "Search...",
-          hintStyle: Theme.of(context).appBarTheme.textTheme.subtitle1),
-      maxLines: 1,
-      minLines: 1,
-      onChanged: (s) => searchNotes(s),
-    );
+    return SearchTextView(
+        toggleIsSearching: _toggleIsSearching,
+        onChanged: searchNotes,
+        controller: _controller);
   }
 }
