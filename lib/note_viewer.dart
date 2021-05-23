@@ -94,7 +94,7 @@ class _NoteViewerState extends State<NoteViewer> {
           icon: Icon(Icons.fast_rewind),
           onPressed: () {
             setState(() {
-              offset = 0.85 * offset;
+              offset = 0.9 * offset;
             });
             _updateScrollOffset();
           }),
@@ -103,7 +103,7 @@ class _NoteViewerState extends State<NoteViewer> {
           icon: Icon(Icons.fast_forward),
           onPressed: () {
             setState(() {
-              offset = 1.15 * offset;
+              offset = 1.1 * offset;
             });
             _updateScrollOffset();
           }),
@@ -148,7 +148,19 @@ class _NoteViewerState extends State<NoteViewer> {
               textScaleFactor *= 0.95;
             });
             _updateZoom();
-          })
+          }),
+      IconButton(
+        color: Theme.of(context).accentColor,
+        icon: Icon(Icons.settings_backup_restore_outlined),
+        onPressed: () {
+          setState(() {
+            textScaleFactor = 1.0;
+            offset = 1.0;
+          });
+          _updateZoom();
+          _updateScrollOffset();
+        },
+      )
     ];
 
     Widget overlay = Container(
