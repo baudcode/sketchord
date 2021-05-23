@@ -42,7 +42,7 @@ class Home extends StatelessWidget {
     LocalStorage().getNotes().then((value) => LocalStorage()
         .controller
         .sink
-        .add(value.where((e) => !e.discarded && !e.isIdea).toList()));
+        .add(value.where((e) => !e.discarded).toList()));
 
     var builder = StreamBuilder<List<Note>>(
       stream: LocalStorage().stream,
