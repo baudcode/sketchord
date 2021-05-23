@@ -126,7 +126,9 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
                 removeTop: isCollapsed ? false : true,
                 child: Material(
                   animationDuration: animateMenuDuration,
-                  child: _getView(),
+                  child: !isCollapsed
+                      ? AbsorbPointer(child: _getView())
+                      : _getView(),
                   borderRadius:
                       BorderRadius.all(Radius.circular(isCollapsed ? 0 : 10)),
                   color: Theme.of(context).appBarTheme.color,
