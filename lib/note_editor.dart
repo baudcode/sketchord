@@ -19,7 +19,6 @@ import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
 import 'package:tuple/tuple.dart';
-import 'dart:ui';
 //import 'recorder.dart';
 //import 'file_manager.dart';
 // import 'recorder_bottom_sheet_store2.dart';
@@ -28,8 +27,6 @@ import "recorder_bottom_sheet.dart";
 import "recorder_store.dart";
 
 import 'utils.dart';
-
-// TODO: Add an animation like this: https://i.pinimg.com/originals/6b/a1/74/6ba174bf48e9b6dc8d8bd19d13c9caa9.gif
 
 class NoteEditor extends StatefulWidget {
   final Note note;
@@ -47,6 +44,7 @@ class NoteEditorState extends State<NoteEditor>
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
+  List<String> popupMenuActions = ["share", "copy"];
 
   Map<Section, GlobalKey> dismissables = {};
 
@@ -118,6 +116,22 @@ class NoteEditorState extends State<NoteEditor>
       );
       _globalKey.currentState.showSnackBar(snackBar);
     });
+  }
+
+  _runPopupAction(String action) {
+    switch (action) {
+      case "share":
+        showExportDialog(context, store.note);
+        break;
+      case "star":
+        toggleStarred();
+        break;
+      case "copy":
+        _copyToClipboard(context);
+        break;
+      default:
+        break;
+    }
   }
 
   @override
@@ -219,11 +233,18 @@ class NoteEditorState extends State<NoteEditor>
         color: recorderStore.state == RecorderState.RECORDING
             ? Theme.of(context).accentColor
             : null);
-
+    PopupMenuButton popup = PopupMenuButton<String>(
+      onSelected: _runPopupAction,
+      itemBuilder: (context) {
+        return popupMenuActions.map<PopupMenuItem<String>>((String action) {
+          return PopupMenuItem(value: action, child: Text(action));
+        }).toList();
+      },
+    );
     List<Widget> actions = [
-      IconButton(
-          icon: Icon(Icons.share),
-          onPressed: () => showExportDialog(context, store.note)),
+      // IconButton(
+      //     icon: Icon(Icons.share),
+      //     onPressed: () => showExportDialog(context, store.note)),
       IconButton(
           icon: Icon((store.note.starred) ? Icons.star : Icons.star_border),
           onPressed: toggleStarred),
@@ -254,9 +275,10 @@ class NoteEditorState extends State<NoteEditor>
                         showAudioFiles: false,
                         showTitle: false)));
           }),
-      IconButton(
-          icon: Icon(Icons.content_copy),
-          onPressed: () => _copyToClipboard(context))
+      // IconButton(
+      //     icon: Icon(Icons.content_copy),
+      //     onPressed: () => _copyToClipboard(context))
+      popup,
     ];
     print(store.note.color);
     return WillPopScope(
