@@ -162,6 +162,7 @@ playInDialog(BuildContext context, AudioFile f) {
 
   showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           void onPlay() async {
@@ -184,11 +185,13 @@ playInDialog(BuildContext context, AudioFile f) {
           }
 
           player.onAudioPositionChanged.listen((event) {
-            print(event);
-            setState(() => position = event);
+            if (event.inMilliseconds < f.duration.inMilliseconds) {
+              setState(() => position = event);
+            }
           });
 
           player.onDurationChanged.listen((event) {
+            print("duration chaned: ${event}");
             if (event != null &&
                 event.inMilliseconds != duration.inMilliseconds) {
               setState(() {
@@ -203,7 +206,6 @@ playInDialog(BuildContext context, AudioFile f) {
             });
             onPlay();
           });
-
           return AlertDialog(
             title: Text(f.name, textScaleFactor: 0.8),
             content: Column(
@@ -214,7 +216,7 @@ playInDialog(BuildContext context, AudioFile f) {
                     child: Expanded(
                         child: Slider(
                       min: 0.0,
-                      max: (f.duration.inMilliseconds / 1000).toDouble(),
+                      max: (duration.inMilliseconds / 1000).toDouble(),
                       value: (position.inMilliseconds / 1000).toDouble(),
                       onChanged: (value) {
                         print("on changed to $value");
