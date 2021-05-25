@@ -49,9 +49,9 @@ class _NoteViewerState extends State<NoteViewer> {
 
   @override
   void dispose() {
-    setState(() {
-      isPlaying = false;
-    });
+    // setState(() {
+    //   isPlaying = false;
+    // });
     super.dispose();
   }
 
