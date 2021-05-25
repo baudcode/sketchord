@@ -180,7 +180,7 @@ class RecorderBottomSheetStore extends Store {
       if (_currentStatus != current.status) {
         _currentStatus = current.status;
         _current = current;
-        print("update to ${current.duration.inSeconds}");
+
         trigger();
       }
 
