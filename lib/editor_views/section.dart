@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Editable extends StatefulWidget {
   final String initialValue, hintText;
@@ -178,8 +181,9 @@ class SectionListItem extends StatelessWidget {
 class SectionView extends StatelessWidget {
   final Section section;
   final double textScaleFactor;
+  final bool richChords;
 
-  SectionView({this.section, this.textScaleFactor});
+  SectionView({this.section, this.textScaleFactor, this.richChords = false});
 
   @override
   Widget build(BuildContext context) {
@@ -199,18 +203,31 @@ class SectionView extends StatelessWidget {
                           Padding(
                               padding: EdgeInsets.only(bottom: 10),
                               child: Text(section.title,
-                                  style: Theme.of(context).textTheme.subtitle1,
+                                  style: GoogleFonts.robotoMono(
+                                    textStyle: Theme.of(context)
+                                        .textTheme
+                                        .subtitle1
+                                        .copyWith(),
+                                    fontSize: 14,
+                                    fontFeatures: [
+                                      FontFeature.enable('smcp'),
+                                    ],
+                                  ),
                                   textScaleFactor: textScaleFactor,
                                   maxLines: 1)),
                           Wrap(children: [
                             Text(
-                              section.content,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .subtitle2
-                                  .copyWith(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.normal),
+                              (richChords)
+                                  ? resolveRichContent(section.content)
+                                  : section.content,
+                              style: GoogleFonts.robotoMono(
+                                textStyle:
+                                    Theme.of(context).textTheme.subtitle2,
+                                fontSize: 10,
+                                letterSpacing: 0,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                                fontWeight: FontWeight.normal,
+                              ),
                               textScaleFactor: textScaleFactor,
                               maxLines: null,
                             )

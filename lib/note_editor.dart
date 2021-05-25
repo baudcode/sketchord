@@ -284,6 +284,7 @@ class NoteEditorState extends State<NoteEditor>
                     builder: (context) => NoteViewer(store.note,
                         showAdditionalInformation: false,
                         showAudioFiles: false,
+                        showSheet: true,
                         showTitle: false)));
           }),
       // IconButton(

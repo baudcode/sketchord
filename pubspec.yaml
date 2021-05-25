@@ -38,6 +38,7 @@ dependencies:
   flutter_audio_recorder: ^0.5.5
   flushbar: ^1.10.4
   pdf: ^1.11.1
+  google_fonts: ^1.1.2
   receive_sharing_intent: ^1.4.1
   clipboard_manager: ^0.0.4
   # html: ^0.14.0+3

@@ -5,6 +5,7 @@ import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
+import 'package:sound/recorder_bottom_sheet.dart';
 
 class NoteViewer extends StatefulWidget {
   final Note note;
@@ -12,13 +13,15 @@ class NoteViewer extends StatefulWidget {
   final bool showAudioFiles,
       showAdditionalInformation,
       showTitle,
-      showZoomPlayback;
+      showZoomPlayback,
+      showSheet;
 
   NoteViewer(this.note,
       {this.actions,
       this.showZoomPlayback = true,
       this.showAudioFiles = true,
       this.showTitle = true,
+      this.showSheet = false,
       this.showAdditionalInformation = true,
       Key key})
       : super(key: key);
@@ -72,12 +75,18 @@ class _NoteViewerState extends State<NoteViewer> {
     List<Widget> items = [];
 
     if (widget.showTitle) {
-      items.add(NoteEditorTitle(title: widget.note.title, allowEdit: false));
+      items.add(NoteEditorTitle(
+        title: widget.note.title,
+        allowEdit: false,
+        onChange: (_) {},
+      ));
     }
 
     for (Section section in widget.note.sections) {
-      items
-          .add(SectionView(section: section, textScaleFactor: textScaleFactor));
+      items.add(SectionView(
+          section: section,
+          textScaleFactor: textScaleFactor,
+          richChords: true));
     }
 
     List<Widget> playingActions = [
@@ -202,6 +211,9 @@ class _NoteViewerState extends State<NoteViewer> {
             : AppBar(
                 actions: widget.actions,
               ),
+        bottomSheet: widget.showSheet
+            ? RecorderBottomSheet(key: Key("bottomSheetViewer"))
+            : null,
         body: Container(
           child: Stack(children: [
             Container(
