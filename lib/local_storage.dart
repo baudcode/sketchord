@@ -116,6 +116,7 @@ class LocalStorage {
           conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
+    note.lastModified = DateTime.now();
     Map<String, dynamic> data = note.toJson();
     data.remove('sections');
     data.remove('audioFiles');
@@ -196,7 +197,7 @@ class LocalStorage {
     _controller.sink.add(await getNotes());
   }
 
-  Future<int> _update(String table, Map<String, dynamic> data,
+  Future<int> _updateTable(String table, Map<String, dynamic> data,
       {String where = 'id = ?'}) async {
     final db = await getDatabase();
 
@@ -215,11 +216,12 @@ class LocalStorage {
 
   Future<void> _updateNote(Note note) async {
     // this function does not update sections and audio files
+    note.lastModified = DateTime.now();
     var data = note.toJson();
     data.remove("sections");
     data.remove("audioFiles");
 
-    await _update(noteTable, data);
+    await _updateTable(noteTable, data);
     _controller.sink.add(await getNotes());
   }
 
