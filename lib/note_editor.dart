@@ -58,7 +58,7 @@ class NoteEditorState extends State<NoteEditor>
 
     recordingFinished.clearListeners();
     recordingFinished.listen((f) {
-      print("recording finished ${f.path}");
+      print("recording finished ${f.path} with duration ${f.duration}");
       addAudioFile(f);
     });
   }
