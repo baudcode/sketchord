@@ -3,16 +3,20 @@ import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
-RangeValues deserializeRangeValues(dynamic c) {
+RangeValues deserializeRangeValues(String c) {
   if (c == null) return null;
-  var s = new Map<String, double>.from(c);
-  return RangeValues(s['start'], s['end']);
+
+  try {
+    var range = c.split(",").map<double>((b) => double.parse(b)).toList();
+    return RangeValues(range[0], range[1]);
+  } catch (e) {
+    return null;
+  }
 }
 
-Map<String, double> serializeRangeValues(RangeValues v) {
+String serializeRangeValues(RangeValues v) {
   if (v == null) return null;
-
-  return {"start": v.start, "end": v.end};
+  return "${v.start},${v.end}";
 }
 
 class AudioFile {
