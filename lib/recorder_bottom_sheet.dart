@@ -55,7 +55,7 @@ class _BottomInfoState extends State<BottomInfo>
     String timeString = _elapsed;
 
     if (length != null) {
-      timeString += " / " + length.inSeconds.toString();
+      timeString += " / " + (length.inMilliseconds / 1000).toStringAsFixed(1);
     }
     timeString += " s";
 

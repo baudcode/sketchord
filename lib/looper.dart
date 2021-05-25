@@ -79,7 +79,7 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
           onChangeEnd: (double endLowerValue, double endUpperValue) {
             setLoopRange(RangeValues(endLowerValue, endUpperValue));
           },
-          max: store.currentLength.inSeconds.toDouble(),
+          max: (store.currentLength.inMilliseconds / 1000.0).toDouble(),
           showValueIndicator: true,
           lowerValue: lowerValue,
           upperValue: upperValue,
