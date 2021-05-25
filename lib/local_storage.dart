@@ -147,7 +147,7 @@ class LocalStorage {
 
     // copy maps to sort them properly
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
-    maps.sort((s1, s2) => s1['idx'] > s2['idx']);
+    maps.sort((s1, s2) => s1['idx'] - s2['idx']);
     return maps.map((s) => AudioFile.fromJson(s)).toList();
   }
 
