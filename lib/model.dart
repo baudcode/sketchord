@@ -17,7 +17,6 @@ Map<String, double> serializeRangeValues(RangeValues v) {
 
 class AudioFile {
   String path, id, name;
-  String downloadURL;
   DateTime createdAt, lastModified;
   RangeValues loopRange;
 
@@ -72,10 +71,9 @@ class AudioFile {
         path: map["path"]);
   }
 
-  Map<dynamic, dynamic> toJson() {
+  Map<String, dynamic> toJson() {
     return {
       "createdAt": serializeDateTime(createdAt),
-      "downloadURL": downloadURL,
       "loopRange": serializeRangeValues(loopRange),
       "id": id,
       "path": path,
@@ -111,7 +109,7 @@ class Section {
     return Section(content: map['content'], title: map['title'], id: map['id']);
   }
 
-  Map<dynamic, dynamic> toJson() {
+  Map<String, dynamic> toJson() {
     return {"title": title, "content": content, "id": id};
   }
 
@@ -177,7 +175,7 @@ class Note {
         lastModified: DateTime.now(),
         key: null,
         tuning: null,
-        id: null,
+        id: Uuid().v4(),
         capo: null,
         instrument: "Guitar",
         label: "",
@@ -193,6 +191,7 @@ class Note {
 
   Map<String, dynamic> toJson() {
     return {
+      "id": id,
       "title": title,
       "createdAt": serializeDateTime(createdAt),
       "lastModified": serializeDateTime(lastModified),
@@ -202,7 +201,7 @@ class Note {
       "instrument": instrument,
       "label": label,
       "artist": artist,
-      "starred": starred,
+      "starred": (starred) ? 1 : 0,
       "scrollOffset": scrollOffset,
       "zoom": zoom,
       "bpm": bpm,
@@ -211,7 +210,7 @@ class Note {
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
       "audioFiles":
           audioFiles.map<Map<dynamic, dynamic>>((a) => a.toJson()).toList(),
-      "discarded": discarded,
+      "discarded": discarded ? 1 : 0,
     };
   }
 
@@ -234,10 +233,11 @@ class Note {
         instrument: json.containsKey("instrument") ? json['instrument'] : null,
         label: json.containsKey("label") ? json['label'] : null,
         bpm: json.containsKey("bpm") ? json['bpm'] : null,
-        starred: json.containsKey("starred") ? json['starred'] : false,
+        starred: json.containsKey("starred") ? json['starred'] == 1 : false,
         color:
             json.containsKey("color") ? deserializeColor(json['color']) : null,
-        discarded: json.containsKey("discarded") ? json['discarded'] : false,
+        discarded:
+            json.containsKey("discarded") ? json['discarded'] == 1 : false,
         artist: json.containsKey("artist") ? json['artist'] : null,
 
         // viewer info
@@ -246,8 +246,9 @@ class Note {
             json.containsKey("scrollOffset") ? json['scrollOffset'] : 1.0,
 
         // sections/audiofiles
-        sections:
-            json['sections'].map<Section>((s) => Section.fromJson(s)).toList(),
+        sections: json.containsKey("sections")
+            ? json['sections'].map<Section>((s) => Section.fromJson(s)).toList()
+            : [],
         audioFiles: json.containsKey("audioFiles")
             ? json['audioFiles']
                 .map<AudioFile>((s) => AudioFile.fromJson(s))
@@ -302,15 +303,22 @@ class Settings {
   EditorView view; // single, double
   AudioFormat audioFormat; // aac, wav
   String name;
+  bool isInitialStart;
 
-  Settings({this.theme, this.view, this.audioFormat, this.name});
+  Settings(
+      {this.theme,
+      this.view,
+      this.audioFormat,
+      this.name,
+      this.isInitialStart});
 
   Map<String, dynamic> toJson() {
     return {
       "theme": theme == SettingsTheme.dark ? "dark" : "light",
       "view": view == EditorView.single ? "single" : "double",
       "audioFormat": audioFormat == AudioFormat.AAC ? "aac" : "wav",
-      "name": name
+      "name": name,
+      "isInitialStart": isInitialStart
     };
   }
 
@@ -320,6 +328,8 @@ class Settings {
             json['theme'] == 'dark' ? SettingsTheme.dark : SettingsTheme.light,
         view: json['view'] == "single" ? EditorView.single : EditorView.double,
         name: json.containsKey("name") ? json['name'] : null,
+        isInitialStart:
+            json.containsKey("isInitialStart") ? json['isInitialStart'] : false,
         audioFormat:
             json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV);
   }
