@@ -91,7 +91,8 @@ class AudioFile {
 
   bool operator ==(o) => o is AudioFile && id == o.id;
 
-  String get durationString => duration.inSeconds.toString() + " s";
+  String get durationString =>
+      (duration.inMilliseconds / 1000).toStringAsFixed(1) + " s";
 }
 
 class Section {
