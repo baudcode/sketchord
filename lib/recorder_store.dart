@@ -6,7 +6,9 @@ import 'package:flutter_flux/flutter_flux.dart' show Store, Action, StoreToken;
 // import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sound/editor_store.dart';
 import 'package:sound/settings_store.dart';
+import 'package:tuple/tuple.dart';
 import 'dart:async';
 import 'model.dart';
 import 'dart:io';
@@ -111,6 +113,7 @@ class RecorderBottomSheetStore extends Store {
 
     _player.onDurationChanged.listen((event) {
       if (_currentLength != event) {
+        setDuration(Tuple2(_audioFile, event));
         _currentLength = event;
         trigger();
       }

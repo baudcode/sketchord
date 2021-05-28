@@ -181,6 +181,17 @@ class NoteEditorStore extends Store {
       await LocalStorage().syncNoteAttr(_note, 'color');
       trigger();
     });
+
+    setDuration.listen((Tuple2<AudioFile, Duration> a) async {
+      for (AudioFile f in _note.audioFiles) {
+        if (f.id == a.item1.id) {
+          print("setting duration of ${f.id} to duration ${a.item2}");
+          f.duration = a.item2;
+        }
+      }
+      await LocalStorage().syncNoteAttr(_note, 'audioFiles');
+      trigger();
+    });
   }
 }
 
@@ -208,5 +219,6 @@ Action<Tuple2<AudioFile, bool>> uploadCallback = Action();
 Action updateNoteEditorView = Action();
 Action toggleStarred = Action();
 Action<Color> changeColor = Action();
+Action<Tuple2<AudioFile, Duration>> setDuration = Action();
 
 StoreToken noteEditorStoreToken = StoreToken(NoteEditorStore());
