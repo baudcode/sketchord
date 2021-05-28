@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
@@ -57,9 +59,19 @@ class NoteEditorState extends State<NoteEditor>
     print("INIT EDITOR");
 
     recordingFinished.clearListeners();
-    recordingFinished.listen((f) {
+    recordingFinished.listen((f) async {
       print("recording finished ${f.path} with duration ${f.duration}");
-      addAudioFile(f);
+
+      final player = AudioPlayer();
+      await player.setUrl(f.path);
+
+      return Future.delayed(
+        const Duration(milliseconds: 200),
+        () async {
+          f.duration = Duration(milliseconds: await player.getDuration());
+          addAudioFile(f);
+        },
+      );
     });
   }
 
