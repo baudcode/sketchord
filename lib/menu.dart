@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/home.dart';
 import 'package:sound/intent_receive.dart';
@@ -64,6 +65,8 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
     setState(() {
       current = item;
     });
+    FirebaseAnalytics()
+        .logEvent(name: 'Menu', parameters: {'Value': item.index});
     //Navigator.push(
     //    context, new MaterialPageRoute(builder: (context) => Settings()));
   }
