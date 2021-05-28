@@ -1,4 +1,5 @@
 import 'package:flutter_flux/flutter_flux.dart';
+import 'package:sound/utils.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'model.dart';
@@ -287,6 +288,7 @@ class StaticStorage extends Store {
         return true;
       if (note.sections.any((s) =>
           s.content.toLowerCase().contains(search) ||
+          resolveRichContent(s.content).toLowerCase().contains(search) ||
           s.title.toLowerCase().contains(search))) return true;
     }
     return false;

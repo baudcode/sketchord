@@ -66,13 +66,18 @@ class AbstractNoteItem extends StatelessWidget {
   Widget highlightSectionText(
       BuildContext context, String text, String highlight,
       {int maxLines = 9}) {
+    if (highlight != null) {
+      highlight = highlight.toLowerCase();
+    }
+
     List<TextSpan> spans = [];
 
     if (highlight == null) {
       spans.add(TextSpan(text: text));
     } else {
       List<String> sections = text.split("\n");
-      int start = text.indexOf(highlight);
+
+      int start = text.toLowerCase().indexOf(highlight);
 
       if (start == -1)
         spans.add(TextSpan(text: text));
@@ -129,7 +134,7 @@ class AbstractNoteItem extends StatelessWidget {
   String sectionText() {
     String text = "";
     for (Section section in note.sections) {
-      text += section.content + '\n';
+      text += resolveRichContent(section.content) + '\n';
     }
     return text;
   }

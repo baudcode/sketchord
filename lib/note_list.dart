@@ -36,7 +36,7 @@ class NoteListState extends State<NoteList> {
   }
 
   List<NoteListItemModel> processList(List<NoteListItemModel> data, bool even) {
-    List<NoteListItemModel> returns = new List();
+    List<NoteListItemModel> returns = [];
 
     for (int i = 0; i < data.length; i++) {
       if (even && i % 2 == 0) returns.add(data[i]);
