@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sound/home.dart';
 import 'package:sound/intent_receive.dart';
+import 'package:sound/collections.dart';
 import 'package:sound/settings.dart';
 import 'package:sound/trash.dart';
 
@@ -13,7 +14,7 @@ class Menu extends StatefulWidget {
   }
 }
 
-enum MenuItem { HOME, SETTINGS, TRASH }
+enum MenuItem { HOME, SETTINGS, TRASH, SETS }
 
 class MenuOption {
   MenuItem item;
@@ -35,6 +36,8 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
 
   var options = [
     MenuOption(icon: Icons.dashboard, name: "Home", item: MenuItem.HOME),
+    MenuOption(
+        icon: Icons.list_alt_outlined, name: "Sets", item: MenuItem.SETS),
     MenuOption(icon: Icons.delete_sweep, name: "Trash", item: MenuItem.TRASH),
     MenuOption(icon: Icons.settings, name: "Settings", item: MenuItem.SETTINGS),
   ];
@@ -104,6 +107,8 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
         return Settings(this._onMenuPressed);
       case MenuItem.TRASH:
         return Trash(this._onMenuPressed);
+      case MenuItem.SETS:
+        return Collections(this._onMenuPressed);
       default:
         return Container();
     }

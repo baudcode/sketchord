@@ -135,6 +135,7 @@ String serializeDuration(Duration d) {
 }
 
 DateTime deserializeDateTime(String s) {
+  if (s == null) return null;
   List<String> params = s.split("-");
   List<int> t = params.map<int>((i) => int.parse(i)).toList();
   return DateTime(t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7]);
@@ -172,6 +173,10 @@ class Note {
 
   double scrollOffset;
   double zoom; // text scaling factor
+
+  bool get hasEmptyTitle {
+    return this.title == null || this.title.trim() == "";
+  }
 
   factory Note.empty() {
     return Note(
@@ -337,5 +342,64 @@ class Settings {
             json.containsKey("isInitialStart") ? json['isInitialStart'] : false,
         audioFormat:
             json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV);
+  }
+}
+
+class NoteCollection {
+  String id;
+  List<Note> notes;
+  String title, description;
+  bool starred;
+
+  DateTime lastModified, createdAt;
+
+  NoteCollection(
+      {this.id,
+      this.notes,
+      this.title,
+      this.starred,
+      this.description,
+      this.createdAt,
+      this.lastModified});
+
+  factory NoteCollection.empty() {
+    return NoteCollection(
+        id: Uuid().v4(),
+        notes: [],
+        title: "",
+        description: "",
+        starred: false,
+        createdAt: DateTime.now(),
+        lastModified: DateTime.now());
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "notes": notes.map((e) => e.toJson()).toList(),
+      "title": title,
+      "description": description,
+      "starred": starred ? 1 : 0,
+      "createdAt": createdAt == null ? null : serializeDateTime(createdAt),
+      "lastModified":
+          lastModified == null ? null : serializeDateTime(lastModified),
+    };
+  }
+
+  factory NoteCollection.fromJson(Map<String, dynamic> json) {
+    return NoteCollection(
+      id: json.containsKey("id") ? json['id'] : Uuid().v4(),
+      notes: json.containsKey("notes")
+          ? json['notes'].map<Note>((n) => Note.fromJson(n, n['id'])).toList()
+          : [],
+      title: json.containsKey("title") ? json['title'] : "",
+      description: json.containsKey("description") ? json['description'] : "",
+      starred: json.containsKey("starred") ? json['starred'] == 1 : false,
+      lastModified: json.containsKey("lastModified")
+          ? deserializeDateTime(json['lastModified'])
+          : DateTime.now(),
+      createdAt: json.containsKey("createdAt")
+          ? deserializeDateTime(json['createdAt'])
+          : DateTime.now(),
+    );
   }
 }

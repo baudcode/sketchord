@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/import_dialog.dart';
-import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/utils.dart';
 import 'package:uuid/uuid.dart';

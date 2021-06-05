@@ -8,8 +8,23 @@ class DB {
   List<Note> _notes = [];
   List<Note> get notes => _notes;
 
+  List<NoteCollection> _collections = [];
+  List<NoteCollection> get collections => _collections;
+
   void setNotes(List<Note> l) {
     _notes = l;
+  }
+
+  void setCollections(List<NoteCollection> l) {
+    _collections = l;
+  }
+
+  void addCollection(NoteCollection collection) {
+    _collections.add(collection);
+  }
+
+  void removeCollection(NoteCollection collection) {
+    _collections.remove(collection);
   }
 
   void addNote(Note note) {
