@@ -32,6 +32,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     Future.delayed(Duration(milliseconds: 1000), () async {
       bool initialStart = await LocalStorage().isInitialStart();
+      initialStart = false;
       if (initialStart) {
         showInitialImportDialog(context, (_) {
           LocalStorage().setInitialStartDone();
@@ -340,7 +341,9 @@ class HomeContentState extends State<HomeContent>
   _searchView() {
     return SearchTextView(
         toggleIsSearching: _toggleIsSearching,
-        onChanged: searchNotes,
+        onChanged: (s) {
+          searchNotes(s);
+        },
         controller: _controller);
   }
 }
