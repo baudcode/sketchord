@@ -68,6 +68,7 @@ class NoteEditorStore extends Store {
       await LocalStorage().syncNoteAttr(_note, 'sections');
       trigger();
     });
+
     moveSectionUp.listen((s) async {
       int index = _note.sections.indexOf(s);
       if (index >= 1) {
