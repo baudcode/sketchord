@@ -30,7 +30,10 @@ class AudioFileListItem extends StatelessWidget {
       dense: true,
       visualDensity: VisualDensity.comfortable,
       contentPadding: EdgeInsets.all(2),
-      leading: IconButton(icon: Icon(Icons.play_arrow), onPressed: onPressed),
+      leading: IconButton(
+          icon: Icon(Icons.play_arrow),
+          onPressed: onPressed,
+          color: Theme.of(context).iconTheme.color),
       title: Text(file.name),
     );
   }
@@ -137,12 +140,12 @@ class AudioFileView extends StatelessWidget {
       key: GlobalKey(),
       background: Card(
           child: Container(
-              color: Colors.greenAccent,
+              color: Theme.of(context).highlightColor,
               child: Row(children: <Widget>[Icon(Icons.share)]),
               padding: EdgeInsets.all(10))),
       secondaryBackground: Card(
           child: Container(
-              color: Colors.redAccent,
+              color: Theme.of(context).accentColor,
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[Icon(Icons.delete)]),

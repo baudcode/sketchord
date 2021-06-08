@@ -171,7 +171,7 @@ class SectionListItem extends StatelessWidget {
       key: globalKey,
       background: Card(
           child: Container(
-              color: Colors.redAccent,
+              color: Theme.of(context).accentColor,
               child: Row(children: <Widget>[Icon(Icons.delete)]),
               padding: EdgeInsets.all(10))),
     );
