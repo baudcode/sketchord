@@ -1,12 +1,9 @@
-import 'dart:io';
-
-import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
-import 'package:flutter_share/flutter_share.dart';
+import 'package:sound/dialogs/add_to_collection_dialog.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/editor_views/additional_info.dart';
@@ -46,7 +43,8 @@ class NoteEditorState extends State<NoteEditor>
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
-  List<String> popupMenuActions = ["share", "copy"];
+  List<String> popupMenuActions = ["share", "copy", "add"];
+  List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Collection"];
 
   Map<Section, GlobalKey> dismissables = {};
 
@@ -140,6 +138,9 @@ class NoteEditorState extends State<NoteEditor>
         break;
       case "copy":
         _copyToClipboard(context);
+        break;
+      case "add":
+        showAddToCollectionDialog(context, store.note);
         break;
       default:
         break;
@@ -258,7 +259,10 @@ class NoteEditorState extends State<NoteEditor>
       onSelected: _runPopupAction,
       itemBuilder: (context) {
         return popupMenuActions.map<PopupMenuItem<String>>((String action) {
-          return PopupMenuItem(value: action, child: Text(action));
+          int index = popupMenuActions.indexOf(action);
+
+          return PopupMenuItem(
+              value: action, child: Text(popupMenuActionsLong[index]));
         }).toList();
       },
     );
