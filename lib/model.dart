@@ -3,6 +3,8 @@ import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
+const EMPTY_TEXT = "Empty";
+
 RangeValues deserializeRangeValues(String c) {
   if (c == null) return null;
 
