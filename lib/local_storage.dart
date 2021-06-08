@@ -166,7 +166,7 @@ class LocalStorage {
     return maps.map((s) => AudioFile.fromJson(s)).toList();
   }
 
-  Future<Note> getNote(Map<String, dynamic> data) async {
+  Future<Note> parseNote(Map<String, dynamic> data) async {
     String noteId = data['id'];
     if (noteId == null) return null;
 
@@ -174,6 +174,16 @@ class LocalStorage {
     note.sections = await getSections(noteId);
     note.audioFiles = await getAudioFiles(noteId);
     return note;
+  }
+
+  Future<Note> getNoteById(String id) async {
+    final List<Map<String, dynamic>> maps = await (await getDatabase())
+        .query(noteTable, where: "id = ?", whereArgs: [id]);
+
+    if (maps == null || maps.length == 0)
+      return null;
+    else
+      return parseNote(maps[0]);
   }
 
   Future<List<Note>> getNotes() async {
@@ -185,7 +195,7 @@ class LocalStorage {
     List<Note> notes = [];
 
     for (var map in maps) {
-      Note note = await getNote(map);
+      Note note = await parseNote(map);
       if (note != null) notes.add(note);
     }
     return notes;
@@ -269,9 +279,10 @@ class LocalStorage {
     if (maps == null) return [];
 
     List<Note> notes = [];
+    print("found ${maps.length} results");
 
     for (var map in maps) {
-      Note note = await getNote(map);
+      Note note = await getNoteById(map['noteId']);
       if (note != null) notes.add(note);
     }
     return notes;
