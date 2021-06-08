@@ -38,42 +38,46 @@ showAddNotesDialog(
 
       return StatefulBuilder(builder: (context, setState) {
         var width = MediaQuery.of(context).size.width;
+
         return AlertDialog(
           title: new Text(title),
           content: Builder(builder: (context) {
-            return ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(maxHeight: 16, maxWidth: 160),
-                        child: Text(
-                          emptyTitle(notes[index])
-                              ? "Empty"
-                              : notes[index].title,
-                          overflow: TextOverflow.clip,
-                        )),
-                    onTap: () {
-                      setState(() {
-                        if (isSelected(index)) {
-                          selected.remove(notes[index]);
-                        } else {
-                          selected.add(notes[index]);
-                        }
-                      });
+            return Container(
+                width: width,
+                height: 400,
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading: ConstrainedBox(
+                            constraints:
+                                BoxConstraints(maxHeight: 16, maxWidth: 160),
+                            child: Text(
+                              emptyTitle(notes[index])
+                                  ? "Empty"
+                                  : notes[index].title,
+                              overflow: TextOverflow.clip,
+                            )),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected(index)) {
+                              selected.remove(notes[index]);
+                            } else {
+                              selected.add(notes[index]);
+                            }
+                          });
+                        },
+                        trailing: isSelected(index)
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.check,
+                                  color: getSelectedCardColor(context),
+                                ),
+                                onPressed: () {})
+                            : null,
+                      );
                     },
-                    trailing: isSelected(index)
-                        ? IconButton(
-                            icon: Icon(
-                            Icons.check,
-                            color: getSelectedCardColor(context),
-                          ))
-                        : null,
-                  );
-                },
-                itemCount: notes.length);
+                    itemCount: notes.length));
           }),
           actions: <Widget>[
             new TextButton(
