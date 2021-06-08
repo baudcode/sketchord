@@ -248,6 +248,7 @@ class _CollectionEditorState extends State<CollectionEditor>
       bool showMoveUp = (i != 0);
       bool showMoveDown = (i != (store.collection.notes.length - 1));
       notes.add(CollecitonNoteListItem(
+          idx: i + 1,
           globalKey: dismissables[store.collection.notes[i]],
           note: store.collection.notes[i],
           moveDown: showMoveDown,
@@ -269,7 +270,7 @@ class _CollectionEditorState extends State<CollectionEditor>
               onChanged: changeCollectionDescription,
               maxlines: 1),
           Padding(
-              padding: EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Row(children: [
                 Text("Notes", style: Theme.of(context).textTheme.caption)
               ])),
@@ -327,14 +328,53 @@ class _CollectionEditorState extends State<CollectionEditor>
   }
 }
 
+class AroundText extends StatelessWidget {
+  final String text;
+  final double radius;
+  final BoxShape shape;
+  const AroundText(
+      {this.text, this.radius = 30, this.shape = BoxShape.rectangle, Key key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Color background = Theme.of(context).appBarTheme.backgroundColor;
+    background = Theme.of(context).accentColor;
+    return Container(
+      width: this.radius,
+      height: this.radius,
+      decoration: BoxDecoration(
+        border: Border.all(width: 1, color: background),
+        shape: BoxShape.rectangle,
+        // You can use like this way or like the below line
+        //borderRadius: new BorderRadius.circular(30.0),
+        //color: Theme.of(context).appBarTheme.backgroundColor,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(this.text),
+        ],
+      ),
+    );
+  }
+}
+
 class CollecitonNoteListItem extends StatelessWidget {
   // Section section, bool moveDown, bool moveUp, GlobalKey globalKey) {
   final Note note;
+  final int idx;
   final bool moveDown, moveUp;
   final GlobalKey globalKey;
 
   const CollecitonNoteListItem(
-      {this.note, this.moveUp, this.moveDown, this.globalKey, Key key})
+      {this.note,
+      this.idx,
+      this.moveUp,
+      this.moveDown,
+      this.globalKey,
+      Key key})
       : super(key: key);
 
   @override
@@ -357,24 +397,29 @@ class CollecitonNoteListItem extends StatelessWidget {
 
     Card card = Card(
         child: Container(
+            padding: EdgeInsets.zero,
             child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Expanded(
-            child: Container(
-                padding: EdgeInsets.all(10),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Text(note.title,
-                              style: Theme.of(context).textTheme.subtitle1)),
-                    ]))),
-        trailing
-      ],
-    )));
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.only(left: 10, top: 10),
+                    child: AroundText(text: idx.toString())),
+                Expanded(
+                    child: Container(
+                        padding: EdgeInsets.all(15),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  note.hasEmptyTitle
+                                      ? EMPTY_TEXT.toUpperCase()
+                                      : note.title,
+                                  style: Theme.of(context).textTheme.subtitle1),
+                            ]))),
+                trailing
+              ],
+            )));
 
     return Dismissible(
       child: card,
@@ -389,9 +434,9 @@ class CollecitonNoteListItem extends StatelessWidget {
       key: globalKey,
       background: Card(
           child: Container(
-              color: Colors.redAccent,
+              color: Theme.of(context).accentColor,
               child: Row(children: <Widget>[Icon(Icons.delete)]),
-              padding: EdgeInsets.all(10))),
+              padding: EdgeInsets.all(8))),
     );
   }
 }
