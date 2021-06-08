@@ -57,22 +57,22 @@ class NoteEditorAdditionalInfo extends StatelessWidget {
           _edit(
               initial: note.tuning == null ? "" : note.tuning,
               title: "Tuning",
-              hint: "f.e. Standard, Dadgad",
+              hint: "Standard, Dadgad ...",
               onChanged: changeTuning),
           _edit(
               initial: note.capo == null ? "" : note.capo.toString(),
               title: "Capo",
-              hint: "f.e. 7, 5",
+              hint: "7, 5 ...",
               onChanged: changeCapo),
           _edit(
               initial: note.key == null ? "" : note.key.toString(),
               title: "Key",
-              hint: "f.e. C Major, A Minor",
+              hint: "C Major, A Minor ...",
               onChanged: changeKey),
           _edit(
               initial: note.label == null ? "" : note.label.toString(),
               title: "Label",
-              hint: "f.e. Rock, Pop...",
+              hint: "Idea, Rock, Pop...",
               onChanged: changeLabel),
           _edit(
               initial: note.artist == null ? "" : note.artist.toString(),
