@@ -205,12 +205,12 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       return Container(
           decoration: BoxDecoration(
               color: Theme.of(context).bottomAppBarColor,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
+              borderRadius: BorderRadius.all(Radius.circular(15)),
               boxShadow: [
                 BoxShadow(
                   color: Theme.of(context).appBarTheme.color,
-                  spreadRadius: 1,
-                  blurRadius: 15,
+                  spreadRadius: 5,
+                  blurRadius: 10,
                 ),
               ]),
           height: 300,
