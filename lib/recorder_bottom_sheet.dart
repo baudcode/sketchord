@@ -209,7 +209,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
               boxShadow: [
                 BoxShadow(
                   color: Theme.of(context).appBarTheme.color,
-                  spreadRadius: 5,
+                  spreadRadius: 2,
                   blurRadius: 10,
                 ),
               ]),
