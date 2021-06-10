@@ -10,9 +10,17 @@ import "model.dart";
 import 'package:path/path.dart' as p;
 
 const NOTES_FILENAME = "notes.json";
+const COLLECTIONS_FILENAME = "collections.json";
 
 class ImportException implements Exception {
   String errMsg() => 'cannot import file';
+}
+
+class BackupData {
+  final List<Note> notes;
+  final List<NoteCollection> collections;
+
+  BackupData({this.notes, this.collections});
 }
 
 class Backup {
@@ -32,7 +40,7 @@ class Backup {
     return Directory(p.join(root.path, 'files'));
   }
 
-  Future<List<Note>> importZip() async {
+  Future<BackupData> importZip() async {
     File f = await FilePicker.getFile(
       type: FileType.custom,
       allowedExtensions: ['zip'],
@@ -40,19 +48,19 @@ class Backup {
     return await readZip(f.path);
   }
 
-  Future<List<Note>> import() async {
+  Future<BackupData> import() async {
     File f = await FilePicker.getFile(
       type: FileType.any,
       // allowedExtensions: ['zip', 'json'],
     );
     if (f.path.endsWith(".json")) {
       Note note = readNote(f.path);
-      return [note];
+      return BackupData(notes: [note], collections: []);
     } else if (f.path.endsWith(".zip")) {
       return await readZip(f.path);
     }
 
-    return [];
+    return BackupData(notes: [], collections: []);
   }
 
   String decodeZipContent(ArchiveFile f) {
@@ -60,8 +68,10 @@ class Backup {
     return new String.fromCharCodes(l);
   }
 
-  Future<List<Note>> readZip(String path) async {
+  Future<BackupData> readZip(String path) async {
     List<Note> notes = [];
+    List<NoteCollection> collections = [];
+
     try {
       final bytes = File(path).readAsBytesSync();
 
@@ -92,12 +102,36 @@ class Backup {
         Note note = Note.fromJson(noteMap, noteMap['id']);
         notes.add(note);
       }
+
+      final collectionsListFile = archive.files.firstWhere(
+          (a) => a.name == COLLECTIONS_FILENAME,
+          orElse: () => null);
+
+      if (collectionsListFile == null) {
+        print("cannot find collections list");
+      } else {
+        final collectionIds = jsonDecode(decodeZipContent(collectionsListFile));
+
+        for (String collectionId in collectionIds) {
+          var collectionFile = archive.files.firstWhere(
+              (a) => a.name == "$collectionId.json",
+              orElse: () => null);
+
+          if (collectionFile == null) {
+            print("cannot find note with id $collectionId");
+          } else {
+            var collectionMap = jsonDecode(decodeZipContent(collectionFile));
+            NoteCollection c = NoteCollection.fromJson(collectionMap);
+            collections.add(c);
+          }
+        }
+      }
     } catch (e) {
       print("unknwon error occurred $e");
       throw new ImportException();
     }
 
-    return notes;
+    return BackupData(notes: notes, collections: collections);
   }
 
   Note readNote(String path) {
@@ -127,7 +161,8 @@ class Backup {
     return readNote(f.path);
   }
 
-  Future<String> exportZip(List<Note> notes) async {
+  Future<String> exportZip(
+      List<Note> notes, List<NoteCollection> collections) async {
     // Zip a directory to out.zip using the zipDirectory convenience method
     // Directory tempDir = await getExternalStorageDirectory();
 
@@ -142,6 +177,7 @@ class Backup {
     print("saving to $path");
     var encoder = ZipFileEncoder();
 
+    // create file
     try {
       encoder.create(path);
     } on FileSystemException catch (e) {
@@ -149,6 +185,7 @@ class Backup {
       return null;
     }
 
+    // write notes
     for (Note note in notes) {
       var filename = "${note.id}.json";
       var notePath = p.join(tempDir.path, filename);
@@ -157,10 +194,28 @@ class Backup {
       encoder.addFile(File(notePath), filename);
     }
 
+    // write note filenames
     var notesPath = p.join(tempDir.path, NOTES_FILENAME);
     File(notesPath)
         .writeAsStringSync(jsonEncode(notes.map((n) => n.id).toList()));
     encoder.addFile(File(notesPath), NOTES_FILENAME);
+
+    // collections
+    for (NoteCollection c in collections) {
+      var filename = "${c.id}.json";
+      var collectionPath = p.join(tempDir.path, filename);
+      File(collectionPath).writeAsStringSync(jsonEncode(c.toJson()));
+
+      encoder.addFile(File(collectionPath), filename);
+    }
+
+    // write sets
+    var setsPath = p.join(tempDir.path, COLLECTIONS_FILENAME);
+    File(setsPath)
+        .writeAsStringSync(jsonEncode(collections.map((n) => n.id).toList()));
+    encoder.addFile(File(setsPath), COLLECTIONS_FILENAME);
+
+    // close
     encoder.close();
     return path;
   }

@@ -29,7 +29,9 @@ class Exporter {
   static Future<String> export(Note note, ExportType t) async {
     if (note.artist == null) {
       Settings settings = await LocalStorage().getSettings();
-      note.artist = settings.name;
+      if (settings != null) {
+        note.artist = settings.name;
+      }
     }
 
     switch (t) {
@@ -46,6 +48,7 @@ class Exporter {
 
   static Future<void> exportShare(Note note, ExportType t) async {
     String path = await export(note, t);
+    print("export to $path");
     await FlutterShare.shareFile(
         title: '${note.title}.${getExtension(t)}',
         text: 'Sharing ${note.title} from SOUND',

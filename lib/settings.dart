@@ -12,6 +12,7 @@ import "backup.dart";
 import 'db.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 
 class Settings extends StatefulWidget {
   final Function onMenuPressed;
@@ -147,26 +148,43 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     );
   }
 
-  _onExport() async {
-    String path = await Backup().exportZip(await LocalStorage().getNotes());
+  _onBackup() async {
+    String path = await Backup().exportZip(
+        await LocalStorage().getNotes(), await LocalStorage().getCollections());
     showSnack(_globalKey.currentState, "Exported zip to $path");
     String filename = p.basename(path);
-    await FlutterShare.shareFile(
-        title: filename, text: 'Share backup zip', filePath: path);
+
+    final params = SaveFileDialogParams(sourceFilePath: path);
+    final filePath = await FlutterFileDialog.saveFile(params: params);
+    print(filePath);
+
+    // await FlutterShare.shareFile(
+    //     title: filename, text: 'Share backup zip', filePath: path);
   }
 
   _onImport() async {
     try {
-      List<Note> notes = await Backup().import();
-      for (Note note in notes) {
+      BackupData backup = await Backup().import();
+      var noteMapping = {};
+      for (Note note in backup.notes) {
+        var newId = Uuid().v4();
+        noteMapping[note.id] = newId;
         // update id
-        note.id = Uuid().v4();
+        note.id = newId;
         //await LocalStorage().syncNote(note);
       }
-      showSelectNotesImportDialog(context, (List<Note> restoredNotes) {
+
+      for (NoteCollection c in backup.collections) {
+        c.notes = c.notes.map((Note n) {
+          n.id = noteMapping[n.id];
+          return n;
+        }).toList();
+      }
+
+      showSelectNotesImportDialog(context, (BackupData data) {
         showSnack(_globalKey.currentState,
-            "Successfully restored ${restoredNotes.length} notes");
-      }, notes, title: "Which songs would you like to restore?");
+            "Successfully restored ${data.notes.length} notes");
+      }, backup, title: "Which songs would you like to restore?");
     } on ImportException {
       showSnack(_globalKey.currentState, "Error while importing zip");
     }
@@ -178,9 +196,9 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       _themeItem(),
       _audioFormatItem(),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Backup"), onPressed: _onExport),
+      ElevatedButton(child: Text("Backup"), onPressed: _onBackup),
       SizedBox(height: 10),
-      RaisedButton(child: Text("Restore"), onPressed: _onImport),
+      ElevatedButton(child: Text("Restore"), onPressed: _onImport),
       SizedBox(height: 10),
     ];
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:sound/backup.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -13,22 +14,34 @@ Future<List<Note>> getExampleNotes() async {
 }
 
 showInitialImportDialog(
-    BuildContext context, ValueChanged<List<Note>> onDone) async {
+    BuildContext context, ValueChanged<BackupData> onDone) async {
   List<Note> exampleNotes = await getExampleNotes();
-  showSelectNotesImportDialog(context, onDone, exampleNotes);
+
+  showSelectNotesImportDialog(
+      context, onDone, BackupData(notes: exampleNotes, collections: []));
 }
 
 showSelectNotesImportDialog(
-    BuildContext context, ValueChanged<List<Note>> onDone, List<Note> notes,
+    BuildContext context, ValueChanged<BackupData> onDone, BackupData backup,
     {String title =
         "Would you like to import any of these example songs?"}) async {
   showSelectNotesDialog(context, (List<Note> selected) async {
+    List<String> noteIds = selected.map((n) => n.id).toList();
+
     for (Note note in selected) {
       await LocalStorage().syncNote(note);
       Future.delayed(Duration(milliseconds: 50));
     }
-    onDone(selected);
-  }, onDone, notes, title: title);
+
+    for (NoteCollection collection in backup.collections) {
+      // remove all notes that where not imported
+      collection.notes.removeWhere((note) => !noteIds.contains(note.id));
+      await LocalStorage().syncCollection(collection);
+      Future.delayed(Duration(milliseconds: 50));
+    }
+
+    onDone(backup);
+  }, () {}, backup.notes, title: title);
 }
 
 typedef NoteListCallback = Future<void> Function(List<Note>);
@@ -63,6 +76,8 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
+          var width = MediaQuery.of(context).size.width;
+
           return Center(
               child: AlertDialog(
                   titlePadding: EdgeInsets.all(16),
@@ -70,22 +85,28 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
                   title: Text(title),
                   content: isImporting
                       ? Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          itemBuilder: (context, index) {
-                            Note note = notes[index];
-                            return CheckboxListTile(
-                                activeColor: Theme.of(context).accentColor,
-                                value: checked[note],
-                                onChanged: (v) {
-                                  setState(() => checked[note] = v);
-                                },
-                                title: ListTile(
-                                  title: Text(note.title),
-                                  subtitle: Text(note.artist),
-                                ));
-                          },
-                          itemCount: notes.length,
-                        ),
+                      : Container(
+                          width: width,
+                          height: 400,
+                          child: ListView.builder(
+                            itemBuilder: (context, index) {
+                              Note note = notes[index];
+                              return CheckboxListTile(
+                                  activeColor: Theme.of(context).accentColor,
+                                  value: checked[note],
+                                  onChanged: (v) {
+                                    setState(() => checked[note] = v);
+                                  },
+                                  title: ListTile(
+                                    title: Text(note.hasEmptyTitle
+                                        ? EMPTY_TEXT
+                                        : note.title),
+                                    subtitle: Text(
+                                        note.artist == null ? "" : note.artist),
+                                  ));
+                            },
+                            itemCount: notes.length,
+                          )),
                   actions: isImporting
                       ? []
                       : [
@@ -93,7 +114,7 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
                             child: Text("Cancel"),
                             onPressed: _onCancel,
                           ),
-                          TextButton(
+                          ElevatedButton(
                               child: Text("Import"),
                               onPressed: () {
                                 setState(() => isImporting = true);
