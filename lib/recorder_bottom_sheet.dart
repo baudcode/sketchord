@@ -107,6 +107,16 @@ class _BottomInfoState extends State<BottomInfo>
     }
 
     return Container(
+        // decoration: BoxDecoration(
+        //     color: widget.color,
+        //     borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Theme.of(context).appBarTheme.color,
+        //         spreadRadius: 2,
+        //         blurRadius: 10,
+        //       ),
+        //     ]),
         color: widget.color,
         height: widget.height,
         child: Row(
@@ -203,16 +213,17 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     if (showLooper) {
       return Container(
-          decoration: BoxDecoration(
-              color: Theme.of(context).bottomAppBarColor,
-              borderRadius: BorderRadius.all(Radius.circular(15)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).appBarTheme.color,
-                  spreadRadius: 2,
-                  blurRadius: 10,
-                ),
-              ]),
+          // decoration: BoxDecoration(
+          //     color: Theme.of(context).bottomAppBarColor,
+          //     borderRadius: BorderRadius.all(Radius.circular(15)),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: Theme.of(context).appBarTheme.color,
+          //         spreadRadius: 2,
+          //         blurRadius: 10,
+          //       ),
+          //     ]),
+          color: Theme.of(context).bottomAppBarColor,
           height: 300,
           width: width,
           child: Column(children: [
