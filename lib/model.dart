@@ -364,6 +364,9 @@ class NoteCollection {
       this.createdAt,
       this.lastModified});
 
+  List<Note> get activeNotes =>
+      notes.where((element) => !element.discarded).toList();
+
   factory NoteCollection.empty() {
     return NoteCollection(
         id: Uuid().v4(),

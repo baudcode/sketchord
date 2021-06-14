@@ -163,6 +163,11 @@ class StaticStorage extends Store {
       trigger();
     });
 
+    setTwoPerRow.listen((value) {
+      _twoPerRow = value;
+      trigger();
+    });
+
     _filters = [];
     _selectedNotes = [];
     _showMore = Map();
@@ -353,6 +358,7 @@ Action<Filter> removeFilter = Action();
 Action<String> searchNotes = Action();
 Action<FilterBy> toggleShowMore = Action();
 Action toggleChangeView = Action();
+Action<bool> setTwoPerRow = Action();
 Action openSettings = Action();
 //Action<FirebaseUser> setUser = Action();
 
@@ -368,3 +374,4 @@ Action clearSelection = Action();
 Action updateView = Action();
 
 StoreToken storageToken = StoreToken(StaticStorage());
+StoreToken searchNoteStorageToken = StoreToken(StaticStorage());

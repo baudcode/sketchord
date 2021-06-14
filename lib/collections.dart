@@ -6,6 +6,7 @@ import 'package:sound/dialogs/choose_note_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/collections_store.dart';
+import 'package:sound/note_search_view.dart';
 import 'package:sound/utils.dart';
 
 class NoteCollectionItemModel {
@@ -132,7 +133,7 @@ class NoteCollectionItem extends StatelessWidget {
           onTap: onTap,
           onLongPress: onLongPress,
           title: Text(this.collection.title),
-          trailing: Text(this.collection.notes.length.toString()),
+          trailing: Text(this.collection.activeNotes.length.toString()),
           tileColor: isSelected ? getSelectedCardColor(context) : null,
           subtitle: this.collection.description == null
               ? Container()
@@ -229,28 +230,39 @@ class _CollectionEditorState extends State<CollectionEditor>
   floatingActionButtonPressed() async {
     // add a note to this collection
     var notes = await LocalStorage().getNotes();
-    showAddNotesDialog(
-        context: context,
-        notes: notes,
-        preselected: store.collection.notes,
-        onImport: (notes) async {
-          setNotesOfCollection(notes);
-        });
+
+    Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => NoteSearchViewLoader(
+                  collection: store.collection,
+                  onAddNotes: (notes) {},
+                )));
+
+    // showAddNotesDialog(
+    //     context: context,
+    //     notes: notes,
+    //     preselected: store.collection.notes,
+    //     onImport: (notes) async {
+    //       setNotesOfCollection(notes);
+    //     });
   }
 
   @override
   Widget build(BuildContext context) {
     var notes = [];
-    for (var i = 0; i < store.collection.notes.length; i++) {
-      if (!dismissables.containsKey(store.collection.notes[i]))
-        dismissables[store.collection.notes[i]] = GlobalKey();
+    var activeNotes = store.collection.activeNotes;
+
+    for (var i = 0; i < activeNotes.length; i++) {
+      if (!dismissables.containsKey(activeNotes[i]))
+        dismissables[activeNotes[i]] = GlobalKey();
 
       bool showMoveUp = (i != 0);
-      bool showMoveDown = (i != (store.collection.notes.length - 1));
+      bool showMoveDown = (i != (activeNotes.length - 1));
       notes.add(CollecitonNoteListItem(
           idx: i + 1,
-          globalKey: dismissables[store.collection.notes[i]],
-          note: store.collection.notes[i],
+          globalKey: dismissables[activeNotes[i]],
+          note: activeNotes[i],
           moveDown: showMoveDown,
           moveUp: showMoveUp));
     }
