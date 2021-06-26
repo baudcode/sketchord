@@ -5,6 +5,7 @@ import 'package:sound/backup.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:uuid/uuid.dart';
 
 Future<List<Note>> getExampleNotes() async {
   String path = "assets/initial_data.json";
@@ -16,9 +17,14 @@ Future<List<Note>> getExampleNotes() async {
 showInitialImportDialog(
     BuildContext context, ValueChanged<BackupData> onDone) async {
   List<Note> exampleNotes = await getExampleNotes();
+  NoteCollection exampleCollection = NoteCollection.empty();
+  exampleCollection.notes = exampleNotes;
+  exampleCollection.title = "Example Set";
+  exampleCollection.description = "Your imported notes";
+  exampleCollection.starred = true;
 
-  showSelectNotesImportDialog(
-      context, onDone, BackupData(notes: exampleNotes, collections: []));
+  showSelectNotesImportDialog(context, onDone,
+      BackupData(notes: exampleNotes, collections: [exampleCollection]));
 }
 
 showSelectNotesImportDialog(

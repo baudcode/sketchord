@@ -109,6 +109,11 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             cursorColor: mainColor,
             selectionHandleColor: mainColor),
         cardColor: Colors.grey.shade200,
+        colorScheme: ColorScheme.light().copyWith(
+            primary: mainColor,
+            secondary: Colors.white,
+            background: Colors.white,
+            surface: Colors.white),
         appBarTheme: ThemeData.light().appBarTheme.copyWith(
             color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
         chipTheme:
@@ -116,6 +121,8 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         indicatorColor: mainColor,
         accentColor: mainColor,
         highlightColor: mainColor,
+        buttonTheme:
+            ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
         sliderTheme: ThemeData.light().sliderTheme.copyWith(
             trackHeight: 4,
             thumbColor: mainColor,

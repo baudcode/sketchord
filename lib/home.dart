@@ -3,6 +3,7 @@ import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/note_views/appbar.dart';
 import 'package:sound/note_views/seach.dart';
+import 'package:sound/settings_store.dart';
 import 'package:tuple/tuple.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
@@ -32,7 +33,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     Future.delayed(Duration(milliseconds: 1000), () async {
       bool initialStart = await LocalStorage().isInitialStart();
-      initialStart = false;
+      //initialStart = false;
       if (initialStart) {
         showInitialImportDialog(context, (_) {
           LocalStorage().setInitialStartDone();
@@ -112,6 +113,13 @@ class HomeContentState extends State<HomeContent>
     filtersEnabled = false;
     _controller = TextEditingController();
     storage = listenToStore(storageToken);
+
+    LocalStorage().getSettings().then((Settings settings) {
+      if (settings != null) {
+        changeSortBy(settings.sortBy);
+        changeSortDirection(settings.sortDirection);
+      }
+    });
 
     // init filemanager
     FileManager();
@@ -243,13 +251,27 @@ class HomeContentState extends State<HomeContent>
     );
   }
 
+  _sortingView() {
+    return SortingView(
+        by: storage.sortBy,
+        direction: storage.sortDirection,
+        onDirectionChange: (d) {
+          changeSortDirection(d);
+          setDefaultSortDirection(d);
+        },
+        onSortByChange: (by) {
+          changeSortBy(by);
+          setDefaultSortBy(by);
+        });
+  }
+
   _sliverAppBar() {
     return SliverAppBar(
       titleSpacing: 5.0,
       actions: isSearching ? _searchActionButtons() : _listActionButtons(),
       flexibleSpace: (filtersEnabled && isSearching)
           ? _filtersView()
-          : (isFiltering ? _activeFiltersView() : Container()),
+          : (isFiltering ? _activeFiltersView() : _sortingView()),
       leading: isSearching
           ? IconButton(
               icon: Icon(Icons.arrow_back), onPressed: () => _clearSearch())
@@ -258,7 +280,7 @@ class HomeContentState extends State<HomeContent>
           child: Center(child: _searchView()),
           padding: EdgeInsets.only(left: 5)),
       expandedHeight:
-          (isSearching && filtersEnabled) ? 370 : (isFiltering ? 100 : 0),
+          (isSearching && filtersEnabled) ? 370 : (isFiltering ? 100 : 80),
       floating: false,
       pinned: true,
     );

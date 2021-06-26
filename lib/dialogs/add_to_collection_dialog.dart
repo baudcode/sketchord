@@ -10,7 +10,9 @@ typedef FutureAddNoteToCollectionCallback = Future<NoteCollection> Function(
 
 showAddToCollectionDialog(BuildContext context, Note note) {
   Future<NoteCollection> onNew() async {
-    return NoteCollection.empty();
+    NoteCollection collection = NoteCollection.empty();
+    collection.notes.add(note);
+    return collection;
   }
 
   Future<NoteCollection> onAdd(NoteCollection collection) async {
@@ -20,13 +22,17 @@ showAddToCollectionDialog(BuildContext context, Note note) {
     return collection;
   }
 
-  _showAddToCollectionDialog(context, "Add To Collection", onNew, onAdd,
+  _showAddToCollectionDialog(context, "Add To Set", onNew, onAdd, note,
       importButtonText: 'Add');
 }
 
-_showAddToCollectionDialog(BuildContext context, String title,
-    FutureNoteCollectionCallback onNew, FutureAddNoteToCollectionCallback onAdd,
-    {String newButtonText = 'Import as NEW',
+_showAddToCollectionDialog(
+    BuildContext context,
+    String title,
+    FutureNoteCollectionCallback onNew,
+    FutureAddNoteToCollectionCallback onAdd,
+    Note note,
+    {String newButtonText = 'Create NEW',
     String importButtonText = "Import",
     bool openCollection = true,
     bool syncCollection = true}) async {
@@ -81,7 +87,7 @@ _showAddToCollectionDialog(BuildContext context, String title,
                           child: Text(newButtonText), onPressed: _onNew)),
                   SizedBox(height: 10),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Container(child: Text("-- or select a collection --"))
+                    Container(child: Text("-- or select a set --"))
                   ]),
                   SizedBox(height: 15),
                   Row(mainAxisSize: MainAxisSize.max, children: [
@@ -89,6 +95,14 @@ _showAddToCollectionDialog(BuildContext context, String title,
                         value: selected,
                         isDense: true,
                         items: collections
+                            .where((c) {
+                              try {
+                                c.notes.firstWhere((n) => n.id == note.id);
+                                return false;
+                              } catch (e) {
+                                return true;
+                              }
+                            })
                             .map((e) => DropdownMenuItem<NoteCollection>(
                                 child: SizedBox(
                                     width: width - 152,

@@ -47,6 +47,18 @@ class SettingsStore extends Store {
       trigger();
     });
 
+    setDefaultSortBy.listen((SortBy by) async {
+      _settings.sortBy = by;
+      await LocalStorage().syncSettings(_settings);
+      trigger();
+    });
+
+    setDefaultSortDirection.listen((SortDirection d) async {
+      _settings.sortDirection = d;
+      await LocalStorage().syncSettings(_settings);
+      trigger();
+    });
+
     setName.listen((name) async {
       _settings.name = name;
       await LocalStorage().syncSettings(_settings);
@@ -70,5 +82,7 @@ Action<String> setName = Action();
 Action<EditorView> setDefaultView = Action();
 Action<AudioFormat> setDefaultAudioFormat = Action();
 Action<Settings> updateSettings = Action();
+Action<SortDirection> setDefaultSortDirection = Action();
+Action<SortBy> setDefaultSortBy = Action();
 
 StoreToken settingsToken = StoreToken(SettingsStore());

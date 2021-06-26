@@ -30,7 +30,7 @@ class _BottomInfoState extends State<BottomInfo>
   }
 
   _onButtonPress() {
-    stopAction();
+    stopAction(true);
   }
 
   @override

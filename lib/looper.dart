@@ -18,42 +18,37 @@ class Looper extends StatefulWidget {
 class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
   RangeValues range;
   RecorderBottomSheetStore store;
-  ActionSubscription stopSubscription;
 
   @override
   void initState() {
     super.initState();
     store = listenToStore(recorderBottomSheetStoreToken);
     range = store.loopRange;
-
-    stopSubscription = stopAction.listen((event) {
-      setState(() {
-        range = null;
-      });
-    });
   }
 
   @override
   void dispose() {
-    stopSubscription.cancel();
     super.dispose();
   }
 
-  _onSaveLoop() {
-    Flushbar(
-      //title: "Hey Ninja",
-      message: "Saved ${range.start} to ${range.end}",
-      duration: Duration(seconds: 2),
-    )..show(context);
-
+  _changeRangeValues(RangeValues values) {
+    print("CHANGE.....");
     AudioFile newFile = store.currentAudioFile;
-    newFile.loopRange = range;
+    newFile.loopRange = values;
     changeAudioFile(newFile);
+
+    setLoopRange(values);
+
+    if (values == null) {
+      setState(() {
+        range = null;
+      });
+    }
   }
 
   _view() {
     var defaultRange =
-        RangeValues(0.0, store.currentLength.inSeconds.toDouble());
+        RangeValues(0.0, store.currentLength.inMilliseconds.toDouble() / 1000);
 
     var lowerValue = range == null ? defaultRange.start : range.start;
     var upperValue = range == null ? defaultRange.end : range.end;
@@ -66,8 +61,9 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
               padding: EdgeInsets.only(right: 8),
               child: FlatButton(
                   visualDensity: VisualDensity.compact,
-                  child: Text("Save Loop"),
-                  onPressed: (range == null) ? null : _onSaveLoop))
+                  child: Text("Reset Loop"),
+                  onPressed:
+                      (range != null) ? () => _changeRangeValues(null) : null))
         ]),
         Text(
           "Looper:",
@@ -77,7 +73,7 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
             child: frs.RangeSlider(
           min: 0,
           onChangeEnd: (double endLowerValue, double endUpperValue) {
-            setLoopRange(RangeValues(endLowerValue, endUpperValue));
+            _changeRangeValues(RangeValues(endLowerValue, endUpperValue));
           },
           max: (store.currentLength.inMilliseconds / 1000.0).toDouble(),
           showValueIndicator: true,

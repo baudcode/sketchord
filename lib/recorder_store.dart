@@ -68,8 +68,7 @@ class RecorderBottomSheetStore extends Store {
   Duration _recordTime;
   Duration get recordTime => _recordTime;
 
-  RangeValues _loopRange;
-  RangeValues get loopRange => _loopRange;
+  RangeValues get loopRange => _audioFile == null ? null : _audioFile.loopRange;
 
   // getters
   RecorderState get state => _state;
@@ -84,19 +83,28 @@ class RecorderBottomSheetStore extends Store {
   AudioPlayer get player => _player;
 
   getDurationLoopEnd() {
-    if (_loopRange == null) return null;
-    return Duration(milliseconds: (_loopRange.end * 1000).floor());
+    if (loopRange == null) return null;
+    return Duration(milliseconds: (loopRange.end * 1000).floor());
   }
 
   getDurationLoopStart() {
-    if (_loopRange == null) return null;
-    return Duration(milliseconds: (_loopRange.start * 1000).floor());
+    if (loopRange == null) return null;
+    return Duration(milliseconds: (loopRange.start * 1000).floor());
   }
 
-  Future<int> stopPlayer() async {
-    int res = await _player.stop();
-    changePlayerPosition(Duration(seconds: 0));
-    return res;
+  Future<int> stopPlayer(bool force) async {
+    if (this.loopRange != null && !force) {
+      print("stop player with loop range: $loopRange");
+      _state = RecorderState.PLAYING;
+      await _player.play(_currentPath,
+          isLocal: true, position: getDurationLoopStart());
+      print("seek to start");
+      return -10;
+    } else {
+      int res = await _player.stop();
+      changePlayerPosition(Duration(seconds: 0));
+      return res;
+    }
   }
 
   Future<int> startPlayer(String path) async {
@@ -104,9 +112,10 @@ class RecorderBottomSheetStore extends Store {
     // set length not yet available
 
     _player.onAudioPositionChanged.listen((pos) async {
-      if (_loopRange != null && pos >= getDurationLoopEnd()) {
+      if (loopRange != null && pos >= getDurationLoopEnd()) {
         pos = getDurationLoopStart();
         await _player.seek(pos);
+        print("seek to start...");
       }
       changePlayerPosition(pos);
     });
@@ -120,17 +129,20 @@ class RecorderBottomSheetStore extends Store {
     });
 
     _state = RecorderState.PLAYING;
-    _player.onPlayerStateChanged.listen((AudioPlayerState event) {
+    _player.onPlayerStateChanged.listen((AudioPlayerState event) async {
       print("player state change $event");
     });
 
-    _player.onPlayerCompletion.listen((event) {
+    _player.onPlayerCompletion.listen((event) async {
       print("player completed");
-      stopAction();
+      stopAction(false);
     });
 
     print("play me");
-    int result = await _player.play(path, isLocal: true);
+    Duration startPosition =
+        (loopRange == null) ? Duration(seconds: 0) : getDurationLoopStart();
+    int result =
+        await _player.play(path, isLocal: true, position: startPosition);
     trigger();
     return result;
   }
@@ -230,8 +242,7 @@ class RecorderBottomSheetStore extends Store {
         changePlayerPosition(Duration(seconds: 0));
         _audioFile = f;
         _currentPath = f.path;
-        _loopRange = f.loopRange;
-        print("Loop Range: $_loopRange");
+        print("Init Audio file with Loop Range: ${f.loopRange}");
 
         startPlayer(f.path).then((t) {
           //   _state = RecorderState.PLAYING;
@@ -240,16 +251,18 @@ class RecorderBottomSheetStore extends Store {
       }
     });
 
-    stopAction.listen((_) {
-      _loopRange = null;
+    stopAction.listen((force) {
       if (_state == RecorderState.RECORDING ||
           _state == RecorderState.PLAYING ||
           _state == RecorderState.PAUSING) {
         if (_state == RecorderState.PLAYING ||
             _state == RecorderState.PAUSING) {
-          stopPlayer();
-          _state = RecorderState.STOP;
-          trigger();
+          stopPlayer(force).then((r) {
+            if (r != -10) {
+              _state = RecorderState.STOP;
+              trigger();
+            }
+          });
         } else {
           stopRecorder().then((_) {
             _state = RecorderState.STOP;
@@ -314,15 +327,19 @@ class RecorderBottomSheetStore extends Store {
     });
 
     setLoopRange.listen((range) async {
-      print("$range, $_loopRange");
-
-      if (_loopRange == null ||
-          (_loopRange != null && range.start != _loopRange.start)) {
-        var start = Duration(milliseconds: (range.start * 1000).floor());
-        await _player.seek(start);
+      if (range != null &&
+          (loopRange == null ||
+              (loopRange != null && range.start != loopRange.start))) {
+        if (_state == RecorderState.PLAYING) {
+          var start = Duration(milliseconds: (range.start * 1000).floor());
+          await _player.seek(start);
+        }
       }
-      _loopRange = range;
-      trigger();
+      print("New Loop Range: $range");
+      if (this._audioFile != null) {
+        _audioFile.loopRange = range;
+        trigger();
+      }
     });
 
     setDefaultAudioFormat.listen((format) {
@@ -339,7 +356,7 @@ Action<AudioFile> startPlaybackAction = Action();
 
 Action<RecorderState> setRecorderState = Action();
 Action<String> setPath = Action();
-Action stopAction = Action();
+Action<bool> stopAction = Action();
 Action pauseAction = Action();
 Action resumeAction = Action();
 Action<Duration> setElapsed = Action();

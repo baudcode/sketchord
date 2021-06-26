@@ -132,11 +132,13 @@ class NoteCollectionItem extends StatelessWidget {
         child: ListTile(
           onTap: onTap,
           onLongPress: onLongPress,
-          title: Text(this.collection.title),
+          title: Text(
+              this.collection.title == "" ? "EMPTY" : this.collection.title),
           trailing: Text(this.collection.activeNotes.length.toString()),
           tileColor: isSelected ? getSelectedCardColor(context) : null,
-          subtitle: this.collection.description == null
-              ? Container()
+          subtitle: this.collection.description == null ||
+                  this.collection.description == ""
+              ? Text("-")
               : (Text(this.collection.description)),
         ));
   }
@@ -156,7 +158,8 @@ class SmallNoteCollectionItem extends StatelessWidget {
 
   bool get empty => ((collection.title == null ||
           collection.title.trim() == "") &&
-      (collection.description == null || collection.description.trim() == ""));
+      (collection.description == null || collection.description.trim() == "") &&
+      collection.notes.length == 0);
 
   @override
   Widget build(BuildContext context) {
@@ -229,14 +232,14 @@ class _CollectionEditorState extends State<CollectionEditor>
 
   floatingActionButtonPressed() async {
     // add a note to this collection
-    var notes = await LocalStorage().getNotes();
-
     Navigator.push(
         context,
         new MaterialPageRoute(
             builder: (context) => NoteSearchViewLoader(
                   collection: store.collection,
-                  onAddNotes: (notes) {},
+                  onAddNotes: (List<Note> notes) {
+                    addNotesToCollection(notes);
+                  },
                 )));
 
     // showAddNotesDialog(
@@ -311,8 +314,7 @@ class _CollectionEditorState extends State<CollectionEditor>
 
     return WillPopScope(
         onWillPop: () async {
-          if (store.collection.title.trim() == "" &&
-              store.collection.description.trim() == "") {
+          if (store.collection.empty) {
             print("delete collection");
             LocalStorage().deleteCollection(store.collection);
           } else {

@@ -136,6 +136,12 @@ class StaticStorage extends Store {
   String _search = "";
   String get search => _search;
 
+  SortBy _sortBy = SortBy.lastModified;
+  SortBy get sortBy => _sortBy;
+
+  SortDirection _sortDirection = SortDirection.up;
+  SortDirection get sortDirection => _sortDirection;
+
   bool mustShowMore(FilterBy by) {
     Map<FilterBy, List<Filter>> f = _getFiltersByCategory();
     if (f.keys.contains(by)) {
@@ -212,6 +218,13 @@ class StaticStorage extends Store {
       }
     });
 
+    resetStaticStorage.listen((_) {
+      _search = "";
+      _selectedNotes.clear();
+      _filters.clear();
+      trigger();
+    });
+
     removeAllSelectedNotes.listen((_) {
       for (Note note in _selectedNotes) {
         for (var audio in note.audioFiles) {
@@ -274,6 +287,16 @@ class StaticStorage extends Store {
       // only update the view, data is stored in file_manager
       trigger();
     });
+
+    changeSortDirection.listen((d) {
+      this._sortDirection = d;
+      trigger();
+    });
+
+    changeSortBy.listen((by) {
+      this._sortBy = by;
+      trigger();
+    });
   }
 
   bool _isSearchValid(Note note) {
@@ -334,20 +357,47 @@ class StaticStorage extends Store {
     return true;
   }
 
-  List<Note> get filteredNotes => DB().notes.where((Note note) {
-        if (_filters.length == 0 && (_search == null || _search == ""))
-          return true;
+  int _sort(Note a, Note b) {
+    if (_sortBy == SortBy.lastModified) {
+      if (_sortDirection == SortDirection.up) {
+        return b.lastModified.compareTo(a.lastModified);
+      } else {
+        return a.lastModified.compareTo(b.lastModified);
+      }
+    } else if (_sortBy == SortBy.created) {
+      if (_sortDirection == SortDirection.up) {
+        return b.createdAt.compareTo(a.createdAt);
+      } else {
+        return a.createdAt.compareTo(b.createdAt);
+      }
+    } else if (_sortBy == SortBy.az) {
+      if (_sortDirection == SortDirection.up) {
+        return b.title.compareTo(a.title);
+      } else {
+        return a.title.compareTo(b.title);
+      }
+    }
+  }
 
-        if (_search != null && search != "") {
-          if (_filters.length == 0) {
-            return _isSearchValid(note);
-          } else {
-            return _isSearchValid(note) && _isAnyFilterValid(note);
-          }
+  List<Note> get filteredNotes {
+    List<Note> notes = DB().notes;
+    notes.sort(_sort);
+
+    return notes.where((Note note) {
+      if (_filters.length == 0 && (_search == null || _search == ""))
+        return true;
+
+      if (_search != null && search != "") {
+        if (_filters.length == 0) {
+          return _isSearchValid(note);
         } else {
-          return _isAnyFilterValid(note);
+          return _isSearchValid(note) && _isAnyFilterValid(note);
         }
-      }).toList();
+      } else {
+        return _isAnyFilterValid(note);
+      }
+    }).toList();
+  }
 }
 
 Action<List<Note>> setNotes = Action();
@@ -372,6 +422,9 @@ Action<Color> colorAllSelectedNotes = Action();
 Action<List<Note>> restoreNotes = Action();
 Action clearSelection = Action();
 Action updateView = Action();
+Action resetStaticStorage = Action();
+Action<SortBy> changeSortBy = Action();
+Action<SortDirection> changeSortDirection = Action();
 
 StoreToken storageToken = StoreToken(StaticStorage());
 StoreToken searchNoteStorageToken = StoreToken(StaticStorage());

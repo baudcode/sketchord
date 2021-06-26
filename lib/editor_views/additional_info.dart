@@ -51,34 +51,33 @@ class NoteEditorAdditionalInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: EdgeInsets.only(left: 10, top: 10),
-        child: Wrap(runSpacing: 1, children: [
-          _edit(
-              initial: note.tuning == null ? "" : note.tuning,
-              title: "Tuning",
-              hint: "Standard, Dadgad ...",
-              onChanged: changeTuning),
-          _edit(
-              initial: note.capo == null ? "" : note.capo.toString(),
-              title: "Capo",
-              hint: "7, 5 ...",
-              onChanged: changeCapo),
-          _edit(
-              initial: note.key == null ? "" : note.key.toString(),
-              title: "Key",
-              hint: "C Major, A Minor ...",
-              onChanged: changeKey),
-          _edit(
-              initial: note.label == null ? "" : note.label.toString(),
-              title: "Label",
-              hint: "Idea, Rock, Pop...",
-              onChanged: changeLabel),
-          _edit(
-              initial: note.artist == null ? "" : note.artist.toString(),
-              title: "Artist",
-              hint: "leave empty if you are the artist",
-              onChanged: changeArtist),
-        ]));
+    // EdgeInsets.only(left: 10, top: 10)
+    return Wrap(runSpacing: 1, children: [
+      _edit(
+          initial: note.tuning == null ? "" : note.tuning,
+          title: "Tuning",
+          hint: "Standard, Dadgad ...",
+          onChanged: changeTuning),
+      _edit(
+          initial: note.capo == null ? "" : note.capo.toString(),
+          title: "Capo",
+          hint: "7, 5 ...",
+          onChanged: changeCapo),
+      _edit(
+          initial: note.key == null ? "" : note.key.toString(),
+          title: "Key",
+          hint: "C Major, A Minor ...",
+          onChanged: changeKey),
+      _edit(
+          initial: note.label == null ? "" : note.label.toString(),
+          title: "Label",
+          hint: "Idea, Rock, Pop...",
+          onChanged: changeLabel),
+      _edit(
+          initial: note.artist == null ? "" : note.artist.toString(),
+          title: "Artist",
+          hint: "leave empty if you are the artist",
+          onChanged: changeArtist),
+    ]);
   }
 }

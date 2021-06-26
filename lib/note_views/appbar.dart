@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sound/db.dart';
+import 'package:sound/model.dart';
 import 'package:sound/storage.dart';
 
 typedef FilterByCallback = bool Function(FilterBy);
@@ -132,7 +133,94 @@ class ActiveFiltersView extends StatelessWidget {
                     },
                   ))
             ])));
-    ;
+  }
+}
+
+class SortingView extends StatelessWidget {
+  final ValueChanged<SortDirection> onDirectionChange;
+  final ValueChanged<SortBy> onSortByChange;
+  final SortDirection direction;
+  final SortBy by;
+
+  const SortingView({
+    @required this.by,
+    @required this.direction,
+    @required this.onDirectionChange,
+    @required this.onSortByChange,
+    Key key,
+  }) : super(key: key);
+
+  _onDirectionChange() {
+    if (direction == SortDirection.down)
+      onDirectionChange(SortDirection.up);
+    else
+      onDirectionChange(SortDirection.down);
+  }
+
+  byText() {
+    switch (by) {
+      case SortBy.created:
+        return "Created";
+      case SortBy.lastModified:
+        return "Last Modified";
+      case SortBy.az:
+        return "AZ";
+      default:
+        return "null";
+    }
+  }
+
+  _onSortByChange() {
+    switch (by) {
+      case SortBy.created:
+        onSortByChange(SortBy.lastModified);
+        break;
+
+      case SortBy.lastModified:
+        onSortByChange(SortBy.az);
+        break;
+
+      case SortBy.az:
+        onSortByChange(SortBy.created);
+        break;
+      default:
+        onSortByChange(SortBy.lastModified);
+        break;
+    }
+  }
+
+  arrowOption(BuildContext context) {
+    return IconButton(
+      onPressed: _onDirectionChange,
+      icon: Icon(
+        direction == SortDirection.up
+            ? Icons.arrow_upward
+            : Icons.arrow_downward,
+        size: 20,
+        color: Theme.of(context).appBarTheme.textTheme.button.color,
+      ),
+      splashRadius: 5,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: EdgeInsets.only(top: 70),
+        child: Container(
+          color: Theme.of(context).appBarTheme.backgroundColor,
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: TextButton(
+                  onPressed: _onSortByChange,
+                  child: Text(byText(),
+                      style: Theme.of(context).appBarTheme.textTheme.button)),
+            ),
+            Expanded(
+              child: arrowOption(context),
+            ),
+          ]),
+        ));
   }
 }
 

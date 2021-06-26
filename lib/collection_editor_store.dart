@@ -89,6 +89,12 @@ class CollectionEditorStore extends Store {
       trigger();
     });
 
+    addNotesToCollection.listen((List<Note> notes) async {
+      _collection.notes.addAll(notes);
+      await LocalStorage().syncCollection(_collection);
+      trigger();
+    });
+
     setNotesOfCollection.listen((List<Note> notes) async {
       _collection.notes = notes;
       await LocalStorage().syncCollection(_collection);
@@ -105,6 +111,7 @@ Action<String> changeCollectionTitle = Action();
 Action<Note> moveNoteDown = Action();
 Action<Note> moveNoteUp = Action();
 Action<Note> addNoteToCollection = Action();
+Action<List<Note>> addNotesToCollection = Action();
 Action undoRemoveNoteFromCollection = Action();
 Action toggleCollectionStarred = Action();
 Action updateCollectionEditorView = Action();

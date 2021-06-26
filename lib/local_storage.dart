@@ -224,6 +224,8 @@ class LocalStorage {
     var data = collection.toJson();
     data.remove('notes');
 
+    print("collection contains ${collection.notes.length} notes");
+
     var db = await getDatabase();
 
     var query = await db
@@ -257,6 +259,7 @@ class LocalStorage {
         noteIds.remove(note.id);
       }
     }
+
     // if any noteId left in list, remove entry from table
     for (var noteId in noteIds) {
       print("delete noteId: $noteId | collectionId: ${collection.id}");
@@ -265,8 +268,10 @@ class LocalStorage {
           whereArgs: [collection.id, noteId]);
     }
 
+    assert((await this._getNoteIdsByCollectionId(collection.id, db)).length ==
+        collection.notes.length);
+
     var collections = await getCollections();
-    print("collections: ${collections.length}");
     _collectionController.sink.add(collections);
   }
 

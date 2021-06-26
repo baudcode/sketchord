@@ -38,13 +38,16 @@ class NoteEditor extends StatefulWidget {
   }
 }
 
+enum TabType { structure, info, audio }
+
 class NoteEditorState extends State<NoteEditor>
     with StoreWatcherMixin<NoteEditor> {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   List<String> popupMenuActions = ["share", "copy", "add"];
-  List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Collection"];
+  List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Set"];
+  bool useTabs = true;
 
   Map<Section, GlobalKey> dismissables = {};
 
@@ -83,7 +86,7 @@ class NoteEditorState extends State<NoteEditor>
 
   _onFloatingActionButtonPress() {
     if (recorderStore.state == RecorderState.RECORDING) {
-      stopAction();
+      stopAction(true);
     } else {
       startRecordingAction();
     }
@@ -147,11 +150,25 @@ class NoteEditorState extends State<NoteEditor>
     }
   }
 
+  _buildTabView(List<Widget> items) {
+    return Container(
+        padding: EdgeInsets.all(16),
+        child: ListView.builder(
+          itemBuilder: (context, index) => items[index],
+          itemCount: items.length,
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<Widget> items = [];
+    // map widgets to tabs
+    Map<TabType, List<Widget>> items = {};
 
-    items.add(NoteEditorTitle(
+    items[TabType.audio] = [];
+    items[TabType.structure] = [];
+    items[TabType.info] = [];
+
+    items[TabType.structure].add(NoteEditorTitle(
       title: store.note.title,
       onChange: changeTitle,
       allowEdit: true,
@@ -164,21 +181,22 @@ class NoteEditorState extends State<NoteEditor>
 
       bool showMoveUp = (i != 0);
       bool showMoveDown = (i != (store.note.sections.length - 1));
-      items.add(SectionListItem(
+
+      items[TabType.structure].add(SectionListItem(
           globalKey: dismissables[store.note.sections[i]],
           section: store.note.sections[i],
           moveDown: showMoveDown,
           moveUp: showMoveUp));
     }
     // add section item
-    items.add(AddSectionItem());
+    items[TabType.structure].add(AddSectionItem());
 
     // all additional info
-    items.add(NoteEditorAdditionalInfo(store.note));
+    items[TabType.info].add(NoteEditorAdditionalInfo(store.note));
 
     // audio files as stack
-    if (store.note.audioFiles.length > 0)
-      items.add(Padding(
+    if (store.note.audioFiles.length > 0 && !useTabs)
+      items[TabType.audio].add(Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
           child: Text(
             'Audio Files',
@@ -186,7 +204,7 @@ class NoteEditorState extends State<NoteEditor>
           )));
 
     store.note.audioFiles.asMap().forEach((int index, AudioFile f) {
-      items.add(AudioFileView(
+      items[TabType.audio].add(AudioFileView(
           file: f,
           index: index,
           onDelete: () => _onAudioFileDelete(f, index),
@@ -233,15 +251,6 @@ class NoteEditorState extends State<NoteEditor>
           onShare: () => shareFile(f.path),
           globalKey: _globalKey));
     });
-
-    List<Widget> stackChildren = [];
-
-    stackChildren.add(Container(
-        padding: EdgeInsets.all(16),
-        child: ListView.builder(
-          itemBuilder: (context, index) => items[index],
-          itemCount: items.length,
-        )));
 
     // bottom sheets
     bool showSheet = recorderStore.state == RecorderState.PAUSING ||
@@ -309,21 +318,53 @@ class NoteEditorState extends State<NoteEditor>
       popup,
     ];
 
+    List<String> categories = ["Structure", "Info", "Audio"];
+
+    List<Widget> stackChildren = [];
+    if (!useTabs) {
+      stackChildren.add(_buildTabView(items[TabType.structure]
+        ..addAll(items[TabType.info])
+        ..addAll(items[TabType.audio])));
+    }
+
     // will pop score
     return WillPopScope(
         onWillPop: () async {
-          stopAction();
+          stopAction(true);
           return true;
         },
-        child: Scaffold(
-            key: _globalKey,
-            appBar: AppBar(
-              //backgroundColor: store.note.color,
-              actions: actions,
-            ),
-            bottomSheet:
-                showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
-            body: Container(child: Stack(children: stackChildren))));
+        child: DefaultTabController(
+            length: 3,
+            child: Scaffold(
+                key: _globalKey,
+                appBar: AppBar(
+                  //backgroundColor: store.note.color,
+                  actions: actions,
+                  bottom: new TabBar(
+                      isScrollable: true,
+                      tabs: useTabs
+                          ? List<Widget>.generate(categories.length,
+                              (int index) {
+                              return new Tab(text: categories[index]);
+                            })
+                          : null),
+                ),
+                bottomSheet: showSheet
+                    ? RecorderBottomSheet(key: Key("bottomSheet"))
+                    : null,
+                body: useTabs
+                    ? TabBarView(
+                        children: List<Widget>.generate(categories.length,
+                            (int index) {
+                        if (index == 0) {
+                          return _buildTabView(items[TabType.structure]);
+                        } else if (index == 1) {
+                          return _buildTabView(items[TabType.info]);
+                        } else {
+                          return _buildTabView(items[TabType.audio]);
+                        }
+                      }))
+                    : Container(child: Stack(children: stackChildren)))));
   }
 }
 

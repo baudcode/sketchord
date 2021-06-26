@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+import 'package:sound/note_views/appbar.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
@@ -40,7 +41,7 @@ class AudioFile {
       this.lastModified,
       this.name,
       this.loopRange}) {
-    print("creating audio file with ${this.name} ${this.id}");
+    //print("creating audio file with ${this.name} ${this.id}");
     if (id == null) id = Uuid().v4().toString();
     if (createdAt == null) createdAt = DateTime.now();
     if (lastModified == null) lastModified = DateTime.now();
@@ -309,6 +310,50 @@ class Note {
 
 enum SettingsTheme { dark, light }
 enum EditorView { single, double }
+enum SortBy { created, lastModified, az }
+enum SortDirection { up, down }
+
+String serializeTheme(SettingsTheme theme) {
+  return theme == SettingsTheme.dark ? "dark" : "light";
+}
+
+String serializeEditorView(EditorView view) {
+  return view == EditorView.single ? "single" : "double";
+}
+
+String serializeAudioFormat(AudioFormat audioFormat) {
+  return audioFormat == AudioFormat.AAC ? "aac" : "wav";
+}
+
+String serializeSortDirection(SortDirection direction) {
+  return direction == SortDirection.up ? "up" : "down";
+}
+
+String serializeSortBy(SortBy by) {
+  switch (by) {
+    case SortBy.created:
+      return "created";
+    case SortBy.lastModified:
+      return "lastModified";
+    case SortBy.az:
+      return "az";
+    default:
+      return "lastModified";
+  }
+}
+
+SortBy deserializeSortBy(String by) {
+  switch (by) {
+    case "created":
+      return SortBy.created;
+    case "lastModified":
+      return SortBy.lastModified;
+    case "az":
+      return SortBy.az;
+    default:
+      return SortBy.lastModified;
+  }
+}
 
 class Settings {
   SettingsTheme theme;
@@ -316,19 +361,25 @@ class Settings {
   AudioFormat audioFormat; // aac, wav
   String name;
   bool isInitialStart;
+  SortBy sortBy;
+  SortDirection sortDirection;
 
   Settings(
       {this.theme,
       this.view,
       this.audioFormat,
       this.name,
-      this.isInitialStart});
+      this.isInitialStart,
+      this.sortBy,
+      this.sortDirection});
 
   Map<String, dynamic> toJson() {
     return {
-      "theme": theme == SettingsTheme.dark ? "dark" : "light",
-      "view": view == EditorView.single ? "single" : "double",
-      "audioFormat": audioFormat == AudioFormat.AAC ? "aac" : "wav",
+      "theme": serializeTheme(theme),
+      "view": serializeEditorView(view),
+      "audioFormat": serializeAudioFormat(audioFormat),
+      "sortBy": serializeSortBy(sortBy),
+      "sortDirection": serializeSortDirection(sortDirection),
       "name": name,
       "isInitialStart": isInitialStart
     };
@@ -343,7 +394,15 @@ class Settings {
         isInitialStart:
             json.containsKey("isInitialStart") ? json['isInitialStart'] : false,
         audioFormat:
-            json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV);
+            json["audioFormat"] == "aac" ? AudioFormat.AAC : AudioFormat.WAV,
+        sortDirection: json.containsKey("sortDirection")
+            ? json['sortDirection'] == "up"
+                ? SortDirection.up
+                : SortDirection.down
+            : SortDirection.up,
+        sortBy: json.containsKey('sortBy')
+            ? deserializeSortBy(json['sortBy'])
+            : SortBy.lastModified);
   }
 }
 
@@ -389,6 +448,9 @@ class NoteCollection {
           lastModified == null ? null : serializeDateTime(lastModified),
     };
   }
+
+  bool get empty =>
+      title.trim() == "" && description.trim() == "" && notes.length == 0;
 
   factory NoteCollection.fromJson(Map<String, dynamic> json) {
     return NoteCollection(

@@ -89,10 +89,17 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
                       //mainAxisAlignment: MainAxisAlignment.spaceAround,
                       //crossAxisAlignment: CrossAxisAlignment.start,
                       children: options
-                          .map((e) => FlatButton.icon(
+                          .map((e) => TextButton.icon(
                                 label: Text(e.name,
-                                    style: TextStyle(fontSize: 20)),
-                                icon: Icon(e.icon),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .button
+                                        .copyWith(fontSize: 20)),
+                                icon: Icon(e.icon,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .button
+                                        .color),
                                 onPressed: () => _switch(e.item),
                               ))
                           .toList()),

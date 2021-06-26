@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
+import 'package:sound/note_viewer.dart';
 import 'package:sound/note_views/appbar.dart';
 import 'package:sound/note_views/seach.dart';
 import 'package:tuple/tuple.dart';
@@ -35,9 +36,14 @@ class NoteSearchViewLoader extends StatelessWidget {
             return CircularProgressIndicator();
           else {
             // add all notes that are active and note already part of this collection
-            DB().setNotes(snap.data
-                .where((element) => collection.notes.indexOf(element) == -1)
-                .toList());
+            DB().setNotes(snap.data.where((element) {
+              try {
+                collection.notes.firstWhere((n) => n.id == element.id);
+                return false;
+              } catch (e) {
+                return true;
+              }
+            }).toList());
 
             return _NoteSearchView(
                 collection: collection, onAddNotes: onAddNotes);
@@ -56,7 +62,7 @@ class _NoteSearchView extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    throw _NoteSearchViewState();
+    return _NoteSearchViewState();
   }
 }
 
@@ -91,6 +97,11 @@ class _NoteSearchViewState extends State<_NoteSearchView>
     // set notes note belonging already to this collection
     storage = listenToStore(searchNoteStorageToken);
     setTwoPerRow(true);
+  }
+
+  _clear() {
+    // clears the state of the view
+    resetStaticStorage();
   }
 
   _activeFiltersView() {
@@ -141,6 +152,12 @@ class _NoteSearchViewState extends State<_NoteSearchView>
     ];
   }
 
+  _onOk() {
+    widget.onAddNotes(storage.selectedNotes);
+    _clear();
+    Navigator.of(context).pop();
+  }
+
   _sliverNoteSelectionAppBar() {
     print((storage.selectedNotes
             .map((e) => e.starred)
@@ -155,9 +172,7 @@ class _NoteSearchViewState extends State<_NoteSearchView>
           icon: Icon(Icons.clear), onPressed: () => clearSelection()),
       title: Text(storage.selectedNotes.length.toString()),
       actions: <Widget>[
-        IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => discardAllSelectedNotes()),
+        IconButton(icon: Icon(Icons.check), onPressed: _onOk),
       ],
     );
   }
@@ -187,12 +202,7 @@ class _NoteSearchViewState extends State<_NoteSearchView>
 
   _sliver() {
     onTap(Note note) {
-      if (storage.isAnyNoteSelected()) {
-        triggerSelectNote(note);
-      } else {
-        Navigator.push(context,
-            new MaterialPageRoute(builder: (context) => NoteEditor(note)));
-      }
+      triggerSelectNote(note);
     }
 
     onLongPress(Note note) {
@@ -261,7 +271,7 @@ class _NoteSearchViewState extends State<_NoteSearchView>
 
   _searchView() {
     return SearchTextView(
-        toggleIsSearching: () {},
+        toggleIsSearching: (_) {},
         onChanged: (s) {
           searchNotes(s);
         },
