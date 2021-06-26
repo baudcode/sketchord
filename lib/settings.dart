@@ -89,6 +89,35 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     ));
   }
 
+  _editorViewAsString() {
+    if (store.editorView == EditorView.onePage) {
+      return "One Page";
+    } else if (store.editorView == EditorView.tabs) {
+      return "Tabs";
+    } else
+      return "";
+  }
+
+  _toggleEditorView() {
+    if (store.editorView == EditorView.onePage) {
+      setDefaultEditorView(EditorView.tabs);
+    } else {
+      setDefaultEditorView(EditorView.onePage);
+    }
+  }
+
+  _editorViewItem() {
+    return _wrapItem(Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Expanded(child: Text("EditorView: ")),
+        RaisedButton(
+            child: Text(_editorViewAsString()), onPressed: _toggleEditorView),
+      ],
+    ));
+  }
+
   _setName() {
     return _wrapItem(Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -195,6 +224,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       _setName(),
       _themeItem(),
       _audioFormatItem(),
+      _editorViewItem(),
       SizedBox(height: 10),
       ElevatedButton(child: Text("Backup"), onPressed: _onBackup),
       SizedBox(height: 10),

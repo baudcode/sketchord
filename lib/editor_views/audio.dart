@@ -43,12 +43,13 @@ class AudioFileView extends StatelessWidget {
   final AudioFile file;
   final int index;
   final GlobalKey globalKey;
-  final Function onDelete, onMove, onShare;
+  final Function onDelete, onMove, onShare, onDuplicate;
 
   const AudioFileView(
       {@required this.file,
       @required this.index,
       @required this.onDelete,
+      @required this.onDuplicate,
       @required this.onShare,
       @required this.onMove,
       @required this.globalKey,
@@ -73,14 +74,14 @@ class AudioFileView extends StatelessWidget {
             controller: controller,
           ),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
+            new ElevatedButton(
               child: new Text("Apply"),
               onPressed: () {
                 file.name = controller.value.text;
@@ -122,6 +123,7 @@ class AudioFileView extends StatelessWidget {
           showAudioActionDialog(context, [
             AudioAction(0, Icons.share, "Share"),
             AudioAction(1, Icons.move_to_inbox, "Move"),
+            AudioAction(2, Icons.copy, "Duplicate"),
           ], (action) {
             Navigator.of(context).pop();
 
@@ -130,6 +132,8 @@ class AudioFileView extends StatelessWidget {
               onShare();
             } else if (action.id == 1) {
               onMove();
+            } else if (action.id == 2) {
+              onDuplicate();
             }
           });
           // shareFile(file.path);
@@ -139,8 +143,9 @@ class AudioFileView extends StatelessWidget {
       direction: DismissDirection.horizontal,
       key: GlobalKey(),
       background: Card(
+          margin: EdgeInsets.all(0),
           child: Container(
-              color: Theme.of(context).highlightColor,
+              color: Theme.of(context).scaffoldBackgroundColor,
               child: Row(children: <Widget>[Icon(Icons.share)]),
               padding: EdgeInsets.all(10))),
       secondaryBackground: Card(

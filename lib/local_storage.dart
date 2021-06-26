@@ -109,7 +109,8 @@ class LocalStorage {
   }
 
   Future<int> syncNote(Note note) async {
-    print("Syncing note ${note.id} with title ${note.title}");
+    print(
+        "Syncing note ${note.id} with title ${note.title} and ${note.audioFiles} audio files");
     final db = await getDatabase();
 
     for (int i = 0; i < note.sections.length; i++) {
@@ -120,6 +121,9 @@ class LocalStorage {
       await db.insert(sectionTable, sectionData,
           conflictAlgorithm: ConflictAlgorithm.replace);
     }
+
+    // delete all old audio files with noteId
+    await db.delete(audioFileTable, where: "noteId = ?", whereArgs: [note.id]);
 
     for (int i = 0; i < note.audioFiles.length; i++) {
       Map<String, dynamic> autdioFileData = note.audioFiles[i].toJson();
@@ -305,8 +309,10 @@ class LocalStorage {
   }
 
   Future<bool> _deleteAudioFile(AudioFile audioFile) async {
-    FileSystemEntity e = await audioFile.file.delete();
-    return !e.existsSync();
+    if (audioFile.file.existsSync()) {
+      FileSystemEntity e = await audioFile.file.delete();
+    }
+    return !audioFile.file.existsSync();
   }
 
   Future<void> deleteNote(Note note) async {

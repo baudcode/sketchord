@@ -27,10 +27,35 @@ import "recorder_store.dart";
 
 import 'utils.dart';
 
-class NoteEditor extends StatefulWidget {
+class NoteEditor extends StatelessWidget {
   final Note note;
+  final EditorView view;
 
-  NoteEditor(this.note);
+  NoteEditor(this.note, {this.view});
+
+  @override
+  Widget build(BuildContext context) {
+    if (view != null) return NoteEditorContent(note, view);
+
+    return FutureBuilder(
+        builder: (BuildContext context, AsyncSnapshot<Settings> snap) {
+          if (snap.hasData) {
+            EditorView v =
+                (snap.data == null) ? EditorView.tabs : snap.data.editorView;
+            return NoteEditorContent(note, v);
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
+        future: LocalStorage().getSettings());
+  }
+}
+
+class NoteEditorContent extends StatefulWidget {
+  final Note note;
+  final EditorView view;
+
+  NoteEditorContent(this.note, this.view);
 
   @override
   State<StatefulWidget> createState() {
@@ -40,14 +65,14 @@ class NoteEditor extends StatefulWidget {
 
 enum TabType { structure, info, audio }
 
-class NoteEditorState extends State<NoteEditor>
-    with StoreWatcherMixin<NoteEditor> {
+class NoteEditorState extends State<NoteEditorContent>
+    with StoreWatcherMixin<NoteEditorContent> {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   List<String> popupMenuActions = ["share", "copy", "add"];
   List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Set"];
-  bool useTabs = true;
+  bool get useTabs => widget.view == EditorView.tabs;
 
   Map<Section, GlobalKey> dismissables = {};
 
@@ -102,6 +127,7 @@ class NoteEditorState extends State<NoteEditor>
         // lets check whether the file was restored or not
         if (status == FlushbarStatus.DISMISSED &&
             !store.note.audioFiles.contains(file)) {
+          print("hardly deleting audio file now");
           hardDeleteAudioFile(file);
         }
       },
@@ -207,6 +233,10 @@ class NoteEditorState extends State<NoteEditor>
       items[TabType.audio].add(AudioFileView(
           file: f,
           index: index,
+          onDuplicate: () async {
+            AudioFile copy = await FileManager().copyToNew(f);
+            addAudioFile(copy);
+          },
           onDelete: () => _onAudioFileDelete(f, index),
           onMove: () {
             showImportDialog(context, "Copy audio to", () async {
@@ -246,6 +276,7 @@ class NoteEditorState extends State<NoteEditor>
                 syncNote:
                     false, // do not sync note, because otherwise this component gets updated twice
                 importButtonText: "Copy",
+                ignoreNoteId: store.note.id,
                 newButtonText: "Copy as NEW");
           },
           onShare: () => shareFile(f.path),
@@ -327,44 +358,41 @@ class NoteEditorState extends State<NoteEditor>
         ..addAll(items[TabType.audio])));
     }
 
+    Scaffold scaffold = Scaffold(
+        key: _globalKey,
+        appBar: AppBar(
+          //backgroundColor: store.note.color,
+          actions: actions,
+          bottom: useTabs
+              ? new TabBar(
+                  isScrollable: true,
+                  tabs: List<Widget>.generate(categories.length, (int index) {
+                    return new Tab(text: categories[index]);
+                  }))
+              : null,
+        ),
+        bottomSheet:
+            showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
+        body: useTabs
+            ? TabBarView(
+                children: List<Widget>.generate(categories.length, (int index) {
+                if (index == 0) {
+                  return _buildTabView(items[TabType.structure]);
+                } else if (index == 1) {
+                  return _buildTabView(items[TabType.info]);
+                } else {
+                  return _buildTabView(items[TabType.audio]);
+                }
+              }))
+            : Container(child: Stack(children: stackChildren)));
+
     // will pop score
     return WillPopScope(
         onWillPop: () async {
           stopAction(true);
           return true;
         },
-        child: DefaultTabController(
-            length: 3,
-            child: Scaffold(
-                key: _globalKey,
-                appBar: AppBar(
-                  //backgroundColor: store.note.color,
-                  actions: actions,
-                  bottom: new TabBar(
-                      isScrollable: true,
-                      tabs: useTabs
-                          ? List<Widget>.generate(categories.length,
-                              (int index) {
-                              return new Tab(text: categories[index]);
-                            })
-                          : null),
-                ),
-                bottomSheet: showSheet
-                    ? RecorderBottomSheet(key: Key("bottomSheet"))
-                    : null,
-                body: useTabs
-                    ? TabBarView(
-                        children: List<Widget>.generate(categories.length,
-                            (int index) {
-                        if (index == 0) {
-                          return _buildTabView(items[TabType.structure]);
-                        } else if (index == 1) {
-                          return _buildTabView(items[TabType.info]);
-                        } else {
-                          return _buildTabView(items[TabType.audio]);
-                        }
-                      }))
-                    : Container(child: Stack(children: stackChildren)))));
+        child: DefaultTabController(length: 3, child: scaffold));
   }
 }
 

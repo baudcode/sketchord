@@ -309,7 +309,8 @@ class Note {
 }
 
 enum SettingsTheme { dark, light }
-enum EditorView { single, double }
+enum EditorView { onePage, tabs }
+enum NoteListType { single, double }
 enum SortBy { created, lastModified, az }
 enum SortDirection { up, down }
 
@@ -318,7 +319,11 @@ String serializeTheme(SettingsTheme theme) {
 }
 
 String serializeEditorView(EditorView view) {
-  return view == EditorView.single ? "single" : "double";
+  return view == EditorView.onePage ? "onePage" : "tabs";
+}
+
+String serializeNoteListType(NoteListType view) {
+  return view == NoteListType.single ? "single" : "double";
 }
 
 String serializeAudioFormat(AudioFormat audioFormat) {
@@ -357,31 +362,34 @@ SortBy deserializeSortBy(String by) {
 
 class Settings {
   SettingsTheme theme;
-  EditorView view; // single, double
+  NoteListType noteListType; // single, double
   AudioFormat audioFormat; // aac, wav
   String name;
+  EditorView editorView;
   bool isInitialStart;
   SortBy sortBy;
   SortDirection sortDirection;
 
   Settings(
       {this.theme,
-      this.view,
+      this.noteListType,
       this.audioFormat,
       this.name,
       this.isInitialStart,
       this.sortBy,
-      this.sortDirection});
+      this.sortDirection,
+      this.editorView});
 
   Map<String, dynamic> toJson() {
     return {
       "theme": serializeTheme(theme),
-      "view": serializeEditorView(view),
+      "editorView": serializeEditorView(editorView),
       "audioFormat": serializeAudioFormat(audioFormat),
       "sortBy": serializeSortBy(sortBy),
       "sortDirection": serializeSortDirection(sortDirection),
       "name": name,
-      "isInitialStart": isInitialStart
+      "isInitialStart": isInitialStart,
+      "noteListType": serializeNoteListType(noteListType)
     };
   }
 
@@ -389,7 +397,12 @@ class Settings {
     return Settings(
         theme:
             json['theme'] == 'dark' ? SettingsTheme.dark : SettingsTheme.light,
-        view: json['view'] == "single" ? EditorView.single : EditorView.double,
+        editorView: json['editorView'] == "onePage"
+            ? EditorView.onePage
+            : EditorView.tabs,
+        noteListType: json['noteListType'] == "double"
+            ? NoteListType.double
+            : NoteListType.single,
         name: json.containsKey("name") ? json['name'] : null,
         isInitialStart:
             json.containsKey("isInitialStart") ? json['isInitialStart'] : false,

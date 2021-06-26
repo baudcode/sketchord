@@ -37,7 +37,7 @@ class NoteEditorStore extends Store {
     hardDeleteAudioFile.listen((f) async {
       FileManager().delete(f);
 
-      _note.audioFiles.remove(f);
+      _note.audioFiles.removeWhere((af) => af.id == f.id);
       print("Removing: ${f.name}");
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');
 

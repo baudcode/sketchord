@@ -10,9 +10,12 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     FutureNoteImportCallback onImport,
     {String newButtonText = 'Import as NEW',
     String importButtonText = "Import",
+    String ignoreNoteId,
     bool openNote = true,
     bool syncNote = true}) async {
   List<Note> notes = await LocalStorage().getActiveNotes();
+  if (ignoreNoteId != null)
+    notes = notes.where((element) => element.id != ignoreNoteId).toList();
 
   showDialog(
     context: context,
@@ -20,7 +23,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
       // if selected is null (use empty new note)
       Note selected;
 
-      _open(Note note) {
+      _open(Note note) async {
         if (openNote) {
           Navigator.push(context,
               new MaterialPageRoute(builder: (context) => NoteEditor(note)));
@@ -57,7 +60,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Flexible(
-                      child: RaisedButton(
+                      child: ElevatedButton(
                           child: Text(newButtonText), onPressed: _onNew)),
                   SizedBox(height: 10),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -82,14 +85,14 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
                 ]);
           }),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
+            new ElevatedButton(
               child: new Text(importButtonText),
               onPressed: (selected != null) ? _import : null,
             ),

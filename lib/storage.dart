@@ -1,4 +1,5 @@
 import 'package:flutter_flux/flutter_flux.dart';
+import 'package:sound/settings_store.dart';
 import 'package:sound/utils.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
@@ -166,6 +167,11 @@ class StaticStorage extends Store {
 
     toggleChangeView.listen((_) {
       _twoPerRow = !_twoPerRow;
+      if (_twoPerRow) {
+        setDefaultNoteListType(NoteListType.double);
+      } else {
+        setDefaultNoteListType(NoteListType.single);
+      }
       trigger();
     });
 
@@ -289,13 +295,25 @@ class StaticStorage extends Store {
     });
 
     changeSortDirection.listen((d) {
-      this._sortDirection = d;
-      trigger();
+      if (this._sortDirection != d) {
+        this._sortDirection = d;
+        trigger();
+      }
     });
 
     changeSortBy.listen((by) {
-      this._sortBy = by;
-      trigger();
+      if (_sortBy != by) {
+        this._sortBy = by;
+        trigger();
+      }
+    });
+
+    changeListType.listen((event) {
+      var twoPerRow = (event == NoteListType.single) ? false : true;
+      if (twoPerRow != _twoPerRow) {
+        _twoPerRow = twoPerRow;
+        trigger();
+      }
     });
   }
 
@@ -425,6 +443,7 @@ Action updateView = Action();
 Action resetStaticStorage = Action();
 Action<SortBy> changeSortBy = Action();
 Action<SortDirection> changeSortDirection = Action();
+Action<NoteListType> changeListType = Action();
 
 StoreToken storageToken = StoreToken(StaticStorage());
 StoreToken searchNoteStorageToken = StoreToken(StaticStorage());

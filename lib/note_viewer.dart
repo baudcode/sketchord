@@ -118,69 +118,73 @@ class _NoteViewerState extends State<NoteViewer> {
           }),
     ];
 
-    List<Widget> actions = [
-      IconButton(
-          icon: Icon(Icons.play_arrow),
-          color: Theme.of(context).accentColor,
-          onPressed: () {
-            if (!isPlaying) {
-              setState(() {
-                isPlaying = true;
-              });
-              Future.microtask(() async {
-                bool atEdge = false;
-                while (!atEdge && isPlaying) {
-                  await _controller.animateTo(_controller.offset + offset,
-                      duration: Duration(milliseconds: 50), curve: Curves.ease);
-                  atEdge = _controller.position.atEdge;
-                }
+    List<Widget> actions = [];
+
+    if (widget.showZoomPlayback) {
+      actions.addAll([
+        IconButton(
+            icon: Icon(Icons.play_arrow),
+            color: Theme.of(context).appBarTheme.textTheme.button.color,
+            onPressed: () {
+              if (!isPlaying) {
                 setState(() {
-                  isPlaying = false;
+                  isPlaying = true;
                 });
+                Future.microtask(() async {
+                  bool atEdge = false;
+                  while (!atEdge && isPlaying) {
+                    await _controller.animateTo(_controller.offset + offset,
+                        duration: Duration(milliseconds: 50),
+                        curve: Curves.ease);
+                    atEdge = _controller.position.atEdge;
+                  }
+                  setState(() {
+                    isPlaying = false;
+                  });
+                });
+              }
+            }),
+        IconButton(
+            color: Theme.of(context).appBarTheme.textTheme.button.color,
+            icon: Icon(Icons.zoom_in),
+            onPressed: () {
+              setState(() {
+                textScaleFactor *= 1.05;
               });
-            }
-          }),
-      IconButton(
-          color: Theme.of(context).accentColor,
-          icon: Icon(Icons.zoom_in),
+              _updateZoom();
+            }),
+        IconButton(
+            color: Theme.of(context).appBarTheme.textTheme.button.color,
+            icon: Icon(Icons.zoom_out),
+            onPressed: () {
+              setState(() {
+                textScaleFactor *= 0.95;
+              });
+              _updateZoom();
+            }),
+        IconButton(
+          color: Theme.of(context).appBarTheme.textTheme.button.color,
+          icon: Icon(Icons.settings_backup_restore_outlined),
           onPressed: () {
             setState(() {
-              textScaleFactor *= 1.05;
+              textScaleFactor = 1.0;
+              offset = 1.0;
             });
             _updateZoom();
-          }),
-      IconButton(
-          color: Theme.of(context).accentColor,
-          icon: Icon(Icons.zoom_out),
-          onPressed: () {
-            setState(() {
-              textScaleFactor *= 0.95;
-            });
-            _updateZoom();
-          }),
-      IconButton(
-        color: Theme.of(context).accentColor,
-        icon: Icon(Icons.settings_backup_restore_outlined),
-        onPressed: () {
-          setState(() {
-            textScaleFactor = 1.0;
-            offset = 1.0;
-          });
-          _updateZoom();
-          _updateScrollOffset();
-        },
-      )
-    ];
+            _updateScrollOffset();
+          },
+        )
+      ]);
+    }
+    // Widget overlay = Container(
+    //     decoration: BoxDecoration(
+    //       shape: BoxShape.rectangle,
 
-    Widget overlay = Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.rectangle,
-
-          //border: Border.all(width: 1, color: Theme.of(context).accentColor)),
-        ),
-        child: Row(
-          children: (isPlaying) ? playingActions : actions,
-        ));
+    //       //border: Border.all(width: 1, color: Theme.of(context).accentColor)),
+    //     ),
+    //     child: Row(
+    //       children: (isPlaying) ? playingActions : actions,
+    //     ));
 
     if (widget.showAdditionalInformation) {
       items.add(NoteEditorAdditionalInfo(
@@ -204,13 +208,14 @@ class _NoteViewerState extends State<NoteViewer> {
         });
       }));
     }
+    if (widget.actions != null) {
+      actions.addAll(widget.actions);
+    }
 
     return Scaffold(
-        appBar: widget.actions == null
-            ? null
-            : AppBar(
-                actions: widget.actions,
-              ),
+        appBar: AppBar(
+          actions: actions,
+        ),
         bottomSheet: widget.showSheet
             ? RecorderBottomSheet(key: Key("bottomSheetViewer"))
             : null,
@@ -223,11 +228,11 @@ class _NoteViewerState extends State<NoteViewer> {
                   itemBuilder: (context, index) => items[index],
                   itemCount: items.length,
                 )),
-            Positioned(
-              child: widget.showZoomPlayback ? overlay : Container(),
-              top: 32,
-              right: 8,
-            ),
+            // Positioned(
+            //   child: widget.showZoomPlayback ? overlay : Container(),
+            //   top: 32,
+            //   right: 8,
+            // ),
           ]),
         ));
   }

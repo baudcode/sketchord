@@ -6,11 +6,14 @@ import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sound/file_manager.dart';
+import 'package:uuid/uuid.dart';
 import "model.dart";
 import 'package:path/path.dart' as p;
 
 const NOTES_FILENAME = "notes.json";
 const COLLECTIONS_FILENAME = "collections.json";
+const AUDIOFILES_FILENAME = "audioFiles.json";
 
 class ImportException implements Exception {
   String errMsg() => 'cannot import file';
@@ -126,6 +129,37 @@ class Backup {
           }
         }
       }
+
+      final audioFilesFile = archive.files
+          .firstWhere((a) => a.name == AUDIOFILES_FILENAME, orElse: () => null);
+
+      if (audioFilesFile == null) {
+        print("cannot find audiofiles json");
+      } else {
+        print("restoring audio files");
+        Map<String, dynamic> audioFilesMap =
+            jsonDecode(decodeZipContent(audioFilesFile));
+        audioFilesMap.forEach((internalName, path) {
+          final file = archive.files
+              .firstWhere((a) => a.name == internalName, orElse: () => null);
+          if (File(path).existsSync() || file == null) {
+            print(
+                "Error: cannot find audio file / already exists $internalName that maps to $path");
+          } else {
+            try {
+              print(
+                  "restoring audio file from ${file.nameOfLinkedFile} to $path");
+              final data = file.content as List<int>;
+
+              File(path)
+                ..createSync(recursive: true)
+                ..writeAsBytesSync(data);
+            } catch (e) {
+              print("cannot restore file $internalName to $path");
+            }
+          }
+        });
+      }
     } catch (e) {
       print("unknwon error occurred $e");
       throw new ImportException();
@@ -185,6 +219,7 @@ class Backup {
       return null;
     }
 
+    Map<String, String> audioFilesMap = {};
     // write notes
     for (Note note in notes) {
       var filename = "${note.id}.json";
@@ -192,6 +227,16 @@ class Backup {
       File(notePath).writeAsStringSync(jsonEncode(note.toJson()));
 
       encoder.addFile(File(notePath), filename);
+
+      for (AudioFile f in note.audioFiles) {
+        File file = File(f.path);
+        String internalName = filename + Uuid().v4() + ".wav";
+
+        if (file.existsSync()) {
+          audioFilesMap[internalName] = f.path;
+          encoder.addFile(file, internalName);
+        }
+      }
     }
 
     // write note filenames
@@ -214,6 +259,10 @@ class Backup {
     File(setsPath)
         .writeAsStringSync(jsonEncode(collections.map((n) => n.id).toList()));
     encoder.addFile(File(setsPath), COLLECTIONS_FILENAME);
+
+    var audioFilesPath = p.join(tempDir.path, AUDIOFILES_FILENAME);
+    File(audioFilesPath).writeAsStringSync(jsonEncode(audioFilesMap));
+    encoder.addFile(File(audioFilesPath), AUDIOFILES_FILENAME);
 
     // close
     encoder.close();

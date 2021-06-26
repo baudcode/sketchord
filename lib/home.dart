@@ -116,6 +116,7 @@ class HomeContentState extends State<HomeContent>
       if (settings != null) {
         changeSortBy(settings.sortBy);
         changeSortDirection(settings.sortDirection);
+        changeListType(settings.noteListType);
       }
     });
 

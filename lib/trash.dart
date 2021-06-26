@@ -60,6 +60,7 @@ class _TrashState extends State<Trash> {
       }
       setState(() {
         notes.removeWhere((n) => isSelected(n));
+        selectedNotes = [];
       });
     } else if (action == 'delete_all') {
       for (Note note in notes) {

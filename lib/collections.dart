@@ -506,10 +506,10 @@ class Collections extends StatelessWidget {
 
 class CollectionsContent extends StatefulWidget {
   final Function onMenuPressed;
-  final EditorView view;
+  final NoteListType listType;
 
   CollectionsContent(
-      {Key key, this.onMenuPressed, this.view = EditorView.double})
+      {Key key, this.onMenuPressed, this.listType = NoteListType.double})
       : super(key: key);
 
   @override

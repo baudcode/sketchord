@@ -2,6 +2,7 @@ import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart' show Action, Store, StoreToken;
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
+import 'package:sound/note_list.dart';
 import 'package:sound/recorder_store.dart';
 
 class SettingsStore extends Store {
@@ -11,12 +12,13 @@ class SettingsStore extends Store {
       audioFormat: AudioFormat.WAV,
       theme: SettingsTheme.dark,
       name: null,
-      view: EditorView.single);
+      noteListType: NoteListType.double,
+      editorView: EditorView.tabs);
 
   // getter
   SettingsTheme get theme => _settings.theme;
 
-  EditorView get view => _settings.view;
+  EditorView get editorView => _settings.editorView;
 
   AudioFormat get audioFormat => _settings.audioFormat;
   String get name => _settings.name;
@@ -41,8 +43,14 @@ class SettingsStore extends Store {
       trigger();
     });
 
-    setDefaultView.listen((view) async {
-      _settings.view = view;
+    setDefaultNoteListType.listen((listType) async {
+      _settings.noteListType = listType;
+      await LocalStorage().syncSettings(_settings);
+      trigger();
+    });
+
+    setDefaultEditorView.listen((view) async {
+      _settings.editorView = view;
       await LocalStorage().syncSettings(_settings);
       trigger();
     });
@@ -79,7 +87,8 @@ class SettingsStore extends Store {
 Action toggleTheme = Action();
 Action<String> setName = Action();
 
-Action<EditorView> setDefaultView = Action();
+Action<NoteListType> setDefaultNoteListType = Action();
+Action<EditorView> setDefaultEditorView = Action();
 Action<AudioFormat> setDefaultAudioFormat = Action();
 Action<Settings> updateSettings = Action();
 Action<SortDirection> setDefaultSortDirection = Action();
