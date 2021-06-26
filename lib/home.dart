@@ -61,8 +61,6 @@ class Home extends StatelessWidget {
     );
     return Scaffold(
         floatingActionButton: FloatingActionButton(
-          foregroundColor: Colors.white,
-          backgroundColor: Theme.of(context).accentColor,
           onPressed: () => _floatingButtonPress(context),
           child: IconButton(
             onPressed: () => _floatingButtonPress(context),

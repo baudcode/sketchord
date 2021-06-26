@@ -99,9 +99,12 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             //overlayColor: mainColor
             inactiveTrackColor: Colors.white),
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        floatingActionButtonTheme:
-            FloatingActionButtonThemeData(backgroundColor: mainColor));
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+            foregroundColor: appBarColor,
+            backgroundColor: ThemeData.dark().appBarTheme.backgroundColor));
 
+    //   foregroundColor: Theme.of(context).appBarTheme.backgroundColor,
+    // backgroundColor: Theme.of(context).appBarTheme.textTheme.button.color,
     final ThemeData light = ThemeData.light().copyWith(
         primaryColor: mainColor,
         textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
@@ -111,9 +114,9 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         cardColor: Colors.grey.shade200,
         colorScheme: ColorScheme.light().copyWith(
             primary: mainColor,
-            secondary: Colors.white,
-            background: Colors.white,
-            surface: Colors.white),
+            secondary: Colors.black54,
+            background: Colors.black54,
+            surface: Colors.black54),
         appBarTheme: ThemeData.light().appBarTheme.copyWith(
             color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
         chipTheme:
@@ -135,8 +138,10 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             activeTrackColor: mainColor, // inactive loop area
             inactiveTrackColor: appBarColor),
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        floatingActionButtonTheme:
-            FloatingActionButtonThemeData(backgroundColor: mainColor));
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          foregroundColor: Colors.white70,
+          backgroundColor: appBarColor,
+        ));
 
     return MaterialApp(
         //debugShowCheckedModeBanner: false,
