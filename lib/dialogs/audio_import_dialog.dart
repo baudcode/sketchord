@@ -8,6 +8,7 @@ import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 
 showAudioImportDialog(BuildContext context, List<File> files) {
   // analyse the playability and duration of audio files
@@ -58,8 +59,11 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
 
     for (AudioFile f in files) {
       Directory filesDir = await Backup().getFilesDir();
-      String newPath = p.join(filesDir.path, p.basename(f.path));
-      AudioFile move = await FileManager().move(f, newPath, id: f.id);
+      String ext = p.extension(f.path);
+      String newBase = Uuid().v4() + ext;
+      String newPath = p.join(filesDir.path, newBase);
+      AudioFile move = await FileManager().copy(f, newPath, id: f.id);
+      move.name = p.basename(f.path);
       copied.add(move);
     }
     return copied;
