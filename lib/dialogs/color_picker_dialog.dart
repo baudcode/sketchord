@@ -99,8 +99,8 @@ showColorPickerDialog(BuildContext context, Color currentColor,
             contentPadding: const EdgeInsets.all(8),
             title: Text("Choose a Color"),
             actions: [
-              FlatButton(child: Text("Cancel"), onPressed: _onCancel),
-              FlatButton(
+              TextButton(child: Text("Cancel"), onPressed: _onCancel),
+              ElevatedButton(
                   child: Text("Apply"),
                   onPressed: () {
                     onColorChanged(selected);

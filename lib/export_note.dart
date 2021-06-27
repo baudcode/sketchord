@@ -87,8 +87,8 @@ class ExportNoteState extends State<ExportNote> {
               width: 100,
               child: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child:
-                      RaisedButton(onPressed: _export, child: Text("Export"))),
+                  child: ElevatedButton(
+                      onPressed: _export, child: Text("Export"))),
             )
           ])
         ]);

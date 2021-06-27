@@ -65,7 +65,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
   Widget build(BuildContext context) {
     final ThemeData dark = ThemeData.dark().copyWith(
         indicatorColor: mainColor,
-        primaryColor: mainColor,
+        primaryColor: Colors.white,
         accentColor: mainColor,
         buttonColor: mainColor,
         colorScheme: ColorScheme.light().copyWith(
@@ -106,7 +106,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
     //   foregroundColor: Theme.of(context).appBarTheme.backgroundColor,
     // backgroundColor: Theme.of(context).appBarTheme.textTheme.button.color,
     final ThemeData light = ThemeData.light().copyWith(
-        primaryColor: mainColor,
+        primaryColor: Colors.white,
         textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
             selectionColor: mainColor,
             cursorColor: mainColor,
@@ -139,7 +139,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             inactiveTrackColor: appBarColor),
         visualDensity: VisualDensity.adaptivePlatformDensity,
         floatingActionButtonTheme: FloatingActionButtonThemeData(
-          foregroundColor: Colors.white70,
+          foregroundColor: Colors.white,
           backgroundColor: appBarColor,
         ));
 

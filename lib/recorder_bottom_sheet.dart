@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/looper.dart';
+import 'package:sound/utils.dart';
 import 'recorder_store.dart';
 
 class BottomInfo extends StatefulWidget {
@@ -175,18 +176,75 @@ class RecorderBottomSheet extends StatefulWidget {
 }
 
 class _RecorderBottomSheetState extends State<RecorderBottomSheet>
-    with StoreWatcherMixin<RecorderBottomSheet> {
+    with StoreWatcherMixin<RecorderBottomSheet>, TickerProviderStateMixin {
   RecorderBottomSheetStore store;
+  double height;
+
+  final double maxMinimizeHeight = 200;
+  final double bottomHeight = 60;
+  AnimationController _controller;
+
+  Animation<Offset> _slideAnimation;
+  Animation<double> _scaleAnimation, _sheetScaleAnimation;
+
+  bool forward = false;
+  ActionSubscription sub;
 
   @override
   void initState() {
     super.initState();
     store = listenToStore(recorderBottomSheetStoreToken);
-    print("INIT STATE....");
+
+    height = maxMinimizeHeight;
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+
+    _slideAnimation = Tween<Offset>(begin: Offset(0, 0), end: Offset(0, 1.5))
+        .animate(_controller);
+
+    _sheetScaleAnimation =
+        Tween<double>(begin: 1.0, end: -1.0).animate(_controller);
+
+    _controller.addStatusListener((status) {
+      print(status);
+      if (status == AnimationStatus.forward) {
+        setState(() {
+          forward = true;
+        });
+      } else if (status == AnimationStatus.reverse) {
+        setState(() {
+          forward = false;
+        });
+      } else if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        setMinimized(forward);
+      }
+    });
+    print("init recorder bottom sheet state");
+
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (store.minimized) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    });
+
+    sub = setMinimized.listen((m) {
+      if (forward != m) {
+        if (forward) {
+          _controller.reverse();
+        } else {
+          _controller.forward();
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    sub.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -208,33 +266,62 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     double width = MediaQuery.of(context).size.width;
 
-    Looper looper = Looper(color);
+    Looper looper = Looper(color, () {
+      _controller?.forward();
+    });
     BottomInfo info = BottomInfo(color);
-
     if (showLooper) {
-      return Container(
-          // decoration: BoxDecoration(
-          //     color: Theme.of(context).bottomAppBarColor,
-          //     borderRadius: BorderRadius.all(Radius.circular(15)),
-          //     boxShadow: [
-          //       BoxShadow(
-          //         color: Theme.of(context).appBarTheme.color,
-          //         spreadRadius: 2,
-          //         blurRadius: 10,
-          //       ),
-          //     ]),
-          color: Theme.of(context).bottomAppBarColor,
-          height: 300,
-          width: width,
-          child: Column(children: [
-            SizedBox(height: 10),
-            looper,
-            SizedBox(height: 50),
-            Text("Player:"),
-            PlayerSlider(),
-            Expanded(child: Container()),
-            info
-          ]));
+      return GestureDetector(
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizeTransition(
+                  axis: Axis.vertical,
+                  sizeFactor: _sheetScaleAnimation,
+                  child: Container(
+                    // decoration: BoxDecoration(
+                    //     color: Theme.of(context).bottomAppBarColor,
+                    //     borderRadius: BorderRadius.all(Radius.circular(15)),
+                    //     boxShadow: [
+                    //       BoxShadow(
+                    //         color: Theme.of(context).appBarTheme.color,
+                    //         spreadRadius: 2,
+                    //         blurRadius: 10,
+                    //       ),
+                    //     ]),
+                    color: Theme.of(context).bottomAppBarColor,
+                    height: bottomHeight + maxMinimizeHeight,
+                    width: width,
+                    child: Column(children: [
+                      SlideTransition(
+                          position: _slideAnimation,
+                          child: Container(
+                              child: Column(children: [
+                            SizedBox(height: 10),
+                            looper,
+                            SizedBox(height: 50),
+                            Text("Player:"),
+                            PlayerSlider(),
+                          ]))),
+                      //Expanded(child: Container()),
+                    ]),
+                  )),
+              store.minimized
+                  ? GestureDetector(
+                      onTap: () => _controller.reverse(),
+                      child: Container(
+                        height: 20,
+                        width: width,
+                        alignment: Alignment.topCenter,
+                        color: Theme.of(context).bottomAppBarColor,
+                        child: IconButton(
+                            icon: Icon(Icons.arrow_upward, size: 16)),
+                      ))
+                  : Container(),
+              info
+            ]),
+      );
     } else {
       return info;
     }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_bottom_sheet.dart';
+import 'package:sound/recorder_store.dart';
 
 class NoteViewer extends StatefulWidget {
   final Note note;
@@ -30,16 +32,20 @@ class NoteViewer extends StatefulWidget {
   _NoteViewerState createState() => _NoteViewerState();
 }
 
-class _NoteViewerState extends State<NoteViewer> {
+class _NoteViewerState extends State<NoteViewer>
+    with StoreWatcherMixin<NoteViewer> {
   ScrollController _controller;
   bool showButtons = true;
   double textScaleFactor = 1.0;
   bool isPlaying = false;
   double offset = 1.0;
+  RecorderBottomSheetStore recorderStore;
 
   @override
   void initState() {
     super.initState();
+    recorderStore = listenToStore(recorderBottomSheetStoreToken);
+    print("note viewer minimize state: ${recorderStore.minimized}");
     _controller = ScrollController()
       ..addListener(() {
         bool upDirection =
@@ -208,6 +214,11 @@ class _NoteViewerState extends State<NoteViewer> {
         });
       }));
     }
+
+    if (widget.showSheet) {
+      items.add(Container(height: recorderStore.minimized ? 70 : 300));
+    }
+
     if (widget.actions != null) {
       actions.addAll(widget.actions);
     }

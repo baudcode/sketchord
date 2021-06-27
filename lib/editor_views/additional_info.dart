@@ -71,12 +71,12 @@ class NoteEditorAdditionalInfo extends StatelessWidget {
       _edit(
           initial: note.label == null ? "" : note.label.toString(),
           title: "Label",
-          hint: "Idea, Rock, Pop...",
+          hint: "Idea, Rock, Pop ...",
           onChanged: changeLabel),
       _edit(
           initial: note.artist == null ? "" : note.artist.toString(),
           title: "Artist",
-          hint: "leave empty if you are the artist",
+          hint: "Passenger, Ed Sheeran ...",
           onChanged: changeArtist),
     ]);
   }

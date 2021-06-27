@@ -148,13 +148,20 @@ String serializeDateTime(DateTime t) {
   return "${t.year}-${t.month}-${t.day}-${t.hour}-${t.minute}-${t.second}-${t.microsecond}-${t.millisecond}";
 }
 
-List<int> serializeColor(Color color) {
-  return [color.alpha, color.red, color.green, color.blue];
+String serializeColor(Color color) {
+  return "${color.alpha};${color.red};${color.green};${color.blue}";
 }
 
-Color deserializeColor(List<dynamic> data) {
-  if (data == null) return null;
-  return Color.fromARGB(data[0], data[1], data[2], data[3]);
+Color deserializeColor(dynamic data) {
+  if (data == null || data is List) return null;
+  try {
+    List<int> args =
+        (data as String).split(";").map((e) => int.parse(e)).toList();
+    return Color.fromARGB(args[0], args[1], args[2], args[3]);
+  } catch (e) {
+    print("error: could not parse color $data");
+  }
+  return null;
 }
 
 class Note {

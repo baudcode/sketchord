@@ -34,14 +34,14 @@ showExportDialog(BuildContext context, Note note) {
                 onChanged: (v) => setState(() => current = v)),
           ]),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
+            new ElevatedButton(
               child: new Text("Export"),
               onPressed: () {
                 _export();

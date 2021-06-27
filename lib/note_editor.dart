@@ -66,14 +66,15 @@ class NoteEditorContent extends StatefulWidget {
 enum TabType { structure, info, audio }
 
 class NoteEditorState extends State<NoteEditorContent>
-    with StoreWatcherMixin<NoteEditorContent> {
+    with StoreWatcherMixin<NoteEditorContent>, WidgetsBindingObserver {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   List<String> popupMenuActions = ["share", "copy", "add"];
   List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Set"];
   bool get useTabs => widget.view == EditorView.tabs;
-
+  var _isKeyboardVisible = false;
+  final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};
 
   @override
@@ -131,7 +132,7 @@ class NoteEditorState extends State<NoteEditorContent>
           hardDeleteAudioFile(file);
         }
       },
-      mainButton: FlatButton(
+      mainButton: TextButton(
           child: Text("Undo"),
           onPressed: () {
             if (!store.note.audioFiles.contains(file)) {
@@ -153,7 +154,7 @@ class NoteEditorState extends State<NoteEditorContent>
       final snackBar = SnackBar(
         content: Text('Copied to Clipboard'),
       );
-      _globalKey.currentState.showSnackBar(snackBar);
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
   }
 
@@ -183,6 +184,17 @@ class NoteEditorState extends State<NoteEditorContent>
           itemBuilder: (context, index) => items[index],
           itemCount: items.length,
         ));
+  }
+
+  @override
+  void didChangeMetrics() {
+    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
+    final newValue = bottomInset > 0.0;
+    if (newValue != _isKeyboardVisible) {
+      setState(() {
+        _isKeyboardVisible = newValue;
+      });
+    }
   }
 
   @override
@@ -352,7 +364,20 @@ class NoteEditorState extends State<NoteEditorContent>
     List<String> categories = ["Structure", "Info", "Audio"];
 
     List<Widget> stackChildren = [];
+
+    // add container to prevent from seeing all content
+    if (showSheet && useTabs) {
+      TabType.values.forEach((tt) {
+        items[tt].add(Container(height: recorderStore.minimized ? 70 : 300));
+      });
+    }
+
     if (!useTabs) {
+      if (showSheet) {
+        items[TabType.audio]
+            .add(Container(height: recorderStore.minimized ? 70 : 300));
+      }
+
       stackChildren.add(_buildTabView(items[TabType.structure]
         ..addAll(items[TabType.info])
         ..addAll(items[TabType.audio])));
@@ -372,7 +397,7 @@ class NoteEditorState extends State<NoteEditorContent>
               : null,
         ),
         bottomSheet:
-            showSheet ? RecorderBottomSheet(key: Key("bottomSheet")) : null,
+            showSheet ? RecorderBottomSheet(key: bottomSheetKey) : null,
         body: useTabs
             ? TabBarView(
                 children: List<Widget>.generate(categories.length, (int index) {

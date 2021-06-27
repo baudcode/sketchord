@@ -55,7 +55,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(child: Text("Theme: ")),
-        RaisedButton(
+        ElevatedButton(
           child: Text(_themeAsString()),
           onPressed: toggleTheme,
         ),
@@ -83,7 +83,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(child: Text("AudioFormat: ")),
-        RaisedButton(
+        ElevatedButton(
             child: Text(_audioFormatAsString()), onPressed: _toggleAudioFormat),
       ],
     ));
@@ -112,7 +112,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(child: Text("EditorView: ")),
-        RaisedButton(
+        ElevatedButton(
             child: Text(_editorViewAsString()), onPressed: _toggleEditorView),
       ],
     ));
@@ -132,7 +132,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
             textScaleFactor: 0.4,
           )
         ])),
-        RaisedButton(
+        ElevatedButton(
             child: Text(store.name == null ? "Edit" : store.name),
             onPressed: _showEditNameDialog),
       ],
@@ -157,14 +157,14 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
             controller: _controller,
           ),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
+            new ElevatedButton(
               child: new Text("Apply"),
               onPressed: () {
                 setName(_controller.value.text);

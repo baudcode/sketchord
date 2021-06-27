@@ -82,7 +82,7 @@ class AddSectionItem extends StatelessWidget {
             decoration: BoxDecoration(
                 border:
                     Border.all(color: Theme.of(context).cardColor, width: 2)),
-            child: FlatButton(
+            child: TextButton(
               child: Text("Add Section",
                   style: Theme.of(context).textTheme.caption),
               onPressed: () => addSection(Section(title: "", content: "")),

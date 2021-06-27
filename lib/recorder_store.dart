@@ -65,6 +65,9 @@ class RecorderBottomSheetStore extends Store {
   RecorderState _state = RecorderState.STOP;
   String _currentPath;
 
+  bool _minimized;
+  bool get minimized => _minimized;
+
   Duration _recordTime;
   Duration get recordTime => _recordTime;
 
@@ -236,6 +239,7 @@ class RecorderBottomSheetStore extends Store {
   }
 
   RecorderBottomSheetStore() {
+    _minimized = false;
     // sound = FlutterSound();
     startPlaybackAction.listen((AudioFile f) {
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
@@ -342,6 +346,14 @@ class RecorderBottomSheetStore extends Store {
       }
     });
 
+    setMinimized.listen((m) {
+      print("set minimized internal: $m");
+      if (m != minimized) {
+        _minimized = m;
+        trigger();
+      }
+    });
+
     setDefaultAudioFormat.listen((format) {
       _audioFormat = format;
       print("ping");
@@ -365,6 +377,7 @@ Action<AudioFile> recordingFinished = Action();
 Action resetRecorderState = Action();
 Action<RangeValues> setLoopRange = Action();
 Action<AudioFormat> setAudioFormat = Action();
+Action<bool> setMinimized = Action();
 
 StoreToken recorderBottomSheetStoreToken =
     StoreToken(RecorderBottomSheetStore());

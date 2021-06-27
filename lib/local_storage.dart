@@ -111,6 +111,7 @@ class LocalStorage {
   Future<int> syncNote(Note note) async {
     print(
         "Syncing note ${note.id} with title ${note.title} and ${note.audioFiles} audio files");
+
     final db = await getDatabase();
 
     for (int i = 0; i < note.sections.length; i++) {
@@ -381,6 +382,8 @@ class LocalStorage {
   }
 
   Future<void> syncNoteAttr(Note note, String attr) async {
+    if (["sections", "title", "audioFiles", "tuning"].contains(attr))
+      note.lastModified = DateTime.now();
     await syncNote(note);
     _controller.sink.add(await getNotes());
   }
