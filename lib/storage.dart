@@ -151,7 +151,8 @@ class StaticStorage extends Store {
       return false;
   }
 
-  bool isSelected(Note note) => _selectedNotes.contains(note);
+  bool isSelected(Note note) =>
+      _selectedNotes.where((n) => n.id == note.id).toList().length > 0;
 
   bool isAnyNoteSelected() => _selectedNotes.length > 0;
 
@@ -215,11 +216,11 @@ class StaticStorage extends Store {
     });
 
     triggerSelectNote.listen((Note note) {
-      if (!_selectedNotes.contains(note)) {
+      if (!isSelected(note)) {
         _selectedNotes.add(note);
         trigger();
       } else {
-        _selectedNotes.remove(note);
+        _selectedNotes.removeWhere((element) => element.id == note.id);
         trigger();
       }
     });
