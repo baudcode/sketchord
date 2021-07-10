@@ -35,16 +35,36 @@ class NoteEditorTitle extends StatelessWidget {
 
 enum AdditionalInfoItem { tuning, capo, key, label, artist }
 
+getAddtionalInfoItemFromNote(Note note, AdditionalInfoItem item) {
+  switch (item) {
+    case AdditionalInfoItem.key:
+      return note.key;
+    case AdditionalInfoItem.tuning:
+      return note.tuning;
+    case AdditionalInfoItem.capo:
+      return note.capo;
+    case AdditionalInfoItem.label:
+      return note.label;
+    case AdditionalInfoItem.artist:
+      return note.artist;
+    default:
+      return null;
+  }
+}
+
 class NoteEditorAdditionalInfo extends StatefulWidget {
   final Note note;
   final bool allowEdit;
   final List<AdditionalInfoItem> items;
   final ValueChanged<AdditionalInfoItem> onFocusChange;
+  final ValueChanged<Tuple2<AdditionalInfoItem, String>>
+      onChange; // general any value change (to update suggestions)
 
   const NoteEditorAdditionalInfo(this.note,
       {this.allowEdit = true,
       this.items = AdditionalInfoItem.values,
       this.onFocusChange,
+      this.onChange,
       Key key})
       : super(key: key);
 
@@ -55,10 +75,33 @@ class NoteEditorAdditionalInfo extends StatefulWidget {
 
 class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
   Map<AdditionalInfoItem, FocusNode> focusNodes = {};
+  Map<AdditionalInfoItem, TextEditingController> controllers = {};
+
+  @override
+  void didUpdateWidget(NoteEditorAdditionalInfo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    print("Addtional Info Widget Update");
+    widget.items.forEach((item) {
+      String data = getAddtionalInfoItemFromNote(widget.note, item);
+      print(item);
+      print("note value: $data");
+      print("controller value: ${controllers[item].text}");
+      if (data == null) data = "";
+
+      if (controllers[item].text != data && data != null) {
+        print("update from note");
+        controllers[item].text = data;
+        controllers[item].selection =
+            TextSelection.fromPosition(TextPosition(offset: data.length));
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+
     widget.items.forEach((item) {
       FocusNode node = FocusNode();
       node.addListener(() {
@@ -68,17 +111,23 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
         }
       });
       focusNodes[item] = node;
+
+      String text = getAddtionalInfoItemFromNote(widget.note, item);
+      controllers[item] = TextEditingController(text: text == null ? "" : text);
     });
   }
 
-  _edit({initial, title, hint, onChanged, focus}) {
+  _edit({initial, title, hint, item}) {
     return TextFormField(
-        initialValue: initial,
-        focusNode: focus,
+        focusNode: focusNodes[item],
         decoration: InputDecoration(
             labelText: title, border: InputBorder.none, hintText: hint),
         enabled: widget.allowEdit,
-        onChanged: (v) => onChanged(v),
+        onChanged: (v) {
+          print("$item on changed => ${v == null}");
+          if (widget.onChange != null) widget.onChange(Tuple2(item, v));
+        },
+        controller: controllers[item],
         maxLines: 1);
   }
 
@@ -86,45 +135,44 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
     switch (item) {
       case AdditionalInfoItem.tuning:
         return _edit(
-            initial: widget.note.tuning == null ? "" : widget.note.tuning,
-            title: "Tuning",
-            hint: "Standard, Dadgad ...",
-            focus: focusNodes[item],
-            onChanged: changeTuning);
+          initial: widget.note.tuning == null ? "" : widget.note.tuning,
+          title: "Tuning",
+          hint: "Standard, Dadgad ...",
+          item: item,
+        );
 
       case AdditionalInfoItem.capo:
         return _edit(
-            initial:
-                widget.note.capo == null ? "" : widget.note.capo.toString(),
-            title: "Capo",
-            hint: "7, 5 ...",
-            focus: focusNodes[item],
-            onChanged: changeCapo);
+          initial: widget.note.capo == null ? "" : widget.note.capo.toString(),
+          title: "Capo",
+          hint: "7, 5 ...",
+          item: item,
+        );
 
       case AdditionalInfoItem.key:
         return _edit(
-            initial: widget.note.key == null ? "" : widget.note.key.toString(),
-            title: "Key",
-            hint: "C Major, A Minor ...",
-            focus: focusNodes[item],
-            onChanged: changeKey);
+          initial: widget.note.key == null ? "" : widget.note.key.toString(),
+          title: "Key",
+          hint: "C Major, A Minor ...",
+          item: item,
+        );
       case AdditionalInfoItem.label:
         return _edit(
-            initial:
-                widget.note.label == null ? "" : widget.note.label.toString(),
-            title: "Label",
-            hint: "Idea, Rock, Pop ...",
-            focus: focusNodes[item],
-            onChanged: changeLabel);
+          initial:
+              widget.note.label == null ? "" : widget.note.label.toString(),
+          title: "Label",
+          hint: "Idea, Rock, Pop ...",
+          item: item,
+        );
 
       case AdditionalInfoItem.artist:
         return _edit(
-            initial:
-                widget.note.artist == null ? "" : widget.note.artist.toString(),
-            title: "Artist",
-            hint: "Passenger, Ed Sheeran ...",
-            focus: focusNodes[item],
-            onChanged: changeArtist);
+          initial:
+              widget.note.artist == null ? "" : widget.note.artist.toString(),
+          title: "Artist",
+          hint: "Passenger, Ed Sheeran ...",
+          item: item,
+        );
       default:
         return null;
         break;

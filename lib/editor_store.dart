@@ -129,31 +129,26 @@ class NoteEditorStore extends Store {
     });
 
     changeTuning.listen((String x) async {
-      if (x.trim() == "") return;
       _note.tuning = x;
       await LocalStorage().syncNoteAttr(_note, 'tuning');
       trigger();
     });
     changeKey.listen((String x) async {
-      if (x.trim() == "") return;
       _note.key = x;
       await LocalStorage().syncNoteAttr(_note, 'key');
       trigger();
     });
     changeLabel.listen((String x) async {
-      if (x.trim() == "") return;
       _note.label = x;
       await LocalStorage().syncNoteAttr(_note, 'label');
       trigger();
     });
     changeArtist.listen((String x) async {
-      if (x.trim() == "") return;
       _note.artist = x;
       await LocalStorage().syncNoteAttr(_note, 'artist');
       trigger();
     });
     changeInstrument.listen((String x) async {
-      if (x.trim() == "") return;
       _note.instrument = x;
       await LocalStorage().syncNoteAttr(_note, 'instrument');
       trigger();

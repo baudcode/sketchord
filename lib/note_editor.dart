@@ -66,7 +66,7 @@ class NoteEditorContent extends StatefulWidget {
 enum TabType { structure, info, audio }
 
 class NoteEditorState extends State<NoteEditorContent>
-    with StoreWatcherMixin<NoteEditorContent> {
+    with StoreWatcherMixin<NoteEditorContent>, WidgetsBindingObserver {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
@@ -75,13 +75,17 @@ class NoteEditorState extends State<NoteEditorContent>
   bool get useTabs => widget.view == EditorView.tabs;
   final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};
+  AdditionalInfoItem focusedAdditionalInfoItem;
+  List<String> additionalItemSuggestions = [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     recorderStore = listenToStore(recorderBottomSheetStoreToken);
     store = listenToStore(noteEditorStoreToken);
     store.setNote(widget.note);
+
     print("INIT EDITOR");
 
     recordingFinished.clearListeners();
@@ -103,6 +107,7 @@ class NoteEditorState extends State<NoteEditorContent>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     recordingFinished.clearListeners();
     //store.dispose();
     //recorderStore.dispose();
@@ -185,6 +190,97 @@ class NoteEditorState extends State<NoteEditorContent>
         ));
   }
 
+  _onAdditionalInfoValueChange(AdditionalInfoItem item, String value) {
+    _onAdditionalInfoFocusChange(item);
+    _onSuggestionTap(value);
+  }
+
+  _onAdditionalInfoFocusChange(AdditionalInfoItem item) async {
+    var suggestions = await _getInfoSuggestions(item);
+    setState(() {
+      additionalItemSuggestions = suggestions;
+      focusedAdditionalInfoItem = item;
+    });
+  }
+
+  Future<List<String>> _getInfoSuggestions(AdditionalInfoItem item) async {
+    if (item == null) return [];
+
+    Iterable<Note> notes = (await LocalStorage().getActiveNotes())
+        .where((element) => element.id != store.note.id);
+
+    String search = getAddtionalInfoItemFromNote(store.note, item);
+
+    if (search != null) search = search.toLowerCase();
+
+    switch (item) {
+      case AdditionalInfoItem.key:
+        return itemsByFrequency(notes
+            .map((note) => note.key)
+            .where((element) =>
+                element != null &&
+                element.trim().length != 0 &&
+                (search == null || element.toLowerCase().contains(search)))
+            .toList());
+      case AdditionalInfoItem.tuning:
+        return itemsByFrequency(notes
+            .map((note) => note.tuning)
+            .where((element) =>
+                element != null &&
+                element.trim().length != 0 &&
+                (search == null || element.toLowerCase().contains(search)))
+            .toList());
+      case AdditionalInfoItem.capo:
+        return itemsByFrequency(notes
+            .map((note) => note.capo)
+            .where((element) =>
+                element != null &&
+                element.trim().length != 0 &&
+                (search == null || element.toLowerCase().contains(search)))
+            .toList());
+      case AdditionalInfoItem.label:
+        return itemsByFrequency(notes
+            .map((note) => note.label)
+            .where((element) =>
+                element != null &&
+                element.trim().length != 0 &&
+                (search == null || element.toLowerCase().contains(search)))
+            .toList());
+      case AdditionalInfoItem.artist:
+        return itemsByFrequency(notes
+            .map((note) => note.artist)
+            .where((element) =>
+                element != null &&
+                element.trim().length != 0 &&
+                (search == null || element.toLowerCase().contains(search)))
+            .toList());
+      default:
+        return [];
+    }
+  }
+
+  _onSuggestionTap(String text) {
+    switch (focusedAdditionalInfoItem) {
+      case AdditionalInfoItem.key:
+        changeKey(text);
+        break;
+      case AdditionalInfoItem.tuning:
+        changeTuning(text);
+        break;
+      case AdditionalInfoItem.capo:
+        changeCapo(text);
+        break;
+      case AdditionalInfoItem.label:
+        changeLabel(text);
+        break;
+      case AdditionalInfoItem.artist:
+        changeArtist(text);
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // map widgets to tabs
@@ -218,7 +314,10 @@ class NoteEditorState extends State<NoteEditorContent>
     items[TabType.structure].add(AddSectionItem());
 
     // all additional info
-    items[TabType.info].add(NoteEditorAdditionalInfo(store.note));
+    items[TabType.info].add(NoteEditorAdditionalInfo(store.note,
+        onChange: (data) =>
+            _onAdditionalInfoValueChange(data.item1, data.item2),
+        onFocusChange: _onAdditionalInfoFocusChange));
 
     // audio files as stack
     if (store.note.audioFiles.length > 0 && !useTabs)
@@ -371,6 +470,22 @@ class NoteEditorState extends State<NoteEditorContent>
         ..addAll(items[TabType.audio])));
     }
 
+    final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
+
+    Widget suggestionSheet = PreferredSize(
+        preferredSize: Size.fromHeight(20),
+        child: Container(
+          padding: EdgeInsets.only(left: 8),
+          child: Wrap(
+              alignment: WrapAlignment.start,
+              spacing: 8,
+              children: additionalItemSuggestions
+                  .map((o) => GestureDetector(
+                      onTap: () => _onSuggestionTap(o),
+                      child: Chip(label: Text(o))))
+                  .toList()),
+        ));
+
     Scaffold scaffold = Scaffold(
         key: _globalKey,
         appBar: AppBar(
@@ -384,8 +499,11 @@ class NoteEditorState extends State<NoteEditorContent>
                   }))
               : null,
         ),
-        bottomSheet:
-            showSheet ? RecorderBottomSheet(key: bottomSheetKey) : null,
+        bottomSheet: showSheet
+            ? RecorderBottomSheet(key: bottomSheetKey)
+            : (keyboardOpen && focusedAdditionalInfoItem != null)
+                ? suggestionSheet
+                : null,
         body: useTabs
             ? TabBarView(
                 children: List<Widget>.generate(categories.length, (int index) {
