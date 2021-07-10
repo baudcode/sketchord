@@ -162,8 +162,11 @@ class SmallNoteItem extends AbstractNoteItem {
   Widget build(BuildContext context) {
     Widget child = Card(
         color: note.color,
+        shape: (isSelected ? getSelectedChardShape(context) : null),
         child: Container(
-            decoration: isSelected ? getSelectedDecoration(context) : null,
+            decoration: (isSelected)
+                ? getSelectedDecoration(context)
+                : getNormalDecoration(context),
             child: empty
                 ? emptyText(context)
                 : hasOnlyTitle
@@ -280,10 +283,12 @@ class NoteItem extends AbstractNoteItem {
         onLongPress: onLongPress,
         child: Container(
             child: Card(
+                shape: (isSelected ? getSelectedChardShape(context) : null),
                 color: note.color,
                 child: Container(
-                    decoration:
-                        isSelected ? getSelectedDecoration(context) : null,
+                    decoration: (isSelected
+                        ? getSelectedDecoration(context)
+                        : getNormalDecoration(context)),
                     child: (empty)
                         ? emptyText(context)
                         : hasOnlyTitle

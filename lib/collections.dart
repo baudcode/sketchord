@@ -167,7 +167,9 @@ class SmallNoteCollectionItem extends StatelessWidget {
     Widget child = Card(
         color: null,
         child: Container(
-            decoration: isSelected ? getSelectedDecoration(context) : null,
+            decoration: isSelected
+                ? getSelectedDecoration(context)
+                : getNormalDecoration(context),
             child: Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Column(

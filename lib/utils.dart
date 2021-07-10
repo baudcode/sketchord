@@ -62,8 +62,22 @@ Color getSelectedCardColor(BuildContext context) {
   return Theme.of(context).textTheme.bodyText1.color.withOpacity(0.4);
 }
 
+ShapeBorder getSelectedChardShape(BuildContext context) {
+  return RoundedRectangleBorder(
+    side: BorderSide(width: 1, color: getSelectedCardColor(context)),
+    borderRadius: BorderRadius.circular(5.0),
+  );
+}
+
 BoxDecoration getSelectedDecoration(BuildContext context) {
-  return BoxDecoration(color: getSelectedCardColor(context));
+  return BoxDecoration(
+    color: getSelectedCardColor(context),
+    borderRadius: BorderRadius.circular(5.0),
+  );
+}
+
+BoxDecoration getNormalDecoration(BuildContext context) {
+  return null;
 }
 
 String resolveRichContent(String data) {
