@@ -190,17 +190,20 @@ class SortingView extends StatelessWidget {
   }
 
   arrowOption(BuildContext context) {
-    return IconButton(
-      onPressed: _onDirectionChange,
-      icon: Icon(
-        direction == SortDirection.up
-            ? Icons.arrow_upward
-            : Icons.arrow_downward,
-        size: 20,
-        color: Theme.of(context).appBarTheme.textTheme.button.color,
-      ),
-      splashRadius: 5,
+    // arrow icon not vanishing under the app bar
+    Icon icon = Icon(
+      direction == SortDirection.up ? Icons.arrow_upward : Icons.arrow_downward,
+      size: 10,
+      color: Theme.of(context).appBarTheme.textTheme.button.color,
     );
+    return TextButton(
+        onPressed: _onDirectionChange,
+        child: Text(
+          (direction == SortDirection.up) ? "Up" : "Down",
+          style: Theme.of(context).appBarTheme.textTheme.button,
+          textScaleFactor: 0.9,
+        ),
+        clipBehavior: Clip.hardEdge);
   }
 
   @override
@@ -209,17 +212,22 @@ class SortingView extends StatelessWidget {
         padding: EdgeInsets.only(top: 70),
         child: Container(
           color: Theme.of(context).appBarTheme.backgroundColor,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(
-              child: TextButton(
-                  onPressed: _onSortByChange,
-                  child: Text(byText(),
-                      style: Theme.of(context).appBarTheme.textTheme.button)),
-            ),
-            Expanded(
-              child: arrowOption(context),
-            ),
-          ]),
+          child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: TextButton(
+                      onPressed: _onSortByChange,
+                      child: Text(byText(),
+                          textScaleFactor: 0.9,
+                          style:
+                              Theme.of(context).appBarTheme.textTheme.button)),
+                ),
+                Expanded(
+                  child: arrowOption(context),
+                ),
+              ]),
         ));
   }
 }
