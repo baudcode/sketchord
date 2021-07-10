@@ -139,7 +139,9 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
                 child: Material(
                   animationDuration: animateMenuDuration,
                   child: !isCollapsed
-                      ? AbsorbPointer(child: _getView())
+                      ? GestureDetector(
+                          onTap: _onMenuPressed,
+                          child: AbsorbPointer(child: _getView()))
                       : _getView(),
                   borderRadius:
                       BorderRadius.all(Radius.circular(isCollapsed ? 0 : 10)),
