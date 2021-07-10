@@ -66,14 +66,13 @@ class NoteEditorContent extends StatefulWidget {
 enum TabType { structure, info, audio }
 
 class NoteEditorState extends State<NoteEditorContent>
-    with StoreWatcherMixin<NoteEditorContent>, WidgetsBindingObserver {
+    with StoreWatcherMixin<NoteEditorContent> {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   List<String> popupMenuActions = ["share", "copy", "add"];
   List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Set"];
   bool get useTabs => widget.view == EditorView.tabs;
-  var _isKeyboardVisible = false;
   final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};
 
@@ -184,17 +183,6 @@ class NoteEditorState extends State<NoteEditorContent>
           itemBuilder: (context, index) => items[index],
           itemCount: items.length,
         ));
-  }
-
-  @override
-  void didChangeMetrics() {
-    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
-    final newValue = bottomInset > 0.0;
-    if (newValue != _isKeyboardVisible) {
-      setState(() {
-        _isKeyboardVisible = newValue;
-      });
-    }
   }
 
   @override

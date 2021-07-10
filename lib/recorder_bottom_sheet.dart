@@ -176,7 +176,10 @@ class RecorderBottomSheet extends StatefulWidget {
 }
 
 class _RecorderBottomSheetState extends State<RecorderBottomSheet>
-    with StoreWatcherMixin<RecorderBottomSheet>, TickerProviderStateMixin {
+    with
+        StoreWatcherMixin<RecorderBottomSheet>,
+        TickerProviderStateMixin,
+        WidgetsBindingObserver {
   RecorderBottomSheetStore store;
   double height;
 
@@ -195,9 +198,15 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     super.initState();
     store = listenToStore(recorderBottomSheetStoreToken);
 
+    WidgetsBinding.instance.addObserver(this);
+    final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
+    forward = keyboardOpen || store.minimized;
+
     height = maxMinimizeHeight;
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _controller = AnimationController(
+        value: (forward) ? 1.0 : 0.0, // TODO check this
+        vsync: this,
+        duration: Duration(milliseconds: 500));
 
     _slideAnimation = Tween<Offset>(begin: Offset(0, 0), end: Offset(0, 1.5))
         .animate(_controller);
@@ -222,13 +231,13 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     });
     print("init recorder bottom sheet state");
 
-    Future.delayed(Duration(milliseconds: 100), () {
-      if (store.minimized) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
+    // Future.delayed(Duration(milliseconds: 100), () {
+    //   if (store.minimized) {
+    //     _controller.forward();
+    //   } else {
+    //     _controller.reverse();
+    //   }
+    // });
 
     sub = setMinimized.listen((m) {
       if (forward != m) {
@@ -245,7 +254,18 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
   void dispose() {
     sub.cancel();
     _controller.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
+    print("bottomInsets: $bottomInset");
+
+    if (bottomInset > 0.0 && !store.minimized) {
+      _controller.forward();
+    }
   }
 
   @override
@@ -261,7 +281,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
         store.state == RecorderState.PAUSING) {
       color = Theme.of(context).bottomAppBarColor;
     } else if (store.state == RecorderState.RECORDING) {
-      color = Theme.of(context).primaryColor;
+      color = Theme.of(context).accentColor;
     }
 
     double width = MediaQuery.of(context).size.width;
@@ -270,8 +290,17 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       _controller?.forward();
     });
     BottomInfo info = BottomInfo(color);
+
     if (showLooper) {
       return GestureDetector(
+        onPanUpdate: (details) {
+          if (details.delta.dy < -5 && forward && store.minimized) {
+            print("reverse ${details.delta.dy}");
+            _controller.reverse();
+          } else if (details.delta.dy > 5 && !forward && !store.minimized) {
+            _controller.forward();
+          }
+        },
         child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,

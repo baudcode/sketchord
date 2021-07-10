@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -81,7 +82,9 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         cardColor: Colors.grey.shade800,
         selectedRowColor: mainColor,
         appBarTheme: ThemeData.dark().appBarTheme.copyWith(
-            color: appBarColor, textTheme: ThemeData.dark().textTheme),
+            brightness: Brightness.dark,
+            color: appBarColor,
+            textTheme: ThemeData.dark().textTheme),
         buttonTheme:
             ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
         chipTheme:
@@ -118,7 +121,9 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             background: Colors.black54,
             surface: Colors.black54),
         appBarTheme: ThemeData.light().appBarTheme.copyWith(
-            color: appBarColor, textTheme: ThemeData.light().accentTextTheme),
+            brightness: Brightness.dark,
+            color: appBarColor,
+            textTheme: ThemeData.light().accentTextTheme),
         chipTheme:
             ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
         indicatorColor: mainColor,
