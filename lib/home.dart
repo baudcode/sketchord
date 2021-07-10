@@ -209,6 +209,8 @@ class HomeContentState extends State<HomeContent>
 
     return SliverAppBar(
       pinned: true,
+      flexibleSpace: _sortingView(),
+      expandedHeight: 80,
       leading: IconButton(
           icon: Icon(Icons.clear), onPressed: () => clearSelection()),
       title: Text(storage.selectedNotes.length.toString()),
