@@ -247,6 +247,20 @@ class NoteItem extends AbstractNoteItem {
         );
   }
 
+  _richText(String text) {
+    return Text.rich(
+      TextSpan(
+        text: text,
+      ),
+      //softWrap: true,
+      //overflow: TextOverflow.clip,
+      //maxLines: 1,
+      //style: Theme.of(context).textTheme.headline6,
+      textScaleFactor: 1.0,
+      textAlign: TextAlign.right,
+    );
+  }
+
   _bottom() {
     return Padding(
         padding: EdgeInsets.all(padding),
@@ -254,7 +268,7 @@ class NoteItem extends AbstractNoteItem {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Text("${note.sections.length} Sections"),
-            Text((note.tuning == null) ? "Standard" : "${note.tuning}")
+            _richText((note.tuning == null) ? "Standard" : "${note.tuning}")
           ],
         ));
   }
