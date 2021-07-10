@@ -75,6 +75,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       newAudioFormat = AudioFormat.AAC;
     }
     setDefaultAudioFormat(newAudioFormat);
+    setAudioFormat(newAudioFormat);
   }
 
   _audioFormatItem() {

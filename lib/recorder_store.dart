@@ -7,6 +7,7 @@ import 'package:flutter_flux/flutter_flux.dart' show Store, Action, StoreToken;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sound/editor_store.dart';
+import 'package:sound/local_storage.dart';
 import 'package:sound/settings_store.dart';
 import 'package:tuple/tuple.dart';
 import 'dart:async';
@@ -240,6 +241,10 @@ class RecorderBottomSheetStore extends Store {
 
   RecorderBottomSheetStore() {
     _minimized = false;
+
+    LocalStorage()
+        .getSettings()
+        .then((value) => _audioFormat = value.audioFormat);
     // sound = FlutterSound();
     startPlaybackAction.listen((AudioFile f) {
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
