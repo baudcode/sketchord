@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
+import 'package:tuple/tuple.dart';
 
 class NoteEditorTitle extends StatelessWidget {
   final String title, hintText, labelText;
@@ -32,52 +33,108 @@ class NoteEditorTitle extends StatelessWidget {
   }
 }
 
-class NoteEditorAdditionalInfo extends StatelessWidget {
+enum AdditionalInfoItem { tuning, capo, key, label, artist }
+
+class NoteEditorAdditionalInfo extends StatefulWidget {
   final Note note;
   final bool allowEdit;
+  final List<AdditionalInfoItem> items;
+  final ValueChanged<AdditionalInfoItem> onFocusChange;
 
-  const NoteEditorAdditionalInfo(this.note, {this.allowEdit = true, Key key})
+  const NoteEditorAdditionalInfo(this.note,
+      {this.allowEdit = true,
+      this.items = AdditionalInfoItem.values,
+      this.onFocusChange,
+      Key key})
       : super(key: key);
 
-  _edit({initial, title, hint, onChanged}) {
+  @override
+  _NoteEditorAdditionalInfoState createState() =>
+      _NoteEditorAdditionalInfoState();
+}
+
+class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
+  Map<AdditionalInfoItem, FocusNode> focusNodes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    widget.items.forEach((item) {
+      FocusNode node = FocusNode();
+      node.addListener(() {
+        if (widget.onFocusChange != null && node.hasFocus) {
+          print("focused $item");
+          widget.onFocusChange(item);
+        }
+      });
+      focusNodes[item] = node;
+    });
+  }
+
+  _edit({initial, title, hint, onChanged, focus}) {
     return TextFormField(
         initialValue: initial,
+        focusNode: focus,
         decoration: InputDecoration(
             labelText: title, border: InputBorder.none, hintText: hint),
-        enabled: allowEdit,
+        enabled: widget.allowEdit,
         onChanged: (v) => onChanged(v),
         maxLines: 1);
   }
 
+  getEdit(AdditionalInfoItem item) {
+    switch (item) {
+      case AdditionalInfoItem.tuning:
+        return _edit(
+            initial: widget.note.tuning == null ? "" : widget.note.tuning,
+            title: "Tuning",
+            hint: "Standard, Dadgad ...",
+            focus: focusNodes[item],
+            onChanged: changeTuning);
+
+      case AdditionalInfoItem.capo:
+        return _edit(
+            initial:
+                widget.note.capo == null ? "" : widget.note.capo.toString(),
+            title: "Capo",
+            hint: "7, 5 ...",
+            focus: focusNodes[item],
+            onChanged: changeCapo);
+
+      case AdditionalInfoItem.key:
+        return _edit(
+            initial: widget.note.key == null ? "" : widget.note.key.toString(),
+            title: "Key",
+            hint: "C Major, A Minor ...",
+            focus: focusNodes[item],
+            onChanged: changeKey);
+      case AdditionalInfoItem.label:
+        return _edit(
+            initial:
+                widget.note.label == null ? "" : widget.note.label.toString(),
+            title: "Label",
+            hint: "Idea, Rock, Pop ...",
+            focus: focusNodes[item],
+            onChanged: changeLabel);
+
+      case AdditionalInfoItem.artist:
+        return _edit(
+            initial:
+                widget.note.artist == null ? "" : widget.note.artist.toString(),
+            title: "Artist",
+            hint: "Passenger, Ed Sheeran ...",
+            focus: focusNodes[item],
+            onChanged: changeArtist);
+      default:
+        return null;
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // EdgeInsets.only(left: 10, top: 10)
-    return Wrap(runSpacing: 1, children: [
-      _edit(
-          initial: note.tuning == null ? "" : note.tuning,
-          title: "Tuning",
-          hint: "Standard, Dadgad ...",
-          onChanged: changeTuning),
-      _edit(
-          initial: note.capo == null ? "" : note.capo.toString(),
-          title: "Capo",
-          hint: "7, 5 ...",
-          onChanged: changeCapo),
-      _edit(
-          initial: note.key == null ? "" : note.key.toString(),
-          title: "Key",
-          hint: "C Major, A Minor ...",
-          onChanged: changeKey),
-      _edit(
-          initial: note.label == null ? "" : note.label.toString(),
-          title: "Label",
-          hint: "Idea, Rock, Pop ...",
-          onChanged: changeLabel),
-      _edit(
-          initial: note.artist == null ? "" : note.artist.toString(),
-          title: "Artist",
-          hint: "Passenger, Ed Sheeran ...",
-          onChanged: changeArtist),
-    ]);
+    return Wrap(
+        runSpacing: 1,
+        children: widget.items.map<Widget>((item) => getEdit(item)).toList());
   }
 }
