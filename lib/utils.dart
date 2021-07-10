@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+List<String> itemsByFrequency(List<String> input) => [
+      ...(input
+              .fold<Map<String, int>>(
+                  <String, int>{},
+                  (map, letter) => map
+                    ..update(letter, (value) => value + 1, ifAbsent: () => 1))
+              .entries
+              .toList()
+                ..sort((e1, e2) => e2.value.compareTo(e1.value)))
+          .map((e) => e.key)
+    ];
+
 class LifecycleEventHandler extends WidgetsBindingObserver {
   final AsyncCallback resumeCallBack;
   final AsyncCallback suspendingCallBack;
