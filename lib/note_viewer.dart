@@ -343,7 +343,7 @@ class _NoteViewerState extends State<NotesViewer>
       actions.addAll(widget.actions);
     }
 
-    Widget body;
+    Widget body, indicator;
 
     if (widget.notes.length > 1) {
       body = Container(
@@ -353,63 +353,63 @@ class _NoteViewerState extends State<NotesViewer>
               children: widget.notes
                   .map<Widget>((Note n) => _getNoteViewerContent(n))
                   .toList()));
+
+      double prefferedHeight = 24;
+      double noteIndicatorHeight = prefferedHeight - 8;
+      double noteIndicatorPadding = 4;
+      double noteIndicatorOffsetRight = 80;
+
+      double noteIndicatorWidth = (MediaQuery.of(context).size.width -
+              noteIndicatorPadding * widget.notes.length -
+              noteIndicatorOffsetRight) /
+          widget.notes.length;
+      Color indicatorColor = Theme.of(context).scaffoldBackgroundColor;
+      Color highlightColor = Theme.of(context).accentColor;
+
+      _buildIndicator(int index) {
+        return Container(
+          decoration: BoxDecoration(
+              color: (index == page) ? highlightColor : indicatorColor,
+              borderRadius: BorderRadius.circular(5)),
+          padding: null,
+          width: noteIndicatorWidth,
+          height: noteIndicatorHeight,
+        );
+      }
+
+      indicator = PreferredSize(
+        preferredSize: Size.fromHeight(prefferedHeight),
+        child: Container(
+          child: Row(
+            children: widget.notes
+                .asMap()
+                .map<int, Widget>(
+                  (int index, Note _note) => MapEntry(
+                      index,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: noteIndicatorPadding,
+                          bottom: noteIndicatorPadding,
+                        ),
+                        child: Transform.scale(
+                          scale: (index == page) ? _sizeController.value : 0.8,
+                          child: _buildIndicator(index),
+                        ),
+                      )),
+                )
+                .values
+                .toList()
+                  ..add(Expanded(
+                      child: Container(
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.only(right: 8, bottom: 8),
+                          child: Text("${page + 1}/${widget.notes.length}")))),
+          ),
+        ),
+      );
     } else {
       body = _getNoteViewerContent(note);
     }
-
-    double prefferedHeight = 24;
-    double noteIndicatorHeight = prefferedHeight - 8;
-    double noteIndicatorPadding = 4;
-    double noteIndicatorOffsetRight = 80;
-
-    double noteIndicatorWidth = (MediaQuery.of(context).size.width -
-            noteIndicatorPadding * widget.notes.length -
-            noteIndicatorOffsetRight) /
-        widget.notes.length;
-    Color indicatorColor = Theme.of(context).scaffoldBackgroundColor;
-    Color highlightColor = Theme.of(context).accentColor;
-
-    _buildIndicator(int index) {
-      return Container(
-        decoration: BoxDecoration(
-            color: (index == page) ? highlightColor : indicatorColor,
-            borderRadius: BorderRadius.circular(5)),
-        padding: null,
-        width: noteIndicatorWidth,
-        height: noteIndicatorHeight,
-      );
-    }
-
-    Widget indicator = PreferredSize(
-      preferredSize: Size.fromHeight(prefferedHeight),
-      child: Container(
-        child: Row(
-          children: widget.notes
-              .asMap()
-              .map<int, Widget>(
-                (int index, Note _note) => MapEntry(
-                    index,
-                    Padding(
-                      padding: EdgeInsets.only(
-                        left: noteIndicatorPadding,
-                        bottom: noteIndicatorPadding,
-                      ),
-                      child: Transform.scale(
-                        scale: (index == page) ? _sizeController.value : 0.8,
-                        child: _buildIndicator(index),
-                      ),
-                    )),
-              )
-              .values
-              .toList()
-                ..add(Expanded(
-                    child: Container(
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.only(right: 8, bottom: 8),
-                        child: Text("${page + 1}/${widget.notes.length}")))),
-        ),
-      ),
-    );
 
     return Scaffold(
         appBar: AppBar(actions: actions, bottom: indicator),
