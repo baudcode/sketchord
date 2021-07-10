@@ -7,6 +7,7 @@ import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/collections_store.dart';
 import 'package:sound/note_search_view.dart';
+import 'package:sound/note_viewer.dart';
 import 'package:sound/utils.dart';
 
 class NoteCollectionItemModel {
@@ -251,6 +252,12 @@ class _CollectionEditorState extends State<CollectionEditor>
     //     });
   }
 
+  _onPlay() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return NoteCollectionViewer(store.collection);
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     var notes = [];
@@ -306,6 +313,7 @@ class _CollectionEditorState extends State<CollectionEditor>
         )));
 
     List<Widget> actions = [
+      IconButton(icon: Icon(Icons.play_circle), onPressed: _onPlay),
       IconButton(
           icon:
               Icon((store.collection.starred) ? Icons.star : Icons.star_border),

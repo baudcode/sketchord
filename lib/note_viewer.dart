@@ -9,7 +9,101 @@ import 'package:sound/model.dart';
 import 'package:sound/recorder_bottom_sheet.dart';
 import 'package:sound/recorder_store.dart';
 
-class NoteViewer extends StatefulWidget {
+class NoteCollectionViewer extends StatelessWidget {
+  final NoteCollection collection;
+
+  NoteCollectionViewer(this.collection, {Key key});
+
+  @override
+  Widget build(BuildContext context) {
+    return NotesViewer(collection.notes,
+        showAdditionalInformation: false,
+        showTitle: true,
+        showZoomPlayback: true,
+        showAudioFiles: false);
+  }
+}
+
+class NoteViewerContent extends StatelessWidget {
+  final Note note;
+  final bool showTitle,
+      showAdditionalInformation,
+      showAudioFiles,
+      showSheet,
+      sheetMinimized;
+  final double textScaleFactor;
+  final ScrollController controller;
+
+  const NoteViewerContent(this.note, this.sheetMinimized,
+      {this.controller,
+      this.textScaleFactor = 1.0,
+      this.showAdditionalInformation = true,
+      this.showTitle = true,
+      this.showAudioFiles = false,
+      this.showSheet = false,
+      Key key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> items = [];
+
+    if (showTitle) {
+      items.add(NoteEditorTitle(
+        title: note.title,
+        allowEdit: false,
+        onChange: (_) {},
+      ));
+    }
+
+    for (Section section in note.sections) {
+      items.add(SectionView(
+          section: section,
+          textScaleFactor: textScaleFactor,
+          richChords: true));
+    }
+
+    if (showAdditionalInformation) {
+      items.add(NoteEditorAdditionalInfo(
+        note,
+        allowEdit: false,
+      ));
+    }
+
+    if (showAudioFiles) {
+      items.add(Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'Audio Files',
+            style: Theme.of(context).textTheme.subtitle1,
+          )));
+
+      items.addAll(note.audioFiles.map<Widget>((e) {
+        return AudioFileListItem(e, onPressed: () {
+          playInDialog(context, e);
+        });
+      }));
+    }
+
+    if (showSheet) {
+      items.add(Container(height: sheetMinimized ? 70 : 300));
+    }
+
+    return Container(
+      child: Stack(children: [
+        Container(
+            padding: EdgeInsets.all(16),
+            child: ListView.builder(
+              controller: controller,
+              itemBuilder: (context, index) => items[index],
+              itemCount: items.length,
+            )),
+      ]),
+    );
+  }
+}
+
+class NoteViewer extends StatelessWidget {
   final Note note;
   final List<Widget> actions;
   final bool showAudioFiles,
@@ -29,35 +123,80 @@ class NoteViewer extends StatefulWidget {
       : super(key: key);
 
   @override
+  Widget build(BuildContext context) {
+    return NotesViewer(
+      [this.note],
+      actions: actions,
+      showZoomPlayback: showZoomPlayback,
+      showTitle: showTitle,
+      showSheet: showSheet,
+      showAdditionalInformation: showAdditionalInformation,
+    );
+  }
+}
+
+class NotesViewer extends StatefulWidget {
+  final List<Note> notes;
+  final List<Widget> actions;
+
+  final bool showAudioFiles,
+      showAdditionalInformation,
+      showTitle,
+      showZoomPlayback,
+      showSheet;
+
+  NotesViewer(this.notes,
+      {this.actions,
+      this.showZoomPlayback = true,
+      this.showAudioFiles = true,
+      this.showTitle = true,
+      this.showSheet = false,
+      this.showAdditionalInformation = true,
+      Key key})
+      : super(key: key);
+
+  @override
   _NoteViewerState createState() => _NoteViewerState();
 }
 
-class _NoteViewerState extends State<NoteViewer>
-    with StoreWatcherMixin<NoteViewer> {
-  ScrollController _controller;
-  bool showButtons = true;
+class _NoteViewerState extends State<NotesViewer>
+    with StoreWatcherMixin<NotesViewer>, TickerProviderStateMixin {
+  ScrollController _scollController;
+  AnimationController _animationController;
+
+  Animation<double> _sizeController;
+
   double textScaleFactor = 1.0;
   bool isPlaying = false;
   double offset = 1.0;
   RecorderBottomSheetStore recorderStore;
+  int page = 0;
+  PageController pageController;
+
+  Note get note => widget.notes[page];
 
   @override
   void initState() {
     super.initState();
+    pageController = PageController(initialPage: page);
+    _scollController = ScrollController(debugLabel: "contentController");
+
+    _animationController = AnimationController(
+        value: 1.0, vsync: this, duration: Duration(milliseconds: 500));
+
+    _sizeController =
+        Tween<double>(begin: 0.8, end: 1.0).animate(_animationController);
+
     recorderStore = listenToStore(recorderBottomSheetStoreToken);
     print("note viewer minimize state: ${recorderStore.minimized}");
-    _controller = ScrollController()
-      ..addListener(() {
-        bool upDirection =
-            _controller.position.userScrollDirection == ScrollDirection.forward;
-      });
 
-    textScaleFactor = widget.note.zoom;
-    offset = widget.note.scrollOffset;
+    textScaleFactor = note.zoom;
+    offset = note.scrollOffset == null ? 1.0 : note.scrollOffset;
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     // setState(() {
     //   isPlaying = false;
     // });
@@ -65,47 +204,51 @@ class _NoteViewerState extends State<NoteViewer>
   }
 
   _updateZoom() async {
-    Note note = widget.note;
     note.zoom = textScaleFactor;
     await LocalStorage().syncNoteAttr(note, "zoom");
   }
 
   _updateScrollOffset() async {
-    Note note = widget.note;
     note.scrollOffset = offset;
     await LocalStorage().syncNoteAttr(note, "scrollOffset");
   }
 
+  _getNoteViewerContent(Note note) {
+    return NoteViewerContent(
+      note,
+      recorderStore.minimized,
+      controller: _scollController,
+      textScaleFactor: textScaleFactor,
+      showAdditionalInformation: widget.showAdditionalInformation,
+      showAudioFiles: widget.showAudioFiles,
+      showSheet: widget.showSheet,
+      showTitle: widget.showTitle,
+    );
+  }
+
+  _onPageChange(_page) {
+    _animationController.reverse();
+
+    setState(() {
+      offset = widget.notes[_page].scrollOffset;
+      textScaleFactor = widget.notes[_page].zoom;
+      page = _page;
+    });
+    _animationController.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<Widget> items = [];
-
-    if (widget.showTitle) {
-      items.add(NoteEditorTitle(
-        title: widget.note.title,
-        allowEdit: false,
-        onChange: (_) {},
-      ));
-    }
-
-    for (Section section in widget.note.sections) {
-      items.add(SectionView(
-          section: section,
-          textScaleFactor: textScaleFactor,
-          richChords: true));
-    }
-
     List<Widget> playingActions = [
       IconButton(
-          color: Theme.of(context).accentColor,
           icon: Icon(Icons.stop),
           onPressed: () {
             setState(() {
               isPlaying = false;
             });
           }),
+      Container(width: 48, height: 48),
       IconButton(
-          color: Theme.of(context).accentColor,
           icon: Icon(Icons.fast_rewind),
           onPressed: () {
             setState(() {
@@ -114,7 +257,6 @@ class _NoteViewerState extends State<NoteViewer>
             _updateScrollOffset();
           }),
       IconButton(
-          color: Theme.of(context).accentColor,
           icon: Icon(Icons.fast_forward),
           onPressed: () {
             setState(() {
@@ -126,7 +268,7 @@ class _NoteViewerState extends State<NoteViewer>
 
     List<Widget> actions = [];
 
-    if (widget.showZoomPlayback) {
+    if (widget.showZoomPlayback && !isPlaying) {
       actions.addAll([
         IconButton(
             icon: Icon(Icons.play_arrow),
@@ -139,10 +281,11 @@ class _NoteViewerState extends State<NoteViewer>
                 Future.microtask(() async {
                   bool atEdge = false;
                   while (!atEdge && isPlaying) {
-                    await _controller.animateTo(_controller.offset + offset,
+                    await _scollController.animateTo(
+                        _scollController.offset + offset,
                         duration: Duration(milliseconds: 50),
                         curve: Curves.ease);
-                    atEdge = _controller.position.atEdge;
+                    atEdge = _scollController.position.atEdge;
                   }
                   setState(() {
                     isPlaying = false;
@@ -181,6 +324,8 @@ class _NoteViewerState extends State<NoteViewer>
           },
         )
       ]);
+    } else if (isPlaying) {
+      actions.addAll(playingActions);
     }
     // Widget overlay = Container(
     //     decoration: BoxDecoration(
@@ -192,59 +337,85 @@ class _NoteViewerState extends State<NoteViewer>
     //       children: (isPlaying) ? playingActions : actions,
     //     ));
 
-    if (widget.showAdditionalInformation) {
-      items.add(NoteEditorAdditionalInfo(
-        widget.note,
-        allowEdit: false,
-      ));
-    }
-
     // add audio files
-    if (widget.showAudioFiles) {
-      items.add(Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
-          child: Text(
-            'Audio Files',
-            style: Theme.of(context).textTheme.subtitle1,
-          )));
-
-      items.addAll(widget.note.audioFiles.map<Widget>((e) {
-        return AudioFileListItem(e, onPressed: () {
-          playInDialog(context, e);
-        });
-      }));
-    }
-
-    if (widget.showSheet) {
-      items.add(Container(height: recorderStore.minimized ? 70 : 300));
-    }
 
     if (widget.actions != null) {
       actions.addAll(widget.actions);
     }
 
-    return Scaffold(
-        appBar: AppBar(
-          actions: actions,
+    Widget body;
+
+    if (widget.notes.length > 1) {
+      body = Container(
+          child: PageView(
+              controller: isPlaying ? null : pageController,
+              onPageChanged: _onPageChange,
+              children: widget.notes
+                  .map<Widget>((Note n) => _getNoteViewerContent(n))
+                  .toList()));
+    } else {
+      body = _getNoteViewerContent(note);
+    }
+
+    double prefferedHeight = 24;
+    double noteIndicatorHeight = prefferedHeight - 8;
+    double noteIndicatorPadding = 4;
+    double noteIndicatorOffsetRight = 80;
+
+    double noteIndicatorWidth = (MediaQuery.of(context).size.width -
+            noteIndicatorPadding * widget.notes.length -
+            noteIndicatorOffsetRight) /
+        widget.notes.length;
+    Color indicatorColor = Theme.of(context).scaffoldBackgroundColor;
+    Color highlightColor = Theme.of(context).accentColor;
+
+    _buildIndicator(int index) {
+      return Container(
+        decoration: BoxDecoration(
+            color: (index == page) ? highlightColor : indicatorColor,
+            borderRadius: BorderRadius.circular(5)),
+        padding: null,
+        width: noteIndicatorWidth,
+        height: noteIndicatorHeight,
+      );
+    }
+
+    Widget indicator = PreferredSize(
+      preferredSize: Size.fromHeight(prefferedHeight),
+      child: Container(
+        child: Row(
+          children: widget.notes
+              .asMap()
+              .map<int, Widget>(
+                (int index, Note _note) => MapEntry(
+                    index,
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: noteIndicatorPadding,
+                        bottom: noteIndicatorPadding,
+                      ),
+                      child: Transform.scale(
+                        scale: (index == page) ? _sizeController.value : 0.8,
+                        child: _buildIndicator(index),
+                      ),
+                    )),
+              )
+              .values
+              .toList()
+                ..add(Expanded(
+                    child: Container(
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(right: 8, bottom: 8),
+                        child: Text("${page + 1}/${widget.notes.length}")))),
         ),
+      ),
+    );
+
+    return Scaffold(
+        appBar: AppBar(actions: actions, bottom: indicator),
         bottomSheet: widget.showSheet
             ? RecorderBottomSheet(key: Key("bottomSheetViewer"))
             : null,
-        body: Container(
-          child: Stack(children: [
-            Container(
-                padding: EdgeInsets.all(16),
-                child: ListView.builder(
-                  controller: _controller,
-                  itemBuilder: (context, index) => items[index],
-                  itemCount: items.length,
-                )),
-            // Positioned(
-            //   child: widget.showZoomPlayback ? overlay : Container(),
-            //   top: 32,
-            //   right: 8,
-            // ),
-          ]),
-        ));
+        body: body);
   }
 }
