@@ -332,6 +332,7 @@ class StaticStorage extends Store {
 
       if (note.tuning != null && note.tuning.toLowerCase().contains(search))
         return true;
+
       if (note.sections.any((s) =>
           s.content.toLowerCase().contains(search) ||
           resolveRichContent(s.content).toLowerCase().contains(search) ||
@@ -375,6 +376,13 @@ class StaticStorage extends Store {
     return true;
   }
 
+  String getLower(String t) {
+    if (t == null)
+      return null;
+    else
+      return t.toLowerCase();
+  }
+
   int _sort(Note a, Note b) {
     if (_sortBy == SortBy.lastModified) {
       if (_sortDirection == SortDirection.up) {
@@ -390,11 +398,12 @@ class StaticStorage extends Store {
       }
     } else if (_sortBy == SortBy.az) {
       if (_sortDirection == SortDirection.up) {
-        return b.title.compareTo(a.title);
+        return getLower(b.title).compareTo(getLower(a.title));
       } else {
-        return a.title.compareTo(b.title);
+        return getLower(a.title).compareTo(getLower(b.title));
       }
-    }
+    } else
+      return 1;
   }
 
   List<Note> get filteredNotes {
