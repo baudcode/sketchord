@@ -148,7 +148,7 @@ class NotesViewer extends StatefulWidget {
   NotesViewer(this.notes,
       {this.actions,
       this.showZoomPlayback = true,
-      this.showAudioFiles = true,
+      this.showAudioFiles = false,
       this.showTitle = true,
       this.showSheet = false,
       this.showAdditionalInformation = true,
