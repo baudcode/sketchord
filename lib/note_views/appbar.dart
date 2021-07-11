@@ -6,6 +6,32 @@ import 'package:sound/storage.dart';
 typedef FilterByCallback = bool Function(FilterBy);
 typedef FilterCallback = bool Function(Filter);
 
+class CustomChip extends StatelessWidget {
+  final bool active;
+  final Widget label;
+  final Function onPressed;
+
+  CustomChip({this.active = false, this.label, this.onPressed, Key key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Color backgroundColor = (active)
+        ? Theme.of(context).chipTheme.selectedColor
+        : Theme.of(context).chipTheme.backgroundColor;
+
+    TextStyle style = (active)
+        ? Theme.of(context).chipTheme.secondaryLabelStyle
+        : Theme.of(context).chipTheme.labelStyle;
+
+    return ActionChip(
+        backgroundColor: backgroundColor,
+        labelStyle: style,
+        label: label,
+        onPressed: onPressed);
+  }
+}
+
 class FilterView extends StatelessWidget {
   final bool active;
   final Filter filter;
@@ -15,14 +41,10 @@ class FilterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor = (active)
-        ? Theme.of(context).chipTheme.selectedColor
-        : Theme.of(context).chipTheme.backgroundColor;
-
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 5),
-        child: ActionChip(
-            backgroundColor: backgroundColor,
+        child: CustomChip(
+            active: active,
             label: Text(filter.content),
             onPressed: () => (active) ? remove(filter) : add(filter)));
   }
@@ -120,12 +142,11 @@ class ActiveFiltersView extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (context, index) {
                       Filter filter = filters[index];
-                      Color color = Theme.of(context).chipTheme.selectedColor;
 
                       return Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: ActionChip(
-                              backgroundColor: color,
+                          child: CustomChip(
+                              active: true,
                               label: Text(
                                 filter.content,
                               ),

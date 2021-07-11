@@ -87,8 +87,12 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             textTheme: ThemeData.dark().textTheme),
         buttonTheme:
             ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
-        chipTheme:
-            ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
+        chipTheme: ThemeData.dark().chipTheme.copyWith(
+            selectedColor: mainColor,
+            secondaryLabelStyle: ThemeData.light()
+                .chipTheme
+                .labelStyle
+                .copyWith(color: Colors.white)),
         sliderTheme: ThemeData.dark().sliderTheme.copyWith(
             trackHeight: 5,
             showValueIndicator: ShowValueIndicator.always,
@@ -124,8 +128,12 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             brightness: Brightness.dark,
             color: appBarColor,
             textTheme: ThemeData.light().accentTextTheme),
-        chipTheme:
-            ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
+        chipTheme: ThemeData.light().chipTheme.copyWith(
+            selectedColor: mainColor,
+            secondaryLabelStyle: ThemeData.light()
+                .chipTheme
+                .labelStyle
+                .copyWith(color: Colors.white)),
         indicatorColor: mainColor,
         accentColor: mainColor,
         highlightColor: mainColor,

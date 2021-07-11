@@ -14,6 +14,7 @@ import 'package:sound/export.dart';
 import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/note_viewer.dart';
+import 'package:sound/note_views/appbar.dart';
 import 'package:sound/share.dart';
 import 'editor_store.dart';
 import 'model.dart';
@@ -191,7 +192,7 @@ class NoteEditorState extends State<NoteEditorContent>
   }
 
   _onAdditionalInfoValueChange(AdditionalInfoItem item, String value) {
-    _onAdditionalInfoFocusChange(item);
+    // when the value inside of the text edits change
     _onSuggestionTap(value);
   }
 
@@ -242,7 +243,7 @@ class NoteEditorState extends State<NoteEditorContent>
     }
   }
 
-  _onSuggestionTap(String text) {
+  _onSuggestionTap(String text) async {
     switch (focusedAdditionalInfoItem) {
       case AdditionalInfoItem.key:
         changeKey(text);
@@ -262,6 +263,11 @@ class NoteEditorState extends State<NoteEditorContent>
       default:
         break;
     }
+    // update suggestions
+    var suggestions = await _getInfoSuggestions(focusedAdditionalInfoItem);
+    setState(() {
+      additionalItemSuggestions = suggestions;
+    });
   }
 
   @override
@@ -463,9 +469,8 @@ class NoteEditorState extends State<NoteEditorContent>
               alignment: WrapAlignment.start,
               spacing: 8,
               children: additionalItemSuggestions
-                  .map((o) => GestureDetector(
-                      onTap: () => _onSuggestionTap(o),
-                      child: Chip(label: Text(o))))
+                  .map((o) => CustomChip(
+                      label: Text(o), onPressed: () => _onSuggestionTap(o)))
                   .toList()),
         ));
 
