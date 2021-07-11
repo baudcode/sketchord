@@ -20,16 +20,25 @@ class Looper extends StatefulWidget {
 class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
   RangeValues range;
   RecorderBottomSheetStore store;
+  ActionSubscription audioFileChange;
 
   @override
   void initState() {
     super.initState();
     store = listenToStore(recorderBottomSheetStoreToken);
     range = store.loopRange;
+
+    audioFileChange = startPlaybackAction.listen((AudioFile f) {
+      print("playback action is started!");
+      setState(() {
+        range = f.loopRange;
+      });
+    });
   }
 
   @override
   void dispose() {
+    audioFileChange.cancel();
     super.dispose();
   }
 
@@ -54,6 +63,12 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
 
     var lowerValue = range == null ? defaultRange.start : range.start;
     var upperValue = range == null ? defaultRange.end : range.end;
+    var rangeMax = (store.currentLength.inMilliseconds / 1000.0).toDouble();
+    print("upperValue: $upperValue");
+    print("lowerValue: $lowerValue");
+    print('max: $rangeMax');
+    print("currentLength: ${store.currentLength}");
+
     return Container(
       color: widget.color,
       height: 100,
@@ -86,7 +101,7 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
           onChangeEnd: (double endLowerValue, double endUpperValue) {
             _changeRangeValues(RangeValues(endLowerValue, endUpperValue));
           },
-          max: (store.currentLength.inMilliseconds / 1000.0).toDouble(),
+          max: (rangeMax > upperValue) ? rangeMax : upperValue,
           showValueIndicator: true,
           lowerValue: lowerValue,
           upperValue: upperValue,

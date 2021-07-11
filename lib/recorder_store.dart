@@ -246,7 +246,11 @@ class RecorderBottomSheetStore extends Store {
         .getSettings()
         .then((value) => _audioFormat = value.audioFormat);
     // sound = FlutterSound();
-    startPlaybackAction.listen((AudioFile f) {
+    startPlaybackAction.listen((AudioFile f) async {
+      if (_state == RecorderState.PLAYING) {
+        await stopPlayer(true);
+        _state = RecorderState.STOP;
+      }
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
         changePlayerPosition(Duration(seconds: 0));
         _audioFile = f;
