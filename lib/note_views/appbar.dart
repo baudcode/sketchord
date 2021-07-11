@@ -28,6 +28,7 @@ class CustomChip extends StatelessWidget {
         backgroundColor: backgroundColor,
         labelStyle: style,
         label: label,
+        clipBehavior: Clip.hardEdge,
         onPressed: onPressed);
   }
 }
@@ -126,34 +127,42 @@ class ActiveFiltersView extends StatelessWidget {
 
   ActiveFiltersView({this.filters, this.removeFilter, Key key})
       : super(key: key);
+
+  _getItem() {
+    return Container(
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+          Container(
+              height: 50,
+              child: ListView.builder(
+                itemCount: this.filters.length,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  Filter filter = filters[index];
+
+                  return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5),
+                      child: CustomChip(
+                          active: true,
+                          label: Text(
+                            filter.content,
+                          ),
+                          onPressed: () => removeFilter(filter)));
+                },
+              )),
+        ]));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: EdgeInsets.only(left: 25, top: 70),
-        child: Container(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-              Container(
-                  height: 50,
-                  child: ListView.builder(
-                    itemCount: this.filters.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      Filter filter = filters[index];
-
-                      return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                          child: CustomChip(
-                              active: true,
-                              label: Text(
-                                filter.content,
-                              ),
-                              onPressed: () => removeFilter(filter)));
-                    },
-                  ))
-            ])));
+        padding: EdgeInsets.only(left: 10, top: 50),
+        child: ListView.builder(
+          itemBuilder: (context, i) => _getItem(),
+          itemCount: 1,
+        ));
   }
 }
 
