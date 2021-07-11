@@ -371,6 +371,23 @@ class NoteEditorState extends State<NoteEditorContent>
           globalKey: _globalKey));
     });
 
+    if (store.note.audioFiles.length == 0 && useTabs) {
+      String text =
+          "No audio recorded yet. \nPress the microphone button to get started.";
+
+      items[TabType.audio].add(SafeArea(
+          child: Center(
+              child: Container(
+        padding: const EdgeInsets.all(0.0),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+        ),
+        width: 200.0,
+        height: 120.0,
+      ))));
+    }
+
     // bottom sheets
     bool showSheet = recorderStore.state == RecorderState.PAUSING ||
         recorderStore.state == RecorderState.PLAYING ||
