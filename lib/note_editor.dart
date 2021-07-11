@@ -213,47 +213,30 @@ class NoteEditorState extends State<NoteEditorContent>
 
     if (search != null) search = search.toLowerCase();
 
+    _filter(element) {
+      return element != null &&
+          element.trim().length != 0 &&
+          (search == null ||
+              (element.toLowerCase().contains(search) &&
+                  element.toLowerCase() != search));
+    }
+
     switch (item) {
       case AdditionalInfoItem.key:
-        return itemsByFrequency(notes
-            .map((note) => note.key)
-            .where((element) =>
-                element != null &&
-                element.trim().length != 0 &&
-                (search == null || element.toLowerCase().contains(search)))
-            .toList());
+        return itemsByFrequency(
+            notes.map((note) => note.key).where(_filter).toList());
       case AdditionalInfoItem.tuning:
-        return itemsByFrequency(notes
-            .map((note) => note.tuning)
-            .where((element) =>
-                element != null &&
-                element.trim().length != 0 &&
-                (search == null || element.toLowerCase().contains(search)))
-            .toList());
+        return itemsByFrequency(
+            notes.map((note) => note.tuning).where(_filter).toList());
       case AdditionalInfoItem.capo:
-        return itemsByFrequency(notes
-            .map((note) => note.capo)
-            .where((element) =>
-                element != null &&
-                element.trim().length != 0 &&
-                (search == null || element.toLowerCase().contains(search)))
-            .toList());
+        return itemsByFrequency(
+            notes.map((note) => note.capo).where(_filter).toList());
       case AdditionalInfoItem.label:
-        return itemsByFrequency(notes
-            .map((note) => note.label)
-            .where((element) =>
-                element != null &&
-                element.trim().length != 0 &&
-                (search == null || element.toLowerCase().contains(search)))
-            .toList());
+        return itemsByFrequency(
+            notes.map((note) => note.label).where(_filter).toList());
       case AdditionalInfoItem.artist:
-        return itemsByFrequency(notes
-            .map((note) => note.artist)
-            .where((element) =>
-                element != null &&
-                element.trim().length != 0 &&
-                (search == null || element.toLowerCase().contains(search)))
-            .toList());
+        return itemsByFrequency(
+            notes.map((note) => note.artist).where(_filter).toList());
       default:
         return [];
     }
