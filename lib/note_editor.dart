@@ -67,7 +67,10 @@ class NoteEditorContent extends StatefulWidget {
 enum TabType { structure, info, audio }
 
 class NoteEditorState extends State<NoteEditorContent>
-    with StoreWatcherMixin<NoteEditorContent>, WidgetsBindingObserver {
+    with
+        StoreWatcherMixin<NoteEditorContent>,
+        WidgetsBindingObserver,
+        TickerProviderStateMixin {
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
@@ -78,11 +81,19 @@ class NoteEditorState extends State<NoteEditorContent>
   Map<Section, GlobalKey> dismissables = {};
   AdditionalInfoItem focusedAdditionalInfoItem;
   List<String> additionalItemSuggestions = [];
+  FocusNode noteEditorTitleFocusNode;
+  TabController tabController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    noteEditorTitleFocusNode = FocusNode();
+    tabController = TabController(length: 3, initialIndex: 0, vsync: this);
+    tabController.addListener(() {
+      setState(() {});
+    });
+
     recorderStore = listenToStore(recorderBottomSheetStoreToken);
     store = listenToStore(noteEditorStoreToken);
     store.setNote(widget.note);
@@ -193,7 +204,7 @@ class NoteEditorState extends State<NoteEditorContent>
 
   _onAdditionalInfoValueChange(AdditionalInfoItem item, String value) {
     // when the value inside of the text edits change
-    _onSuggestionTap(value);
+    _onSuggestionTap(value, item);
   }
 
   _onAdditionalInfoFocusChange(AdditionalInfoItem item) async {
@@ -238,13 +249,21 @@ class NoteEditorState extends State<NoteEditorContent>
       case AdditionalInfoItem.artist:
         return itemsByFrequency(
             notes.map((note) => note.artist).where(_filter).toList());
+      case AdditionalInfoItem.title:
+        if (search == null || search.trim() == "") {
+          return [getFormattedDate(DateTime.now())];
+        } else {
+          return [];
+        }
+        break;
+
       default:
         return [];
     }
   }
 
-  _onSuggestionTap(String text) async {
-    switch (focusedAdditionalInfoItem) {
+  _onSuggestionTap(String text, AdditionalInfoItem item) async {
+    switch (item) {
       case AdditionalInfoItem.key:
         changeKey(text);
         break;
@@ -260,6 +279,10 @@ class NoteEditorState extends State<NoteEditorContent>
       case AdditionalInfoItem.artist:
         changeArtist(text);
         break;
+      case AdditionalInfoItem.title:
+        changeTitle(text);
+        break;
+
       default:
         break;
     }
@@ -280,8 +303,11 @@ class NoteEditorState extends State<NoteEditorContent>
     items[TabType.info] = [];
 
     items[TabType.structure].add(NoteEditorTitle(
+      focus: noteEditorTitleFocusNode,
       title: store.note.title,
-      onChange: changeTitle,
+      onChange: (s) {
+        _onAdditionalInfoValueChange(AdditionalInfoItem.title, s);
+      },
       allowEdit: true,
     ));
 
@@ -477,17 +503,21 @@ class NoteEditorState extends State<NoteEditorContent>
     }
 
     final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
+    print("keyboard open: $keyboardOpen");
 
     Widget suggestionSheet = PreferredSize(
         preferredSize: Size.fromHeight(20),
         child: Container(
+          width: double.infinity,
           padding: EdgeInsets.only(left: 8),
           child: Wrap(
               alignment: WrapAlignment.start,
               spacing: 8,
               children: additionalItemSuggestions
                   .map((o) => CustomChip(
-                      label: Text(o), onPressed: () => _onSuggestionTap(o)))
+                      label: Text(o),
+                      onPressed: () =>
+                          _onSuggestionTap(o, focusedAdditionalInfoItem)))
                   .toList()),
         ));
 
@@ -498,6 +528,7 @@ class NoteEditorState extends State<NoteEditorContent>
           actions: actions,
           bottom: useTabs
               ? new TabBar(
+                  controller: tabController,
                   isScrollable: true,
                   tabs: List<Widget>.generate(categories.length, (int index) {
                     return new Tab(text: categories[index]);
@@ -506,20 +537,23 @@ class NoteEditorState extends State<NoteEditorContent>
         ),
         bottomSheet: showSheet
             ? RecorderBottomSheet(key: bottomSheetKey)
-            : (keyboardOpen && focusedAdditionalInfoItem != null)
+            : (keyboardOpen &&
+                    focusedAdditionalInfoItem != null &&
+                    !(useTabs && tabController.index != 1))
                 ? suggestionSheet
                 : null,
         body: useTabs
             ? TabBarView(
+                controller: tabController,
                 children: List<Widget>.generate(categories.length, (int index) {
-                if (index == 0) {
-                  return _buildTabView(items[TabType.structure]);
-                } else if (index == 1) {
-                  return _buildTabView(items[TabType.info]);
-                } else {
-                  return _buildTabView(items[TabType.audio]);
-                }
-              }))
+                  if (index == 0) {
+                    return _buildTabView(items[TabType.structure]);
+                  } else if (index == 1) {
+                    return _buildTabView(items[TabType.info]);
+                  } else {
+                    return _buildTabView(items[TabType.audio]);
+                  }
+                }))
             : Container(child: Stack(children: stackChildren)));
 
     // will pop score
@@ -528,7 +562,7 @@ class NoteEditorState extends State<NoteEditorContent>
           stopAction(true);
           return true;
         },
-        child: DefaultTabController(length: 3, child: scaffold));
+        child: scaffold);
   }
 }
 

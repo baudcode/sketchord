@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:tuple/tuple.dart';
 
-class NoteEditorTitle extends StatelessWidget {
+class NoteEditorTitle extends StatefulWidget {
   final String title, hintText, labelText;
   final bool allowEdit;
   final ValueChanged<String> onChange;
+  final FocusNode focus;
 
   NoteEditorTitle(
       {@required this.title,
@@ -14,26 +14,52 @@ class NoteEditorTitle extends StatelessWidget {
       this.allowEdit = true,
       this.hintText = 'Enter Title',
       this.labelText = 'Title',
+      this.focus,
       Key key})
       : super(key: key);
+
+  @override
+  _NoteEditorTitleState createState() => _NoteEditorTitleState();
+}
+
+class _NoteEditorTitleState extends State<NoteEditorTitle> {
+  TextEditingController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController(text: widget.title);
+  }
+
+  @override
+  void didUpdateWidget(NoteEditorTitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (controller.text != widget.title) {
+      controller.text = widget.title;
+      controller.selection =
+          TextSelection.fromPosition(TextPosition(offset: widget.title.length));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
         visualDensity: VisualDensity.comfortable,
         title: TextFormField(
-            enabled: allowEdit,
-            initialValue: title,
+            controller: controller,
+            enabled: widget.allowEdit,
+            focusNode: widget.focus,
             decoration: InputDecoration(
-                labelText: labelText,
+                labelText: widget.labelText,
                 border: InputBorder.none,
-                hintText: hintText),
-            onChanged: onChange,
+                hintText: widget.hintText),
+            onChanged: widget.onChange,
             maxLines: 1));
   }
 }
 
-enum AdditionalInfoItem { tuning, capo, key, label, artist }
+enum AdditionalInfoItem { tuning, capo, key, label, artist, title }
 
 getAddtionalInfoItemFromNote(Note note, AdditionalInfoItem item) {
   switch (item) {
@@ -47,6 +73,8 @@ getAddtionalInfoItemFromNote(Note note, AdditionalInfoItem item) {
       return note.label;
     case AdditionalInfoItem.artist:
       return note.artist;
+    case AdditionalInfoItem.title:
+      return note.title;
     default:
       return null;
   }
@@ -62,7 +90,13 @@ class NoteEditorAdditionalInfo extends StatefulWidget {
 
   const NoteEditorAdditionalInfo(this.note,
       {this.allowEdit = true,
-      this.items = AdditionalInfoItem.values,
+      this.items = const [
+        AdditionalInfoItem.key,
+        AdditionalInfoItem.tuning,
+        AdditionalInfoItem.capo,
+        AdditionalInfoItem.label,
+        AdditionalInfoItem.artist
+      ],
       this.onFocusChange,
       this.onChange,
       Key key})
@@ -171,6 +205,14 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
               widget.note.artist == null ? "" : widget.note.artist.toString(),
           title: "Artist",
           hint: "Passenger, Ed Sheeran ...",
+          item: item,
+        );
+      case AdditionalInfoItem.title:
+        return _edit(
+          initial:
+              widget.note.title == null ? "" : widget.note.title.toString(),
+          title: "Title",
+          hint: "...",
           item: item,
         );
       default:

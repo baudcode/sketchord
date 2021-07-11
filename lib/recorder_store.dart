@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/settings_store.dart';
+import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
 import 'dart:async';
 import 'model.dart';
@@ -228,15 +229,8 @@ class RecorderBottomSheetStore extends Store {
     var d = (await getApplicationDocumentsDirectory()).parent;
     d = Directory(p.join(d.path, 'files'));
 
-    String date = DateTime.now().toString();
     String ext = _audioFormat == AudioFormat.WAV ? "wav" : "aac";
-    return d.path +
-        '/' +
-        DateTime.now()
-            .toString()
-            .substring(0, date.length - 7)
-            .replaceAll(":", "-") +
-        ".$ext";
+    return d.path + '/' + getFormattedDate(DateTime.now()) + ".$ext";
   }
 
   RecorderBottomSheetStore() {

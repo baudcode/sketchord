@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+String getFormattedDate(DateTime date) {
+  String _date = DateTime.now().toString();
+  return date.toString().substring(0, _date.length - 7).replaceAll(":", "-");
+}
+
 List<String> itemsByFrequency(List<String> input) => [
       ...(input
               .fold<Map<String, int>>(
