@@ -304,6 +304,7 @@ class NoteEditorState extends State<NoteEditorContent>
 
     items[TabType.structure].add(NoteEditorTitle(
       focus: noteEditorTitleFocusNode,
+      showInsertDate: true,
       title: store.note.title,
       onChange: (s) {
         _onAdditionalInfoValueChange(AdditionalInfoItem.title, s);

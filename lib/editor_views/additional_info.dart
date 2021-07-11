@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sound/model.dart';
+import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
 
 class NoteEditorTitle extends StatefulWidget {
@@ -7,6 +8,7 @@ class NoteEditorTitle extends StatefulWidget {
   final bool allowEdit;
   final ValueChanged<String> onChange;
   final FocusNode focus;
+  final bool showInsertDate;
 
   NoteEditorTitle(
       {@required this.title,
@@ -15,6 +17,7 @@ class NoteEditorTitle extends StatefulWidget {
       this.hintText = 'Enter Title',
       this.labelText = 'Title',
       this.focus,
+      this.showInsertDate = false,
       Key key})
       : super(key: key);
 
@@ -42,10 +45,22 @@ class _NoteEditorTitleState extends State<NoteEditorTitle> {
     }
   }
 
+  _insertDate() {
+    if (!widget.showInsertDate || controller.text.length > 0) {
+      return null;
+    }
+    return TextButton(
+        onPressed: () {
+          widget.onChange(getFormattedDate(DateTime.now()));
+        },
+        child: Text("Insert Date"));
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
         visualDensity: VisualDensity.comfortable,
+        trailing: _insertDate(),
         title: TextFormField(
             controller: controller,
             enabled: widget.allowEdit,
