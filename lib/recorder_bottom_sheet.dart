@@ -200,7 +200,14 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     WidgetsBinding.instance.addObserver(this);
     final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
-    forward = keyboardOpen || store.minimized;
+    if (keyboardOpen) {
+      setMinimized(true);
+    }
+    forward = store.minimized || keyboardOpen;
+    print("init recorder bottom sheet");
+    print("keyboard open: $keyboardOpen");
+    print("minimized: ${store.minimized}");
+    print("forward: ${forward}");
 
     height = maxMinimizeHeight;
     _controller = AnimationController(
