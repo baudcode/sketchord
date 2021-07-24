@@ -367,13 +367,16 @@ class _NoteViewerState extends State<NotesViewer>
       Color highlightColor = Theme.of(context).accentColor;
 
       _buildIndicator(int index) {
-        return Container(
-          decoration: BoxDecoration(
-              color: (index == page) ? highlightColor : indicatorColor,
-              borderRadius: BorderRadius.circular(5)),
-          padding: null,
-          width: noteIndicatorWidth,
-          height: noteIndicatorHeight,
+        return GestureDetector(
+          onTap: () => pageController.jumpToPage(index),
+          child: Container(
+            decoration: BoxDecoration(
+                color: (index == page) ? highlightColor : indicatorColor,
+                borderRadius: BorderRadius.circular(5)),
+            padding: null,
+            width: noteIndicatorWidth,
+            height: noteIndicatorHeight,
+          ),
         );
       }
 
