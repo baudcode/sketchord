@@ -201,6 +201,7 @@ class NoteEditorState extends State<NoteEditorContent>
   }
 
   _onAdditionalInfoFocusChange(AdditionalInfoItem item) async {
+    print("=> note editor | on focus change:  $item");
     var suggestions = await _getInfoSuggestions(item);
     setState(() {
       additionalItemSuggestions = suggestions;
@@ -497,7 +498,7 @@ class NoteEditorState extends State<NoteEditorContent>
     }
 
     final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
-    print("keyboard open: $keyboardOpen");
+    print("====> keyboard open: $keyboardOpen");
 
     Widget suggestionSheet = PreferredSize(
         preferredSize: Size.fromHeight(20),
@@ -531,11 +532,10 @@ class NoteEditorState extends State<NoteEditorContent>
         ),
         bottomSheet: showSheet
             ? RecorderBottomSheet(key: bottomSheetKey)
-            : (keyboardOpen &&
-                    focusedAdditionalInfoItem != null &&
+            : (focusedAdditionalInfoItem != null &&
                     !(useTabs && tabController.index != 1))
                 ? suggestionSheet
-                : null,
+                : Container(height: 0, width: 0),
         body: useTabs
             ? TabBarView(
                 controller: tabController,

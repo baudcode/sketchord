@@ -155,8 +155,9 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
       FocusNode node = FocusNode();
       node.addListener(() {
         if (widget.onFocusChange != null && node.hasFocus) {
-          print("focused $item");
           widget.onFocusChange(item);
+        } else {
+          widget.onFocusChange(null);
         }
       });
       focusNodes[item] = node;
