@@ -227,6 +227,7 @@ class _NoteViewerState extends State<NotesViewer>
   }
 
   _onPageChange(_page) {
+    print("onPageChange $_page");
     _animationController.reverse();
 
     setState(() {
@@ -281,11 +282,13 @@ class _NoteViewerState extends State<NotesViewer>
                 Future.microtask(() async {
                   bool atEdge = false;
                   while (!atEdge && isPlaying) {
-                    await _scollController.animateTo(
-                        _scollController.offset + offset,
-                        duration: Duration(milliseconds: 50),
-                        curve: Curves.ease);
-                    atEdge = _scollController.position.atEdge;
+                    try {
+                      await _scollController.animateTo(
+                          _scollController.offset + offset,
+                          duration: Duration(milliseconds: 50),
+                          curve: Curves.ease);
+                      atEdge = _scollController.position.atEdge;
+                    } catch (e) {}
                   }
                   setState(() {
                     isPlaying = false;
@@ -348,8 +351,9 @@ class _NoteViewerState extends State<NotesViewer>
     if (widget.notes.length > 1) {
       body = Container(
           child: PageView(
-              controller: isPlaying ? null : pageController,
+              controller: pageController,
               onPageChanged: _onPageChange,
+              physics: (isPlaying) ? NeverScrollableScrollPhysics() : null,
               children: widget.notes
                   .map<Widget>((Note n) => _getNoteViewerContent(n))
                   .toList()));
@@ -368,7 +372,11 @@ class _NoteViewerState extends State<NotesViewer>
 
       _buildIndicator(int index) {
         return GestureDetector(
-          onTap: () => pageController.jumpToPage(index),
+          onTap: () {
+            if (!isPlaying) {
+              pageController.jumpToPage(index);
+            }
+          },
           child: Container(
             decoration: BoxDecoration(
                 color: (index == page) ? highlightColor : indicatorColor,
