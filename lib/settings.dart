@@ -127,11 +127,9 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
         Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text("Name:"),
-          Text(
-            "Used for copyright in exported files",
-            textScaleFactor: 0.4,
-          )
+          Tooltip(
+              message: "Used for copyright in exported files",
+              child: Text("Name:")),
         ])),
         ElevatedButton(
             child: Text(store.name == null ? "Edit" : store.name),
