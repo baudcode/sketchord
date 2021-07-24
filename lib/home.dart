@@ -51,7 +51,6 @@ class Home extends StatelessWidget {
       stream: LocalStorage().stream,
       initialData: [],
       builder: (context, snap) {
-        print(snap);
         if (snap.hasData) {
           DB().setNotes(snap.data.where((e) => !e.discarded).toList());
           return HomeContent(this.onMenuPressed);
@@ -203,13 +202,6 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliverNoteSelectionAppBar() {
-    print((storage.selectedNotes
-            .map((e) => e.starred)
-            .toList()
-            .length
-            .toDouble() /
-        storage.selectedNotes.length.toDouble()));
-
     return SliverAppBar(
       pinned: true,
       flexibleSpace: _sortingView(),

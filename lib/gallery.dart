@@ -29,7 +29,6 @@ class Gallery extends StatelessWidget {
     double _itemHeight = _itemWidth * widthHeightRatio;
 
     EdgeInsetsGeometry _padding = _getPadding(row, col);
-    print(_padding);
     if (index >= items.length)
       return new Container(
           width: _itemWidth, height: _itemHeight, padding: _padding);

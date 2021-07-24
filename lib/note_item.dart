@@ -32,7 +32,6 @@ class AbstractNoteItem extends StatelessWidget {
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
     List<TextSpan> spans = [];
-    print("$highlight $title");
     if (highlight == null) {
       spans.add(TextSpan(text: title));
     } else {

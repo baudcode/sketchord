@@ -120,17 +120,20 @@ class LocalStorage {
 
   Future<int> syncNote(Note note) async {
     print(
-        "Syncing note ${note.id} with title ${note.title} and ${note.audioFiles} audio files");
+        "Syncing note ${note.id} with title ${note.title}, ${note.sections.length} sections and ${note.audioFiles.length} audio files");
 
     final db = await getDatabase();
+
+    await db.delete(sectionTable, where: "noteId = ?", whereArgs: [note.id]);
 
     for (int i = 0; i < note.sections.length; i++) {
       Map<String, dynamic> sectionData = note.sections[i].toJson();
       sectionData['idx'] = i;
       sectionData['noteId'] = note.id;
 
-      await db.insert(sectionTable, sectionData,
+      int id = await db.insert(sectionTable, sectionData,
           conflictAlgorithm: ConflictAlgorithm.replace);
+      print("insert section ${note.sections[i].title} => $id");
     }
 
     // delete all old audio files with noteId

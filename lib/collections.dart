@@ -495,7 +495,6 @@ class Collections extends StatelessWidget {
       stream: LocalStorage().collectionStream,
       initialData: [],
       builder: (context, snap) {
-        print(snap);
         if (snap.hasData) {
           print("DB Set collections ${snap.data.length}");
           DB().setCollections(snap.data);

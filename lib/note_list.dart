@@ -95,8 +95,6 @@ class NoteListState extends State<NoteList> {
                     ]))
               ]));
     } else {
-      print("index: $index");
-      print(widget.items);
       var item = widget.items[index];
 
       return Padding(

@@ -6,10 +6,10 @@ import 'package:sound/dialogs/audio_import_dialog.dart';
 import 'package:sound/dialogs/text_import_dialog.dart';
 
 showDataInvalidSnack(BuildContext context) {
-  var snackbar = SnackBar(
+  var snackBar = SnackBar(
       content: Text("The dataformat/files were invalid"),
       backgroundColor: Theme.of(context).errorColor);
-  Scaffold.of(context).showSnackBar(snackbar);
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
 
 setupIntentReceivers(BuildContext context) {

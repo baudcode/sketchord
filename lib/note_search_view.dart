@@ -159,13 +159,6 @@ class _NoteSearchViewState extends State<_NoteSearchView>
   }
 
   _sliverNoteSelectionAppBar() {
-    print((storage.selectedNotes
-            .map((e) => e.starred)
-            .toList()
-            .length
-            .toDouble() /
-        storage.selectedNotes.length.toDouble()));
-
     return SliverAppBar(
       pinned: true,
       leading: IconButton(
