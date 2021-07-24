@@ -352,6 +352,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
                         alignment: Alignment.topCenter,
                         color: Theme.of(context).bottomAppBarColor,
                         child: IconButton(
+                            onPressed: () {},
                             icon: Icon(Icons.arrow_upward, size: 16)),
                       ))
                   : Container(),
