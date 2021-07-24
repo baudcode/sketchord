@@ -60,8 +60,9 @@ class EditableState extends State<Editable> {
         //maxLines: widget.maxLines,
         enableInteractiveSelection: true,
         onChanged: (s) {
-          print("widget changed");
-          widget.onChange(s);
+          if (widget.onChange != null) {
+            widget.onChange(s);
+          }
         },
         controller: _controller,
         textInputAction:
@@ -138,7 +139,7 @@ class SectionListItem extends StatelessWidget {
                               textStyle: Theme.of(context).textTheme.subtitle1,
                               onChange: (s) =>
                                   changeSectionTitle(Tuple2(section, s)),
-                              hintText: 'Title',
+                              hintText: 'Section Title',
                               maxLines: 100)),
                       Wrap(children: [
                         Editable(
