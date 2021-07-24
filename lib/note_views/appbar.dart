@@ -223,16 +223,12 @@ class SortingView extends StatelessWidget {
     // arrow icon not vanishing under the app bar
     Icon icon = Icon(
       direction == SortDirection.up ? Icons.arrow_upward : Icons.arrow_downward,
-      size: 10,
+      size: 18,
       color: Theme.of(context).appBarTheme.textTheme.button.color,
     );
     return TextButton(
         onPressed: _onDirectionChange,
-        child: Text(
-          (direction == SortDirection.up) ? "Up" : "Down",
-          style: Theme.of(context).appBarTheme.textTheme.button,
-          textScaleFactor: 0.9,
-        ),
+        child: Container(child: icon),
         clipBehavior: Clip.hardEdge);
   }
 
