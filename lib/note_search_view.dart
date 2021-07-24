@@ -271,7 +271,7 @@ class _NoteSearchViewState extends State<_NoteSearchView>
 
   _searchView() {
     return SearchTextView(
-        toggleIsSearching: (_) {},
+        toggleIsSearching: ({searching}) {},
         onChanged: (s) {
           searchNotes(s);
         },
