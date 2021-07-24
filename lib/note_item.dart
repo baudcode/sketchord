@@ -210,14 +210,21 @@ class NoteItem extends AbstractNoteItem {
             onLongPress: onLongPress,
             highlight: highlight);
 
+  showTop() {
+    return !((note.key == null || note.key.trim() == "") &&
+        (note.capo == null || note.capo.trim() == ""));
+  }
+
   _top() {
     return Padding(
         padding: EdgeInsets.only(left: padding, right: padding, top: padding),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(note.key == null ? 'No Key' : note.key),
-            Text(note.capo == null ? "No Capo" : "Capo ${note.capo}")
+            Text((note.key == null || note.key.trim() == "") ? '' : note.key),
+            Text((note.capo == null || note.capo.trim() == "")
+                ? ""
+                : "Capo ${note.capo}")
           ],
         ));
   }
@@ -264,6 +271,11 @@ class NoteItem extends AbstractNoteItem {
     );
   }
 
+  showBottom() {
+    return note.sections.length > 0 ||
+        (note.tuning != null && note.tuning.trim() != "");
+  }
+
   _bottom() {
     return Padding(
         padding: EdgeInsets.all(padding),
@@ -271,7 +283,7 @@ class NoteItem extends AbstractNoteItem {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Text("${note.sections.length} Sections"),
-            _richText((note.tuning == null) ? "Standard" : "${note.tuning}")
+            _richText((note.tuning == null) ? "" : "${note.tuning}")
           ],
         ));
   }
@@ -297,10 +309,10 @@ class NoteItem extends AbstractNoteItem {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                    _top(),
+                                    if (showTop()) _top(),
                                     _title(context),
                                     _text(context),
-                                    _bottom(),
+                                    if (showBottom()) _bottom(),
                                   ])))));
   }
 }
