@@ -70,7 +70,7 @@ class AudioFile {
   factory AudioFile.fromJson(Map<dynamic, dynamic> map) {
     return AudioFile(
         createdAt: deserializeDateTime(map["createdAt"]),
-        lastModified: deserializeDateTime(map["createdAt"]),
+        lastModified: deserializeDateTime(map["lastModified"]),
         duration: deserializeDuration(map["duration"]),
         loopRange: deserializeRangeValues(map['loopRange']),
         id: map["id"],
@@ -81,6 +81,7 @@ class AudioFile {
   Map<String, dynamic> toJson() {
     return {
       "createdAt": serializeDateTime(createdAt),
+      "lastModified": serializeDateTime(lastModified),
       "loopRange": serializeRangeValues(loopRange),
       "id": id,
       "path": path,
@@ -103,22 +104,35 @@ class Section {
   String id;
   DateTime lastModified, createdAt;
 
-  Section({
-    this.title,
-    this.content,
-    this.id,
-  }) {
+  Section(
+      {this.title, this.content, this.id, this.createdAt, this.lastModified}) {
     if (id == null) id = Uuid().v4().toString();
-    this.lastModified = DateTime.now();
-    this.createdAt = DateTime.now();
+    if (lastModified == null) lastModified = DateTime.now();
+    if (createdAt == null) createdAt = DateTime.now();
   }
 
   factory Section.fromJson(Map<dynamic, dynamic> map) {
-    return Section(content: map['content'], title: map['title'], id: map['id']);
+    return Section(
+      content: map['content'],
+      title: map['title'],
+      id: map['id'],
+      createdAt: map.containsKey("createdAt")
+          ? deserializeDateTime(map['createdAt'])
+          : DateTime.now(),
+      lastModified: map.containsKey("lastModified")
+          ? deserializeDateTime(map['lastModified'])
+          : DateTime.now(),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {"title": title, "content": content, "id": id};
+    return {
+      "title": title,
+      "content": content,
+      "id": id,
+      "lastModified": serializeDateTime(lastModified),
+      "createdAt": serializeDateTime(createdAt)
+    };
   }
 
   bool get hasEmptyTitle => title == null || title.trim() == "";
@@ -239,10 +253,10 @@ class Note {
         // general info
         id: id,
         title: json['title'],
-        createdAt: json.containsKey(json['createdAt'])
+        createdAt: json.containsKey('createdAt')
             ? deserializeDateTime(json['createdAt'])
             : DateTime.now(),
-        lastModified: json.containsKey(json['lastModified'])
+        lastModified: json.containsKey("lastModified")
             ? deserializeDateTime(json['lastModified'])
             : DateTime.now(),
 
