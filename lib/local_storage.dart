@@ -30,6 +30,16 @@ final migrations = {
       "DROP TABLE $collectionTable;",
       "DROP TABLE $collectionMappingTable;",
     ],
+    3: [
+      "ALTER TABLE $sectionTable ADD createdAt TEXT",
+      "ALTER TABLE $sectionTable ADD lastModified TEXT",
+    ]
+  },
+  3: {
+    2: {
+      "ALTER TABLE $sectionTable DROP COLUMN createdAt TEXT",
+      "ALTER TABLE $sectionTable DROP COLUMN lastModified TEXT",
+    }
   }
 };
 
@@ -89,7 +99,7 @@ class LocalStorage {
     },
         // Set the version. This executes the onCreate function and provides a
         // path to perform database upgrades and downgrades.
-        version: 2);
+        version: 3);
   }
 
   Future<void> createDatabase(Database db) async {
