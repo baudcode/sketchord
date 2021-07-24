@@ -75,7 +75,7 @@ class NoteEditorState extends State<NoteEditorContent>
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   List<String> popupMenuActions = ["share", "copy", "add"];
-  List<String> popupMenuActionsLong = ["Share", "Copy", "Add To Set"];
+  List<String> popupMenuActionsLong = ["Export", "Copy", "Add to Set"];
   bool get useTabs => widget.view == EditorView.tabs;
   final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};

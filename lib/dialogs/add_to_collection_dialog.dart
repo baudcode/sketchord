@@ -22,7 +22,7 @@ showAddToCollectionDialog(BuildContext context, Note note) {
     return collection;
   }
 
-  _showAddToCollectionDialog(context, "Add To Set", onNew, onAdd, note,
+  _showAddToCollectionDialog(context, "Add to Set", onNew, onAdd, note,
       importButtonText: 'Add');
 }
 
