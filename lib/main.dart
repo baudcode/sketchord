@@ -84,7 +84,9 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         appBarTheme: ThemeData.dark().appBarTheme.copyWith(
             brightness: Brightness.dark,
             color: appBarColor,
-            textTheme: ThemeData.dark().textTheme),
+            textTheme: ThemeData.dark().textTheme.copyWith(
+                title:
+                    ThemeData.dark().textTheme.title.copyWith(fontSize: 16))),
         buttonTheme:
             ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
         chipTheme: ThemeData.dark().chipTheme.copyWith(
