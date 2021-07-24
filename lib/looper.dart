@@ -1,10 +1,8 @@
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
-import 'package:sound/utils.dart';
 import 'range_slider.dart' as frs;
 
 class Looper extends StatefulWidget {

@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:sound/model.dart';
 import 'package:sound/utils.dart';

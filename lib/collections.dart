@@ -333,22 +333,24 @@ class _CollectionEditorState extends State<CollectionEditor>
           }
           return true;
         },
-        child: Scaffold(
-            floatingActionButton: FloatingActionButton(
-              onPressed: floatingActionButtonPressed,
-              foregroundColor: Colors.white,
-              backgroundColor: Theme.of(context).accentColor,
-              child: IconButton(
-                icon: Icon(Icons.add),
+        child: ScaffoldMessenger(
+          child: Scaffold(
+              floatingActionButton: FloatingActionButton(
                 onPressed: floatingActionButtonPressed,
+                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).accentColor,
+                child: IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: floatingActionButtonPressed,
+                ),
               ),
-            ),
-            appBar: AppBar(
-              //backgroundColor: store.note.color,
-              actions: actions,
-              title: Text("Edit Set"),
-            ),
-            body: Container(child: Stack(children: stackChildren))));
+              appBar: AppBar(
+                //backgroundColor: store.note.color,
+                actions: actions,
+                title: Text("Edit Set"),
+              ),
+              body: Container(child: Stack(children: stackChildren))),
+        ));
   }
 }
 
@@ -449,10 +451,14 @@ class CollecitonNoteListItem extends StatelessWidget {
       child: card,
       onDismissed: (d) {
         removeNoteFromCollection(note);
-        showUndoSnackbar(Scaffold.of(context),
-            note.hasEmptyTitle ? "Note" : note.title, note, (_) {
-          undoRemoveNoteFromCollection(note);
-        });
+
+        showUndoSnackbar(
+            context: context,
+            dataString: note.hasEmptyTitle ? "Note" : note.title,
+            data: note,
+            onUndo: (_) {
+              undoRemoveNoteFromCollection(note);
+            });
       },
       direction: DismissDirection.startToEnd,
       key: globalKey,

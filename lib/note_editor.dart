@@ -1,6 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:sound/dialogs/add_to_collection_dialog.dart';
@@ -135,32 +134,26 @@ class NoteEditorState extends State<NoteEditorContent>
   }
 
   _onAudioFileDelete(AudioFile file, int index) {
-    Flushbar bar;
-
-    bar = Flushbar(
-      //title: "Hey Ninja",
-      message: "${file.name} was deleted",
-      onStatusChanged: (status) {
-        // lets check whether the file was restored or not
-        if (status == FlushbarStatus.DISMISSED &&
-            !store.note.audioFiles.contains(file)) {
-          print("hardly deleting audio file now");
-          hardDeleteAudioFile(file);
-        }
-      },
-      mainButton: TextButton(
-          child: Text("Undo"),
-          onPressed: () {
-            if (!store.note.audioFiles.contains(file)) {
-              restoreAudioFile(Tuple2(file, index));
-            }
-            bar.dismiss();
-          }),
-      duration: Duration(seconds: 3),
-    );
-    bar.show(context);
-
     softDeleteAudioFile(file);
+
+    showUndoSnackbar(
+        context: context,
+        dataString: file.name == null || file.name.trim() == ""
+            ? "Audio File"
+            : file.name,
+        data: file,
+        onClose: () {
+          if (!store.note.audioFiles.contains(file)) {
+            print("hardly deleting audio file now");
+            hardDeleteAudioFile(file);
+          }
+        },
+        onUndo: (_) {
+          if (!store.note.audioFiles.contains(file)) {
+            restoreAudioFile(Tuple2(file, index));
+          }
+          hideSnack(context);
+        });
   }
 
   _copyToClipboard(BuildContext context) {
@@ -560,10 +553,11 @@ class NoteEditorState extends State<NoteEditorContent>
     // will pop score
     return WillPopScope(
         onWillPop: () async {
+          hideSnack(context);
           stopAction(true);
           return true;
         },
-        child: scaffold);
+        child: ScaffoldMessenger(child: scaffold));
   }
 }
 

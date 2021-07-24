@@ -4,6 +4,7 @@ import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/note_views/appbar.dart';
 import 'package:sound/note_views/seach.dart';
 import 'package:sound/settings_store.dart';
+import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
@@ -59,16 +60,18 @@ class Home extends StatelessWidget {
         }
       },
     );
-    return Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _floatingButtonPress(context),
-          child: IconButton(
+    return ScaffoldMessenger(
+      child: Scaffold(
+          floatingActionButton: FloatingActionButton(
             onPressed: () => _floatingButtonPress(context),
-            icon: Icon(Icons.add),
+            child: IconButton(
+              onPressed: () => _floatingButtonPress(context),
+              icon: Icon(Icons.add),
+            ),
           ),
-        ),
-        //bottomSheet: RecorderBottomSheet(),
-        body: builder);
+          //bottomSheet: RecorderBottomSheet(),
+          body: builder),
+    );
   }
 }
 
@@ -217,7 +220,11 @@ class HomeContentState extends State<HomeContent>
       actions: <Widget>[
         IconButton(
             icon: Icon(Icons.delete),
-            onPressed: () => discardAllSelectedNotes()),
+            onPressed: () {
+              showSnack(Scaffold.of(context),
+                  "Moved ${storage.selectedNotes.length} Notes to Trash");
+              discardAllSelectedNotes();
+            }),
         IconButton(
             icon: Icon(Icons.color_lens),
             onPressed: () {

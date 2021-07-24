@@ -22,7 +22,7 @@ class CollectionEditorStore extends Store {
     });
 
     removeNoteFromCollection.listen((note) async {
-      int index = _collection.notes.indexOf(note);
+      int index = _collection.notes.indexWhere((n) => n.id == note.id);
       _collection.notes.removeAt(index);
       _lastDeletion = Tuple2(index, note);
       await LocalStorage().syncCollection(_collection);

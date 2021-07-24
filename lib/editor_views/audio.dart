@@ -112,12 +112,12 @@ class AudioFileView extends StatelessWidget {
     return Dismissible(
       child: view,
       onDismissed: (d) {
-        if (d == DismissDirection.endToStart) {
+        if (d == DismissDirection.startToEnd) {
           onDelete();
         } else {}
       },
       confirmDismiss: (d) async {
-        if (d == DismissDirection.endToStart) {
+        if (d == DismissDirection.startToEnd) {
           return true;
         } else {
           showAudioActionDialog(context, [
@@ -142,17 +142,19 @@ class AudioFileView extends StatelessWidget {
       },
       direction: DismissDirection.horizontal,
       key: GlobalKey(),
-      background: Card(
+      secondaryBackground: Card(
           margin: EdgeInsets.all(0),
           child: Container(
               color: Theme.of(context).scaffoldBackgroundColor,
-              child: Row(children: <Widget>[Icon(Icons.share)]),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[Icon(Icons.share)]),
               padding: EdgeInsets.all(10))),
-      secondaryBackground: Card(
+      background: Card(
           child: Container(
               color: Theme.of(context).accentColor,
               child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[Icon(Icons.delete)]),
               padding: EdgeInsets.all(10))),
     );

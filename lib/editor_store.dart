@@ -55,7 +55,7 @@ class NoteEditorStore extends Store {
     });
 
     deleteSection.listen((s) async {
-      int index = _note.sections.indexOf(s);
+      int index = _note.sections.indexWhere((element) => element.id == s.id);
       _note.sections.removeAt(index);
       _lastDeletion = Tuple2(index, s);
       await LocalStorage().syncNoteAttr(_note, 'sections');

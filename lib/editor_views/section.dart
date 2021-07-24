@@ -163,10 +163,15 @@ class SectionListItem extends StatelessWidget {
       child: card,
       onDismissed: (d) {
         deleteSection(section);
-        showUndoSnackbar(Scaffold.of(context),
-            section.hasEmptyTitle ? "Section" : section.title, section, (_) {
-          undoDeleteSection(section);
-        });
+
+        showUndoSnackbar(
+            context: context,
+            dataString: section.hasEmptyTitle ? "Section" : section.title,
+            data: section,
+            onClose: () => {},
+            onUndo: (_) {
+              undoDeleteSection(section);
+            });
       },
       direction: DismissDirection.startToEnd,
       key: globalKey,

@@ -47,14 +47,29 @@ class LifecycleEventHandler extends WidgetsBindingObserver {
 }
 
 const defaultDuration = Duration(seconds: 2);
-showUndoSnackbar(ScaffoldState state, String dataString, dynamic data,
-    ValueChanged<dynamic> onUndo) {
+
+showUndoSnackbar(
+    {BuildContext context,
+    String dataString,
+    dynamic data,
+    ValueChanged<dynamic> onUndo,
+    Function onClose}) {
   var snackbar = SnackBar(
       content: Text("Deleted $dataString sucessfully"),
       duration: Duration(seconds: 3),
-      action: SnackBarAction(label: "Undo", onPressed: () => onUndo(data)));
+      action: SnackBarAction(
+          label: "Undo",
+          textColor: Theme.of(context).accentColor,
+          onPressed: () => onUndo(data)));
 
-  state.showSnackBar(snackbar);
+  ScaffoldMessenger.of(context)
+      .showSnackBar(snackbar)
+      .closed
+      .then((value) => onClose());
+}
+
+hideSnack(BuildContext context) {
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
 }
 
 showSnack(var state, String message, {Duration duration = defaultDuration}) {
