@@ -168,7 +168,7 @@ class NoteEditorState extends State<NoteEditorContent>
 
     ClipboardManager.copyToClipBoard(text).then((result) {
       final snackBar = SnackBar(
-        content: Text('Copied to Clipboard'),
+        content: Text('Songtext copied'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
