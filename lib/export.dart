@@ -68,10 +68,27 @@ class Exporter {
       contents += info;
     }
     contents += "\n\n\n";
-    for (Section section in note.sections) {
-      contents += "[${section.title}]" + "\n\n";
-      contents += section.content;
-      contents += "\n\n";
+    for (var i = 0; i < note.sections.length; i++) {
+      Section section = note.sections[i];
+
+      var sectionTitleEmpty =
+          section.title == null || section.title.trim() == "";
+      var contentEmpty =
+          section.content == null || section.content.trim() == "";
+
+      if (sectionTitleEmpty) {
+        if (!contentEmpty) {
+          contents += section.content;
+        }
+      } else {
+        contents += "[${section.title}]" + "\n\n";
+        contents += section.content;
+      }
+
+      if ((!sectionTitleEmpty || !contentEmpty) &&
+          i != (note.sections.length - 1)) {
+        contents += "\n\n";
+      }
     }
     return contents;
   }
