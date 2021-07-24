@@ -304,6 +304,7 @@ class StaticStorage extends Store {
 
     changeSortBy.listen((by) {
       if (_sortBy != by) {
+        print("set sort by to $by");
         this._sortBy = by;
         trigger();
       }
