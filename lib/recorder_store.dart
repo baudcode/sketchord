@@ -236,9 +236,11 @@ class RecorderBottomSheetStore extends Store {
   RecorderBottomSheetStore() {
     _minimized = false;
 
-    LocalStorage()
-        .getSettings()
-        .then((value) => _audioFormat = value.audioFormat);
+    LocalStorage().getSettings().then((value) {
+      if (value != null) {
+        _audioFormat = value.audioFormat;
+      }
+    });
     // sound = FlutterSound();
     startPlaybackAction.listen((AudioFile f) async {
       if (_state == RecorderState.PLAYING) {
