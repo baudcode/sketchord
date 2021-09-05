@@ -21,13 +21,15 @@ class AbstractNoteItem extends StatelessWidget {
       this.sectionText().trim() == "");
 
   Widget singleText(BuildContext context, String text) {
-    return Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(text,
-            style: Theme.of(context)
-                .textTheme
-                .headline5
-                .copyWith(fontWeight: FontWeight.w200)));
+    return Container(
+        width: MediaQuery.of(context).size.width,
+        child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(text,
+                style: Theme.of(context)
+                    .textTheme
+                    .headline5
+                    .copyWith(fontWeight: FontWeight.w200))));
   }
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
@@ -107,7 +109,6 @@ class AbstractNoteItem extends StatelessWidget {
 
     return Text.rich(
       TextSpan(
-        //text: 'TEST',
         children: spans,
       ),
       softWrap: true,
