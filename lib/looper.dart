@@ -8,8 +8,10 @@ import 'range_slider.dart' as frs;
 class Looper extends StatefulWidget {
   final Color color;
   final Function onMinimize;
+  final bool enableMinimize;
 
-  Looper(this.color, this.onMinimize, {Key key}) : super(key: key);
+  Looper(this.color, this.onMinimize, {this.enableMinimize = true, Key key})
+      : super(key: key);
 
   @override
   _LooperState createState() => _LooperState();
@@ -75,12 +77,14 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: IconButton(
-                    onPressed: widget.onMinimize,
-                    icon: Icon(Icons.arrow_downward),
-                  )),
+              widget.enableMinimize
+                  ? Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: IconButton(
+                        onPressed: widget.onMinimize,
+                        icon: Icon(Icons.close),
+                      ))
+                  : Container(),
               Padding(
                   padding: EdgeInsets.only(right: 8),
                   child: TextButton(

@@ -190,7 +190,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
   Animation<Offset> _slideAnimation;
   Animation<double> _scaleAnimation, _sheetScaleAnimation;
 
-  bool forward = false;
+  bool minimized = true;
   ActionSubscription sub;
 
   @override
@@ -200,18 +200,11 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     WidgetsBinding.instance.addObserver(this);
     final keyboardOpen = WidgetsBinding.instance.window.viewInsets.bottom > 0;
-    if (keyboardOpen) {
-      setMinimized(true);
-    }
-    forward = store.minimized || keyboardOpen;
-    print("init recorder bottom sheet");
-    print("keyboard open: $keyboardOpen");
-    print("minimized: ${store.minimized}");
-    print("forward: ${forward}");
 
     height = maxMinimizeHeight;
+
     _controller = AnimationController(
-        value: (forward) ? 1.0 : 0.0, // TODO check this
+        value: 0.0, // TODO check this
         vsync: this,
         duration: Duration(milliseconds: 500));
 
@@ -221,62 +214,81 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     _sheetScaleAnimation =
         Tween<double>(begin: 1.0, end: -1.0).animate(_controller);
 
-    _controller.addStatusListener((status) {
-      print(status);
-      if (status == AnimationStatus.forward) {
-        setState(() {
-          forward = true;
-        });
-      } else if (status == AnimationStatus.reverse) {
-        setState(() {
-          forward = false;
-        });
-      } else if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
-        setMinimized(forward);
-      }
-    });
-    print("init recorder bottom sheet state");
-
-    // Future.delayed(Duration(milliseconds: 100), () {
-    //   if (store.minimized) {
-    //     _controller.forward();
-    //   } else {
-    //     _controller.reverse();
-    //   }
-    // });
-
-    sub = setMinimized.listen((m) {
-      if (forward != m) {
-        if (forward) {
-          _controller.reverse();
-        } else {
-          _controller.forward();
-        }
+    sub = stopAction.listen((event) {
+      if (!minimized) {
+        animateForward();
       }
     });
   }
 
   @override
   void dispose() {
-    sub.cancel();
-    _controller.dispose();
+    if (sub != null) {
+      sub.cancel();
+    }
+
+    if (_controller != null) {
+      _controller.dispose();
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  @override
-  void didChangeMetrics() {
-    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
-    print("bottomInsets: $bottomInset");
+  void animateForward() {
+    setState(() {
+      minimized = true;
+    });
 
-    if (bottomInset > 0.0 && !store.minimized) {
-      _controller.forward();
-    }
+    Navigator.of(context).pop();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void animateReverse() {
+    print("reverse");
+
+    setState(() {
+      minimized = false;
+    });
+
+    showDialog(
+        context: context,
+        useSafeArea: true,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return WillPopScope(
+              onWillPop: () async {
+                animateForward();
+                return true;
+              },
+              child: AlertDialog(
+                  contentPadding: const EdgeInsets.all(0),
+                  insetPadding: const EdgeInsets.all(8),
+                  content: getControls(
+                      minimized: false,
+                      onMinimize: () {
+                        animateForward();
+                      })));
+        });
+
+    // Navigator.of(context)
+    //     .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+    //   return Scaffold(
+    //     appBar: AppBar(
+    //         leading: IconButton(
+    //             icon: Icon(Icons.fullscreen_exit_sharp),
+    //             onPressed: () {
+    //               animateForward();
+    //               Navigator.of(context).pop();
+    //             }),
+    //         title: const Text("Controls")),
+    //     body: Container(
+    //       alignment: Alignment.bottomCenter,
+    //       child: getControls(minimized: false, onExpand: () {}),
+    //     ),
+    //   );
+    // }));
+  }
+
+  Widget getControls({bool minimized, Function onExpand, Function onMinimize}) {
     if (store.state == RecorderState.STOP)
       return Container(height: 0, width: 0);
 
@@ -294,65 +306,57 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     double width = MediaQuery.of(context).size.width;
 
     Looper looper = Looper(color, () {
-      _controller?.forward();
-    });
+      // on
+      if (onMinimize != null) {
+        onMinimize();
+      }
+    }, enableMinimize: true);
+
     BottomInfo info = BottomInfo(color);
 
+    Widget controls;
+
+    print("showLooper: $showLooper");
+
     if (showLooper) {
-      return GestureDetector(
+      controls = GestureDetector(
         onPanUpdate: (details) {
-          if (details.delta.dy < -5 && forward && store.minimized) {
-            print("reverse ${details.delta.dy}");
-            _controller.reverse();
-          } else if (details.delta.dy > 5 && !forward && !store.minimized) {
-            _controller.forward();
+          if (details.delta.dy < -5 && minimized) {
+            onExpand();
           }
         },
         child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              SizeTransition(
-                  axis: Axis.vertical,
-                  sizeFactor: _sheetScaleAnimation,
-                  child: Container(
-                    // decoration: BoxDecoration(
-                    //     color: Theme.of(context).bottomAppBarColor,
-                    //     borderRadius: BorderRadius.all(Radius.circular(15)),
-                    //     boxShadow: [
-                    //       BoxShadow(
-                    //         color: Theme.of(context).appBarTheme.color,
-                    //         spreadRadius: 2,
-                    //         blurRadius: 10,
-                    //       ),
-                    //     ]),
-                    color: Theme.of(context).bottomAppBarColor,
-                    height: bottomHeight + maxMinimizeHeight,
-                    width: width,
-                    child: Column(children: [
-                      SlideTransition(
-                          position: _slideAnimation,
-                          child: Container(
-                              child: Column(children: [
-                            SizedBox(height: 10),
-                            looper,
-                            SizedBox(height: 50),
-                            Text("Player:"),
-                            PlayerSlider(),
-                          ]))),
-                      //Expanded(child: Container()),
-                    ]),
-                  )),
-              store.minimized
+              (!minimized)
+                  ? Container(
+                      color: Theme.of(context).bottomAppBarColor,
+                      height: bottomHeight + maxMinimizeHeight,
+                      width: width,
+                      child: Column(children: [
+                        Container(
+                            child: Column(children: [
+                          SizedBox(height: 10),
+                          looper,
+                          SizedBox(height: 50),
+                          Text("Player:"),
+                          PlayerSlider(),
+                        ])),
+                        //Expanded(child: Container()),
+                      ]),
+                    )
+                  : Container(),
+              minimized
                   ? GestureDetector(
-                      onTap: () => _controller.reverse(),
+                      onTap: () {},
                       child: Container(
                         height: 20,
                         width: width,
                         alignment: Alignment.topCenter,
                         color: Theme.of(context).bottomAppBarColor,
                         child: IconButton(
-                            onPressed: () {},
+                            onPressed: onExpand,
                             icon: Icon(Icons.arrow_upward, size: 16)),
                       ))
                   : Container(),
@@ -360,7 +364,15 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
             ]),
       );
     } else {
-      return info;
+      controls = info;
     }
+
+    return controls;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!minimized) return Container();
+    return getControls(minimized: true, onExpand: animateReverse);
   }
 }

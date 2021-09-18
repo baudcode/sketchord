@@ -90,6 +90,7 @@ class NoteEditorState extends State<NoteEditorContent>
     noteEditorTitleFocusNode = FocusNode();
     tabController = TabController(length: 3, initialIndex: 0, vsync: this);
     tabController.addListener(() {
+      FocusScope.of(context).unfocus();
       setState(() {});
     });
 
@@ -527,7 +528,16 @@ class NoteEditorState extends State<NoteEditorContent>
                   controller: tabController,
                   isScrollable: true,
                   tabs: List<Widget>.generate(categories.length, (int index) {
-                    return new Tab(text: categories[index]);
+                    return Container(
+                      width: 90,
+                      child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            categories[index],
+                          )),
+                      padding: EdgeInsets.all(16),
+                    );
+                    //return new Tab(text: categories[index]);
                   }))
               : null,
         ),
@@ -554,6 +564,7 @@ class NoteEditorState extends State<NoteEditorContent>
     // will pop score
     return WillPopScope(
         onWillPop: () async {
+          print("will pop...");
           hideSnack(context);
           stopAction(true);
           return true;
