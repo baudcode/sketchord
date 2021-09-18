@@ -518,6 +518,7 @@ class NoteEditorState extends State<NoteEditorContent>
                   .toList()),
         ));
 
+    var width = MediaQuery.of(context).size.width;
     Scaffold scaffold = Scaffold(
         key: _globalKey,
         appBar: AppBar(
@@ -529,7 +530,6 @@ class NoteEditorState extends State<NoteEditorContent>
                   isScrollable: true,
                   tabs: List<Widget>.generate(categories.length, (int index) {
                     return Container(
-                      width: 90,
                       child: Align(
                           alignment: Alignment.center,
                           child: Text(
