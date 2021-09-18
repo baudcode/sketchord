@@ -69,6 +69,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         primaryColor: Colors.white,
         accentColor: mainColor,
         buttonColor: mainColor,
+        brightness: Brightness.dark,
         colorScheme: ColorScheme.light().copyWith(
             primary: mainColor,
             secondary: Colors.white,
@@ -84,9 +85,12 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         appBarTheme: ThemeData.dark().appBarTheme.copyWith(
             brightness: Brightness.dark,
             color: appBarColor,
-            textTheme: ThemeData.dark().textTheme.copyWith(
-                title:
-                    ThemeData.dark().textTheme.title.copyWith(fontSize: 16))),
+            textTheme: ThemeData.dark().textTheme
+            //titleTextStyle: ThemeData.dark()
+            //    .appBarTheme
+            //    .titleTextStyle
+            //    .copyWith(fontSize: 16)),
+            ),
         buttonTheme:
             ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
         chipTheme: ThemeData.dark().chipTheme.copyWith(
@@ -121,6 +125,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
             cursorColor: mainColor,
             selectionHandleColor: mainColor),
         cardColor: Colors.grey.shade200,
+        brightness: Brightness.light,
         colorScheme: ColorScheme.light().copyWith(
             primary: mainColor,
             secondary: Colors.black54,

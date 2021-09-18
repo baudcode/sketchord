@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/confirmation_dialogs.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_list.dart';
@@ -55,20 +56,25 @@ class _TrashState extends State<Trash> {
   _runPopupAction(String action) {
     print("action: $action");
     if (action == "delete") {
-      for (Note note in selectedNotes) {
-        LocalStorage().deleteNote(note);
-      }
-      setState(() {
-        notes.removeWhere((n) => isSelected(n));
-        selectedNotes = [];
-      });
+      // TODO:
+      showDeleteNotesForeverDialog(
+          context: context,
+          notes: selectedNotes,
+          onDelete: () {
+            setState(() {
+              notes.removeWhere((n) => isSelected(n));
+              selectedNotes = [];
+            });
+          });
     } else if (action == 'delete_all') {
-      for (Note note in notes) {
-        LocalStorage().deleteNote(note);
-      }
-      setState(() {
-        notes = [];
-      });
+      showDeleteNotesForeverDialog(
+          context: context,
+          notes: notes,
+          onDelete: () {
+            setState(() {
+              notes = [];
+            });
+          });
     }
   }
 
@@ -140,12 +146,16 @@ class _TrashState extends State<Trash> {
     }
 
     _deleteForever(Note note) {
-      LocalStorage().deleteNote(note);
+      showDeleteForeverDialog(
+          context: context,
+          note: note,
+          onDelete: () {
+            setState(() {
+              notes.removeWhere((n) => n.id == note.id);
+            });
 
-      setState(() {
-        notes.removeWhere((n) => n.id == note.id);
-      });
-      Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          });
     }
 
     onTap(Note note) {

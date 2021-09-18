@@ -454,7 +454,8 @@ class CollecitonNoteListItem extends StatelessWidget {
 
         showUndoSnackbar(
             context: context,
-            dataString: note.hasEmptyTitle ? "Note" : note.title,
+            message:
+                "Removed ${note.hasEmptyTitle ? "Note" : note.title} from collection",
             data: note,
             onUndo: (_) {
               undoRemoveNoteFromCollection(note);

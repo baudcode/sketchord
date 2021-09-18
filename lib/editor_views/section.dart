@@ -166,7 +166,8 @@ class SectionListItem extends StatelessWidget {
 
         showUndoSnackbar(
             context: context,
-            dataString: section.hasEmptyTitle ? "Section" : section.title,
+            message:
+                "Deleted ${section.hasEmptyTitle ? "Section" : "section " + section.title}",
             data: section,
             onClose: () => {},
             onUndo: (_) {

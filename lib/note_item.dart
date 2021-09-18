@@ -26,10 +26,8 @@ class AbstractNoteItem extends StatelessWidget {
         child: Padding(
             padding: EdgeInsets.all(8.0),
             child: Text(text,
-                style: Theme.of(context)
-                    .textTheme
-                    .headline5
-                    .copyWith(fontWeight: FontWeight.w200))));
+                textScaleFactor: 0.8,
+                style: Theme.of(context).textTheme.headline6.copyWith())));
   }
 
   Widget highlightTitle(BuildContext context, String title, String highlight) {
@@ -163,6 +161,7 @@ class SmallNoteItem extends AbstractNoteItem {
         color: note.color,
         shape: (isSelected ? getSelectedChardShape(context) : null),
         child: Container(
+            width: MediaQuery.of(context).size.width,
             decoration: (isSelected)
                 ? getSelectedDecoration(context)
                 : getNormalDecoration(context),

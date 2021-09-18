@@ -394,6 +394,16 @@ class LocalStorage {
     await _updateNote(note);
   }
 
+  Future<bool> restoreNoteById(String noteId) async {
+    Note note = await getNoteById(noteId);
+    if (note != null) {
+      note.discarded = false;
+      await _updateNote(note);
+      return true;
+    } else
+      return false;
+  }
+
   Future<void> syncNoteAttr(Note note, String attr) async {
     if (["sections", "title", "audioFiles", "tuning"].contains(attr))
       note.lastModified = DateTime.now();

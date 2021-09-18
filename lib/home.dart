@@ -213,9 +213,20 @@ class HomeContentState extends State<HomeContent>
         IconButton(
             icon: Icon(Icons.delete),
             onPressed: () {
-              showSnack(Scaffold.of(context),
-                  "Moved ${storage.selectedNotes.length} Notes to Trash");
+              showUndoSnackbar(
+                  data: null,
+                  context: context,
+                  onClose: () {},
+                  onUndo: (_) {
+                    undoDiscardAllSelectedNotes();
+                  },
+                  message:
+                      "Moved ${storage.selectedNotes.length} Notes to Trash");
+
               discardAllSelectedNotes();
+
+              // showSnack(Scaffold.of(context),
+              //     "Moved ${storage.selectedNotes.length} Notes to Trash");
             }),
         IconButton(
             icon: Icon(Icons.color_lens),

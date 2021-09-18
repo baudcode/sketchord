@@ -138,9 +138,8 @@ class NoteEditorState extends State<NoteEditorContent>
 
     showUndoSnackbar(
         context: context,
-        dataString: file.name == null || file.name.trim() == ""
-            ? "Audio File"
-            : file.name,
+        message:
+            'Deleted ${file.name == null || file.name.trim() == "" ? "Audio File" : file.name}',
         data: file,
         onClose: () {
           if (!store.note.audioFiles.contains(file)) {
@@ -204,7 +203,8 @@ class NoteEditorState extends State<NoteEditorContent>
     print("=> note editor | on focus change:  $item");
     var suggestions = await _getInfoSuggestions(item);
     setState(() {
-      additionalItemSuggestions = suggestions;
+      additionalItemSuggestions = suggestions.sublist(
+          0, suggestions.length > 5 ? 5 : suggestions.length);
       focusedAdditionalInfoItem = item;
     });
   }
@@ -283,7 +283,8 @@ class NoteEditorState extends State<NoteEditorContent>
     // update suggestions
     var suggestions = await _getInfoSuggestions(focusedAdditionalInfoItem);
     setState(() {
-      additionalItemSuggestions = suggestions;
+      additionalItemSuggestions = suggestions.sublist(
+          0, suggestions.length > 5 ? 5 : suggestions.length);
     });
   }
 

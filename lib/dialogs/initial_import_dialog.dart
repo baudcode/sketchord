@@ -33,6 +33,7 @@ showSelectNotesImportDialog(
         "Would you like to import any of these example songs?"}) async {
   showSelectNotesDialog(context, (List<Note> selected) async {
     List<String> noteIds = selected.map((n) => n.id).toList();
+    print("selected note ids: $noteIds");
 
     for (Note note in selected) {
       await LocalStorage().syncNote(note);

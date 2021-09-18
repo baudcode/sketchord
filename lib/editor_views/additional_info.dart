@@ -181,6 +181,14 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
         maxLines: 1);
   }
 
+  _extra({text, title}) {
+    return TextFormField(
+        enabled: false,
+        initialValue: text,
+        decoration:
+            InputDecoration(labelText: title, border: InputBorder.none));
+  }
+
   getEdit(AdditionalInfoItem item) {
     switch (item) {
       case AdditionalInfoItem.tuning:
@@ -239,8 +247,14 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-        runSpacing: 1,
-        children: widget.items.map<Widget>((item) => getEdit(item)).toList());
+    var edits = widget.items.map<Widget>((item) => getEdit(item)).toList();
+    var extra = <Widget>[
+      _extra(text: dateToString(widget.note.createdAt), title: "Created At"),
+      _extra(
+          text: dateToString(widget.note.lastModified),
+          title: "Last Modified At")
+    ];
+    var children = edits + extra;
+    return Wrap(runSpacing: 1, children: children);
   }
 }

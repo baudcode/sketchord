@@ -6,6 +6,11 @@ String getFormattedDate(DateTime date) {
   return date.toString().substring(0, _date.length - 7).replaceAll(":", "-");
 }
 
+String dateToString(DateTime date) {
+  String _date = DateTime.now().toString();
+  return date.toString().substring(0, _date.length - 7);
+}
+
 List<String> itemsByFrequency(List<String> input) => [
       ...(input
               .fold<Map<String, int>>(
@@ -50,12 +55,12 @@ const defaultDuration = Duration(seconds: 2);
 
 showUndoSnackbar(
     {BuildContext context,
-    String dataString,
+    String message,
     dynamic data,
     ValueChanged<dynamic> onUndo,
     Function onClose}) {
   var snackbar = SnackBar(
-      content: Text("Deleted $dataString sucessfully"),
+      content: Text(message),
       duration: Duration(seconds: 3),
       action: SnackBarAction(
           label: "Undo",

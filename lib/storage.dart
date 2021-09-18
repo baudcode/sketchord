@@ -134,6 +134,9 @@ class StaticStorage extends Store {
   List<Note> _selectedNotes;
   List<Note> get selectedNotes => _selectedNotes;
 
+  List<String> _prevDiscardedNoteIds;
+  List<String> get prevDiscardedNoteIds => _prevDiscardedNoteIds;
+
   String _search = "";
   String get search => _search;
 
@@ -248,6 +251,7 @@ class StaticStorage extends Store {
       for (Note note in _selectedNotes) {
         LocalStorage().discardNote(note);
       }
+      _prevDiscardedNoteIds = _selectedNotes.map((e) => e.id).toList();
       _selectedNotes.clear();
       trigger();
     });
@@ -315,6 +319,12 @@ class StaticStorage extends Store {
       if (twoPerRow != _twoPerRow) {
         _twoPerRow = twoPerRow;
         trigger();
+      }
+    });
+
+    undoDiscardAllSelectedNotes.listen((event) {
+      for (String noteId in this._prevDiscardedNoteIds) {
+        LocalStorage().restoreNoteById(noteId);
       }
     });
   }
@@ -444,6 +454,7 @@ Action openSettings = Action();
 Action<Note> triggerSelectNote = Action();
 Action removeAllSelectedNotes = Action();
 Action discardAllSelectedNotes = Action();
+Action undoDiscardAllSelectedNotes = Action();
 Action starAllSelectedNotes = Action();
 Action unstarAllSelectedNotes = Action();
 Action<Color> colorAllSelectedNotes = Action();
