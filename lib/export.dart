@@ -130,9 +130,10 @@ class Exporter {
 
     int rows = 0;
 
-    for (var section in note.sections) {
+    for (var section in note.sections
+        .where((element) => element.content.trim().length > 0)) {
       int sectionLength = section.content.split("\n").length;
-      if ((rows + sectionLength) > 50) {
+      if ((rows + sectionLength) > 65) {
         sectionRows.add(sections);
         sections = [];
         rows = 0;
@@ -146,7 +147,9 @@ class Exporter {
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold))
       ]));
       sections.add(pw.Row(children: [pw.Container(height: 5)]));
-      sections.add(pw.Row(children: [pw.Text(section.content)]));
+      sections.add(pw.Row(children: [
+        pw.Text(section.content, style: pw.TextStyle(fontSize: 7))
+      ]));
       sections.add(pw.Row(children: [pw.Container(height: 10)]));
 
       print("rows: $rows");
@@ -172,7 +175,7 @@ class Exporter {
       pw.Center(child: pw.Text(note.title, style: pw.TextStyle(fontSize: 20)))
     ]));
     // spacing between title and content
-    titleRows.add(pw.Row(children: [pw.Container(height: 20)]));
+    titleRows.add(pw.Row(children: [pw.Container(height: 50)]));
 
     String artist = (note.artist != null ? note.artist : Settings().name);
 
@@ -185,12 +188,19 @@ class Exporter {
           );
 
     for (var i = 0; i < sectionRows.length; i++) {
+      var page = pw.Positioned(
+        bottom: 0,
+        left: 0,
+        child: pw.Text("Page ${i + 1}/${sectionRows.length}"),
+      );
+
       pdf.addPage(pw.Page(
-          margin: pw.EdgeInsets.all(20),
+          margin: pw.EdgeInsets.only(top: 50, bottom: 20, left: 50, right: 20),
           pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
             return pw.Stack(children: [
               copyright,
+              page,
               pw.Column(
                   children: (i == 0)
                       ? (titleRows..addAll(sectionRows[i]))
