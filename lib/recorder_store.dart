@@ -87,6 +87,8 @@ class RecorderBottomSheetStore extends Store {
   AudioFormat get audioFormat => _audioFormat;
   AudioPlayer get player => _player;
 
+  bool get isLooping => (loopRange != null);
+
   getDurationLoopEnd() {
     if (loopRange == null) return null;
     return Duration(milliseconds: (loopRange.end * 1000).floor());

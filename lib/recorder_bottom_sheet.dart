@@ -215,7 +215,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
         Tween<double>(begin: 1.0, end: -1.0).animate(_controller);
 
     sub = stopAction.listen((event) {
-      if (!minimized) {
+      if (!minimized && !store.isLooping) {
         animateForward();
       }
     });

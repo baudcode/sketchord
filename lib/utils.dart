@@ -136,7 +136,7 @@ String resolveRichContent(String data) {
           text += char;
         }
       }
-      print("${chords.length} vs ${text.length}");
+      // print("${chords.length} vs ${text.length}");
       resolved.add(chords);
       resolved.add(text);
     } else {
