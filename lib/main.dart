@@ -8,9 +8,18 @@ import 'package:sound/local_storage.dart';
 import 'package:sound/menu.dart';
 import 'package:sound/model.dart';
 import 'settings_store.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry/sentry.dart';
 
-void main() {
-  runApp(App());
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn =
+          'https://1b2a119a53224f48966b710bc30123be@o1005300.ingest.sentry.io/5966036';
+    },
+    // Init your App.
+    appRunner: () => runApp(App()),
+  );
 }
 
 // ffe57c73
@@ -33,6 +42,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
   @override
   void initState() {
     super.initState();
+
     store = listenToStore(settingsToken);
 
     // initialize app with loaded settings
