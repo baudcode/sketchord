@@ -133,7 +133,9 @@ class Exporter {
     for (var section in note.sections
         .where((element) => element.content.trim().length > 0)) {
       int sectionLength = section.content.split("\n").length;
-      if ((rows + sectionLength) > 65) {
+
+      if (((sectionRows.length == 0 && (rows + sectionLength) > 50)) ||
+          ((sectionRows.length > 0) && (rows + sectionLength) > 58)) {
         sectionRows.add(sections);
         sections = [];
         rows = 0;
@@ -148,7 +150,8 @@ class Exporter {
       ]));
       sections.add(pw.Row(children: [pw.Container(height: 5)]));
       sections.add(pw.Row(children: [
-        pw.Text(section.content, style: pw.TextStyle(fontSize: 7))
+        pw.Text(section.content,
+            style: pw.TextStyle(fontSize: 11 * PdfPageFormat.point))
       ]));
       sections.add(pw.Row(children: [pw.Container(height: 10)]));
 
