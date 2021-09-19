@@ -55,9 +55,12 @@ class _BottomInfoState extends State<BottomInfo>
 
     String timeString = _elapsed;
 
-    if (length != null) {
+    if (recorderStore.loopRange != null) {
+      timeString += " / ${recorderStore.loopRange.end.toStringAsFixed(1)}";
+    } else {
       timeString += " / " + (length.inMilliseconds / 1000).toStringAsFixed(1);
     }
+
     timeString += " s";
 
     IconData icon = Icons.stop;
