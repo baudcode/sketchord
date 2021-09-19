@@ -414,6 +414,18 @@ class Settings {
     };
   }
 
+  factory Settings.defaults() {
+    return Settings(
+        audioFormat: AudioFormat.WAV,
+        theme: SettingsTheme.dark,
+        isInitialStart: false,
+        sortBy: SortBy.created,
+        sortDirection: SortDirection.down,
+        name: null,
+        noteListType: NoteListType.double,
+        editorView: EditorView.tabs);
+  }
+
   factory Settings.fromJson(Map<String, dynamic> json) {
     return Settings(
         theme:

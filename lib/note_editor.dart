@@ -5,6 +5,7 @@ import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:sound/dialogs/add_to_collection_dialog.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/import_dialog.dart';
+import 'package:sound/dialogs/permissions_dialog.dart';
 import 'package:sound/editor_views/additional_info.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/editor_views/section.dart';
@@ -33,12 +34,21 @@ class NoteEditor extends StatelessWidget {
 
   NoteEditor(this.note, {this.view});
 
+  Future<Settings> getCurrentSettings() async {
+    Settings settings = await LocalStorage().getSettings();
+    if (settings == null)
+      return Settings.defaults();
+    else
+      return settings;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (view != null) return NoteEditorContent(note, view);
 
     return FutureBuilder(
         builder: (BuildContext context, AsyncSnapshot<Settings> snap) {
+          print("snap data: ${snap}, ${snap.hasData}");
           if (snap.hasData) {
             EditorView v =
                 (snap.data == null) ? EditorView.tabs : snap.data.editorView;
@@ -47,7 +57,7 @@ class NoteEditor extends StatelessWidget {
             return CircularProgressIndicator();
           }
         },
-        future: LocalStorage().getSettings());
+        future: getCurrentSettings());
   }
 }
 
@@ -115,12 +125,17 @@ class NoteEditorState extends State<NoteEditorContent>
         },
       );
     });
+
+    audioRecordingPermissionDenied.listen((_) {
+      showHasNoPermissionsDialog(context);
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     recordingFinished.clearListeners();
+    audioRecordingPermissionDenied.clearListeners();
     //store.dispose();
     //recorderStore.dispose();
     super.dispose();
@@ -156,15 +171,12 @@ class NoteEditorState extends State<NoteEditorContent>
         });
   }
 
-  _copyToClipboard(BuildContext context) {
+  _copyToClipboard(BuildContext context) async {
     String text = Exporter.getText(store.note);
 
-    ClipboardManager.copyToClipBoard(text).then((result) {
-      final snackBar = SnackBar(
-        content: Text('Songtext copied'),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    });
+    var result = await ClipboardManager.copyToClipBoard(text);
+    FocusScope.of(context).requestFocus(new FocusNode());
+    showSnack(_globalKey.currentState, "Songtext copied");
   }
 
   _runPopupAction(String action) {

@@ -47,7 +47,11 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
 
     // initialize app with loaded settings
     LocalStorage().getSettings().then((s) {
-      updateSettings(s);
+      if (s != null) {
+        updateSettings(s);
+      } else {
+        updateSettings(Settings.defaults());
+      }
     });
 
     // _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
