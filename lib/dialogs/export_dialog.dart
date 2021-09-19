@@ -5,7 +5,7 @@ import 'package:sound/export.dart';
 import 'package:sound/model.dart';
 
 showExportDialog(BuildContext context, List<Note> notes,
-    {List<NoteCollection> collections}) {
+    {List<NoteCollection> collections, String title}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -13,12 +13,14 @@ showExportDialog(BuildContext context, List<Note> notes,
       ExportType current = ExportType.ZIP;
 
       _share() async {
-        await Exporter.exportShare(notes, current, collections: collections);
+        await Exporter.exportShare(notes, current,
+            collections: collections, title: title);
         Navigator.of(context).pop();
       }
 
       _save() async {
-        await Exporter.exportDialog(notes, current, collections: collections);
+        await Exporter.exportDialog(notes, current,
+            collections: collections, title: title);
         Navigator.of(context).pop();
       }
 

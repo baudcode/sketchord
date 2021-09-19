@@ -215,29 +215,6 @@ class PDFExporter {
 }
 
 class Exporter {
-  static Future<String> export(Note note, ExportType t) async {
-    if (note.artist == null) {
-      Settings settings = await LocalStorage().getSettings();
-      if (settings != null) {
-        note.artist = settings.name;
-      }
-    }
-
-    switch (t) {
-      case ExportType.JSON:
-        return json([note]);
-      case ExportType.PDF:
-        return pdf([note]);
-      case ExportType.TEXT:
-        return text([note]);
-      case ExportType.ZIP:
-        return zip([note]);
-
-      default:
-        return null;
-    }
-  }
-
   static Future<String> exportNotes(List<Note> notes, ExportType t,
       {List<NoteCollection> collections, String title}) async {
     Settings settings = await LocalStorage().getSettings();
@@ -272,9 +249,11 @@ class Exporter {
   }
 
   static Future<void> exportShare(List<Note> notes, ExportType t,
-      {List<NoteCollection> collections}) async {
-    String path = await exportNotes(notes, t, collections: collections);
-    String title = p.basename(path);
+      {List<NoteCollection> collections, String title}) async {
+    String path =
+        await exportNotes(notes, t, collections: collections, title: title);
+
+    title = p.basename(path);
 
     print("export to $path");
     await FlutterShare.shareFile(
@@ -289,8 +268,9 @@ class Exporter {
   }
 
   static Future<void> exportDialog(List<Note> notes, ExportType t,
-      {List<NoteCollection> collections}) async {
-    String path = await exportNotes(notes, t, collections: collections);
+      {List<NoteCollection> collections, String title}) async {
+    String path =
+        await exportNotes(notes, t, collections: collections, title: title);
     await saveFileDialog(path);
   }
 
@@ -342,7 +322,7 @@ class Exporter {
   static Future<String> getPath(List<Note> notes, String extension,
       {String title}) async {
     Directory d = await Backup().getFilesDir();
-    return p.join(d.path, getFilename(notes, extension));
+    return p.join(d.path, getFilename(notes, extension, title: title));
   }
 
   static Future<String> text(

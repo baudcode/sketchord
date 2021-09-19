@@ -3,6 +3,7 @@ import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/collection_editor_store.dart';
 import 'package:sound/db.dart';
 import 'package:sound/dialogs/choose_note_dialog.dart';
+import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/collections_store.dart';
@@ -260,6 +261,13 @@ class _CollectionEditorState extends State<CollectionEditor>
     }));
   }
 
+  _onExport() {
+    String title =
+        (store.collection.title.trim() == "" ? null : store.collection.title);
+    showExportDialog(context, store.collection.notes,
+        collections: [store.collection], title: title);
+  }
+
   @override
   Widget build(BuildContext context) {
     var notes = [];
@@ -315,6 +323,7 @@ class _CollectionEditorState extends State<CollectionEditor>
         )));
 
     List<Widget> actions = [
+      IconButton(icon: Icon(Icons.share), onPressed: _onExport),
       IconButton(icon: Icon(Icons.play_circle), onPressed: _onPlay),
       IconButton(
           icon:
