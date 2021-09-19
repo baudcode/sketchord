@@ -37,6 +37,7 @@ _showAddToCollectionDialog(
     bool openCollection = true,
     bool syncCollection = true}) async {
   List<NoteCollection> collections = await LocalStorage().getCollections();
+  print("found ${collections.length} collections");
 
   showDialog(
     context: context,

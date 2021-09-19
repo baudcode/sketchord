@@ -180,6 +180,7 @@ class RecorderBottomSheetStore extends Store {
 
     // Check permissions before starting
     bool hasPermissions = await init(path);
+
     print("has permissions: $hasPermissions");
 
     if (!hasPermissions) {
@@ -294,7 +295,7 @@ class RecorderBottomSheetStore extends Store {
               _state = RecorderState.RECORDING;
               trigger();
             } else {
-              //start();
+              audioRecordingPermissionDenied();
             }
           });
         }
@@ -385,6 +386,7 @@ Action resetRecorderState = Action();
 Action<RangeValues> setLoopRange = Action();
 Action<AudioFormat> setAudioFormat = Action();
 Action<bool> setMinimized = Action();
+Action audioRecordingPermissionDenied = Action();
 
 StoreToken recorderBottomSheetStoreToken =
     StoreToken(RecorderBottomSheetStore());
