@@ -4,16 +4,21 @@ import 'package:sound/backup.dart';
 import 'package:sound/export.dart';
 import 'package:sound/model.dart';
 
-showExportDialog(BuildContext context, Note note) {
+showExportDialog(BuildContext context, List<Note> notes,
+    {List<NoteCollection> collections}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       // return object of type Dialog
-      ExportType current = ExportType.PDF;
+      ExportType current = ExportType.ZIP;
 
-      _export() async {
-        await Exporter.exportShare(note, current);
+      _share() async {
+        await Exporter.exportShare(notes, current, collections: collections);
+        Navigator.of(context).pop();
+      }
 
+      _save() async {
+        await Exporter.exportDialog(notes, current, collections: collections);
         Navigator.of(context).pop();
       }
 
@@ -25,28 +30,24 @@ showExportDialog(BuildContext context, Note note) {
               child: Text("Format:"),
               padding: EdgeInsets.only(right: 10),
             ),
-            new DropdownButton(
+            DropdownButton(
                 value: current,
-                items: ExportType.values
+                items: [ExportType.ZIP, ExportType.PDF, ExportType.TEXT]
                     .map((e) => DropdownMenuItem(
                         child: Text(getExtension(e)), value: e))
                     .toList(),
                 onChanged: (v) => setState(() => current = v)),
           ]),
           actions: <Widget>[
-            new TextButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new ElevatedButton(
-              child: new Text("Export"),
-              onPressed: () {
-                _export();
-              },
-            ),
+            ElevatedButton(child: Text("Share"), onPressed: _share),
+            ElevatedButton(onPressed: _save, child: Text("Save"))
           ],
         );
       });

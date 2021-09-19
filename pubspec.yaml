@@ -71,6 +71,15 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/initial_data.json
+    # - assets/fonts/RobotoMono.ttf
+    # - assets/fonts/arial.ttf
+    # - assets/fonts/Hind-Bold.ttf
+    # - assets/fonts/Hind-Light.ttf
+    # - assets/fonts/Hind-Medium.ttf
+    # - assets/fonts/Hind-Regular.ttf
+    # - assets/fonts/Hind-SemiBold.ttf
+    # - assets/fonts/OpenSans-Bold.ttf
+    # - assets/fonts/OpenSans-Regular.ttf
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
   # For details regarding adding assets from package dependencies, see

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
@@ -12,14 +13,20 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sentry/sentry.dart';
 
 Future<void> main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn =
-          'https://1b2a119a53224f48966b710bc30123be@o1005300.ingest.sentry.io/5966036';
-    },
-    // Init your App.
-    appRunner: () => runApp(App()),
-  );
+  if (kReleaseMode) {
+    print("Running release mode");
+    await SentryFlutter.init(
+      (options) {
+        options.dsn =
+            'https://1b2a119a53224f48966b710bc30123be@o1005300.ingest.sentry.io/5966036';
+      },
+      // Init your App.
+      appRunner: () => runApp(App()),
+    );
+  } else {
+    print("Running debug mode");
+    runApp(App());
+  }
 }
 
 // ffe57c73

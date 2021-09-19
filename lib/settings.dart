@@ -177,8 +177,8 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
   }
 
   _onBackup() async {
-    String path = await Backup().exportZip(
-        await LocalStorage().getNotes(), await LocalStorage().getCollections());
+    String path = await Backup().exportZip(await LocalStorage().getNotes(),
+        collections: await LocalStorage().getCollections());
     showSnack(_globalKey.currentState, "Exported zip to $path");
     String filename = p.basename(path);
 

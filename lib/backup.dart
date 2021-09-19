@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sound/file_manager.dart';
 import 'package:uuid/uuid.dart';
 import "model.dart";
 import 'package:path/path.dart' as p;
@@ -43,14 +43,6 @@ class Backup {
     return Directory(p.join(root.path, 'files'));
   }
 
-  Future<BackupData> importZip() async {
-    File f = await FilePicker.getFile(
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
-    );
-    return await readZip(f.path);
-  }
-
   Future<BackupData> import() async {
     File f = await FilePicker.getFile(
       type: FileType.any,
@@ -60,7 +52,7 @@ class Backup {
       Note note = readNote(f.path);
       return BackupData(notes: [note], collections: []);
     } else if (f.path.endsWith(".zip")) {
-      return await readZip(f.path);
+      return await _readZip(f.path);
     }
 
     return BackupData(notes: [], collections: []);
@@ -71,7 +63,7 @@ class Backup {
     return new String.fromCharCodes(l);
   }
 
-  Future<BackupData> readZip(String path) async {
+  Future<BackupData> _readZip(String path) async {
     List<Note> notes = [];
     List<NoteCollection> collections = [];
 
@@ -195,18 +187,23 @@ class Backup {
     return readNote(f.path);
   }
 
-  Future<String> exportZip(
-      List<Note> notes, List<NoteCollection> collections) async {
+  Future<String> exportZip(List<Note> notes,
+      {List<NoteCollection> collections, String filename}) async {
     // Zip a directory to out.zip using the zipDirectory convenience method
     // Directory tempDir = await getExternalStorageDirectory();
 
     // cache directory which is located at /storage/emulated/0/Android/data/com.myapp.de/cache/
     //Directory tempDir = (await getExternalCacheDirectories())[0];
-    Directory tempDir = await getFilesDir();
-    print("saving into directory ${tempDir.path}");
 
-    String path = p.join(tempDir.path,
-        "sound_notes_backup_${DateTime.now().toIso8601String()}.zip");
+    Directory tempDir = await getFilesDir();
+    String path;
+
+    if (filename == null) {
+      path = p.join(tempDir.path,
+          "sound_notes_backup_${DateTime.now().toIso8601String()}.zip");
+    } else {
+      path = p.join(tempDir.path, filename);
+    }
 
     print("saving to $path");
     var encoder = ZipFileEncoder();
@@ -246,19 +243,22 @@ class Backup {
     encoder.addFile(File(notesPath), NOTES_FILENAME);
 
     // collections
-    for (NoteCollection c in collections) {
-      var filename = "${c.id}.json";
-      var collectionPath = p.join(tempDir.path, filename);
-      File(collectionPath).writeAsStringSync(jsonEncode(c.toJson()));
 
-      encoder.addFile(File(collectionPath), filename);
+    if (collections != null) {
+      for (NoteCollection c in collections) {
+        var filename = "${c.id}.json";
+        var collectionPath = p.join(tempDir.path, filename);
+        File(collectionPath).writeAsStringSync(jsonEncode(c.toJson()));
+
+        encoder.addFile(File(collectionPath), filename);
+      }
+
+      // write sets
+      var setsPath = p.join(tempDir.path, COLLECTIONS_FILENAME);
+      File(setsPath)
+          .writeAsStringSync(jsonEncode(collections.map((n) => n.id).toList()));
+      encoder.addFile(File(setsPath), COLLECTIONS_FILENAME);
     }
-
-    // write sets
-    var setsPath = p.join(tempDir.path, COLLECTIONS_FILENAME);
-    File(setsPath)
-        .writeAsStringSync(jsonEncode(collections.map((n) => n.id).toList()));
-    encoder.addFile(File(setsPath), COLLECTIONS_FILENAME);
 
     var audioFilesPath = p.join(tempDir.path, AUDIOFILES_FILENAME);
     File(audioFilesPath).writeAsStringSync(jsonEncode(audioFilesMap));

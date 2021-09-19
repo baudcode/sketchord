@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
+import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/note_views/appbar.dart';
 import 'package:sound/note_views/seach.dart';
@@ -209,6 +210,11 @@ class HomeContentState extends State<HomeContent>
           icon: Icon(Icons.clear), onPressed: () => clearSelection()),
       title: Text(storage.selectedNotes.length.toString()),
       actions: <Widget>[
+        IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () {
+              showExportDialog(context, storage.selectedNotes);
+            }),
         IconButton(
             icon: Icon(Icons.delete),
             onPressed: () {

@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
+import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/dialogs/add_to_collection_dialog.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
 import 'package:sound/dialogs/import_dialog.dart';
@@ -83,8 +84,8 @@ class NoteEditorState extends State<NoteEditorContent>
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
-  List<String> popupMenuActions = ["share", "copy", "add"];
-  List<String> popupMenuActionsLong = ["Export", "Copy", "Add to Set"];
+  List<String> popupMenuActions = ["export", "share", "copy", "add"];
+  List<String> popupMenuActionsLong = ["Export", "Share", "Copy", "Add to Set"];
   bool get useTabs => widget.view == EditorView.tabs;
   final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};
@@ -179,10 +180,36 @@ class NoteEditorState extends State<NoteEditorContent>
     showSnack(_globalKey.currentState, "Songtext copied");
   }
 
+  _sharePdf() async {
+    // TODO: open dialog with "Save" and "Share" Options
+
+    String path = await Exporter.pdf([store.note]);
+    print("generated pdf at $path");
+
+    await FlutterShare.shareFile(
+        title: '${store.note.title}.pdf',
+        text: 'Sharing PDF of ${store.note.title}',
+        filePath: path);
+
+    /*
+    String path = await Backup().exportNote(note);
+
+    await FlutterShare.shareFile(
+        title: '${note.title}.json',
+        text: 'Sharing Json of ${note.title}',
+        filePath: path);
+    */
+  }
+
   _runPopupAction(String action) {
     switch (action) {
       case "share":
-        showExportDialog(context, store.note);
+        _sharePdf();
+        // share text....
+        break;
+      case "export":
+        // export as pdf
+        showExportDialog(context, [store.note]);
         break;
       case "star":
         toggleStarred();

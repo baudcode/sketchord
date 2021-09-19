@@ -33,7 +33,7 @@ class ExportNoteState extends State<ExportNote> {
       showSnack(widget.state, "Please select a note to export first");
       return;
     }
-    String path = await Exporter.pdf(note);
+    String path = await Exporter.pdf([note]);
 
     await FlutterShare.shareFile(
         title: '${note.title}.pdf',
@@ -88,7 +88,7 @@ class ExportNoteState extends State<ExportNote> {
               child: Padding(
                   padding: EdgeInsets.only(left: 10),
                   child: ElevatedButton(
-                      onPressed: _export, child: Text("Export"))),
+                      onPressed: _export, child: Text("Export PDF"))),
             )
           ])
         ]);
