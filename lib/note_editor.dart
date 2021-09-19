@@ -49,7 +49,7 @@ class NoteEditor extends StatelessWidget {
         builder: (BuildContext context, AsyncSnapshot<Settings> snap) {
           print("snap data: ${snap}, ${snap.hasData}");
           if (snap.hasData) {
-            EditorView v = (view == null) ? view : snap.data.editorView;
+            EditorView v = (view != null) ? view : snap.data.editorView;
             return NoteEditorContent(note, v, snap.data.sectionContentFontSize);
           } else {
             return CircularProgressIndicator();

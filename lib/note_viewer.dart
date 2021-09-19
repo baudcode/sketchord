@@ -16,7 +16,8 @@ class NoteCollectionViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NotesViewer(collection.notes,
+    return NotesViewer(
+        collection.notes.where((note) => !note.discarded).toList(),
         showAdditionalInformation: false,
         showTitle: true,
         showZoomPlayback: true,
