@@ -84,6 +84,7 @@ class Backup {
       }
       final noteIds = jsonDecode(decodeZipContent(noteListFile));
       print("zip contains $noteIds");
+      Map<String, String> noteIdMap = {};
 
       for (String noteId in noteIds) {
         var noteFile = archive.files
@@ -102,7 +103,8 @@ class Backup {
         }
 
         for (AudioFile f in note.audioFiles) {
-          f.id = Uuid().v4();
+          noteIdMap[f.id] = Uuid().v4();
+          f.id = noteIdMap[f.id];
         }
 
         notes.add(note);
@@ -128,6 +130,16 @@ class Backup {
             var collectionMap = jsonDecode(decodeZipContent(collectionFile));
             NoteCollection c = NoteCollection.fromJson(collectionMap);
             collections.add(c);
+          }
+        }
+      }
+
+      for (NoteCollection c in collections) {
+        // update id
+        c.id = Uuid().v4();
+        for (Note note in c.notes) {
+          if (noteIdMap.containsKey(note.id)) {
+            note.id = noteIdMap[note.id];
           }
         }
       }
