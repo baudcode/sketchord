@@ -337,8 +337,6 @@ class _CollectionEditorState extends State<CollectionEditor>
           child: Scaffold(
               floatingActionButton: FloatingActionButton(
                 onPressed: floatingActionButtonPressed,
-                foregroundColor: Colors.white,
-                backgroundColor: Theme.of(context).accentColor,
                 child: IconButton(
                   icon: Icon(Icons.add),
                   onPressed: floatingActionButtonPressed,
