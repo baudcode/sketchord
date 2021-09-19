@@ -214,8 +214,8 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     _sheetScaleAnimation =
         Tween<double>(begin: 1.0, end: -1.0).animate(_controller);
 
-    sub = stopAction.listen((event) {
-      if (!minimized && !store.isLooping) {
+    sub = stopAction.listen((force) {
+      if (!minimized && (!store.isLooping || force)) {
         animateForward();
       }
     });
@@ -323,6 +323,8 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
         onPanUpdate: (details) {
           if (details.delta.dy < -5 && minimized) {
             onExpand();
+          } else if (details.delta.dy > 5 && !minimized) {
+            onMinimize();
           }
         },
         child: Column(
