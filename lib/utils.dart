@@ -60,7 +60,10 @@ showUndoSnackbar(
     ValueChanged<dynamic> onUndo,
     Function onClose}) {
   var snackbar = SnackBar(
-      content: Text(message),
+      content: Text(
+        message,
+        style: Theme.of(context).appBarTheme.textTheme.bodyText1,
+      ),
       duration: Duration(seconds: 3),
       action: SnackBarAction(
           label: "Undo",
@@ -79,7 +82,6 @@ hideSnack(BuildContext context) {
 
 showSnack(var state, String message, {Duration duration = defaultDuration}) {
   var snackbar = SnackBar(content: Text(message), duration: duration);
-
   state.showSnackBar(snackbar);
 }
 
