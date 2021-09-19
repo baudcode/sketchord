@@ -57,7 +57,7 @@ class _BottomInfoState extends State<BottomInfo>
 
     if (recorderStore.loopRange != null) {
       timeString += " / ${recorderStore.loopRange.end.toStringAsFixed(1)}";
-    } else {
+    } else if (length != null) {
       timeString += " / " + (length.inMilliseconds / 1000).toStringAsFixed(1);
     }
 
