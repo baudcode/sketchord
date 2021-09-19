@@ -414,7 +414,11 @@ class _NoteViewerState extends State<NotesViewer>
                       child: Container(
                           alignment: Alignment.centerRight,
                           padding: EdgeInsets.only(right: 8, bottom: 8),
-                          child: Text("${page + 1}/${widget.notes.length}")))),
+                          child: Text("${page + 1}/${widget.notes.length}",
+                              style: Theme.of(context)
+                                  .appBarTheme
+                                  .textTheme
+                                  .button)))),
           ),
         ),
       );
