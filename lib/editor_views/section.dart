@@ -96,9 +96,15 @@ class SectionListItem extends StatelessWidget {
   final Section section;
   final bool moveDown, moveUp;
   final GlobalKey globalKey;
+  final double contentFontSize;
 
   const SectionListItem(
-      {this.section, this.moveUp, this.moveDown, this.globalKey, Key key})
+      {this.section,
+      this.moveUp,
+      this.moveDown,
+      this.globalKey,
+      this.contentFontSize = 10,
+      Key key})
       : super(key: key);
 
   @override
@@ -136,7 +142,13 @@ class SectionListItem extends StatelessWidget {
                           padding: EdgeInsets.only(bottom: 10),
                           child: Editable(
                               initialValue: section.title,
-                              textStyle: Theme.of(context).textTheme.subtitle1,
+                              textStyle: GoogleFonts.robotoMono(
+                                  textStyle: Theme.of(context)
+                                      .textTheme
+                                      .subtitle1
+                                      .copyWith(
+                                fontFeatures: [FontFeature.enable('smcp')],
+                              )),
                               onChange: (s) =>
                                   changeSectionTitle(Tuple2(section, s)),
                               hintText: 'Section Title',
@@ -144,12 +156,16 @@ class SectionListItem extends StatelessWidget {
                       Wrap(children: [
                         Editable(
                             initialValue: section.content,
-                            textStyle: Theme.of(context)
-                                .textTheme
-                                .subtitle2
-                                .copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.normal),
+                            textStyle: GoogleFonts.robotoMono(
+                                textStyle: Theme.of(context)
+                                    .textTheme
+                                    .subtitle2
+                                    .copyWith(
+                                        fontSize: contentFontSize,
+                                        fontFeatures: [
+                                          FontFeature.tabularFigures()
+                                        ],
+                                        fontWeight: FontWeight.normal)),
                             onChange: (s) => changeContent(Tuple2(section, s)),
                             hintText: 'Content',
                             multiline: true)

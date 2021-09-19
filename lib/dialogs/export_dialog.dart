@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/backup.dart';
@@ -24,6 +25,10 @@ showExportDialog(BuildContext context, List<Note> notes,
         Navigator.of(context).pop();
       }
 
+      var options = (kReleaseMode)
+          ? [ExportType.ZIP, ExportType.PDF, ExportType.TEXT]
+          : [ExportType.ZIP, ExportType.PDF, ExportType.TEXT, ExportType.JSON];
+
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
           title: new Text("Export Options"),
@@ -34,7 +39,7 @@ showExportDialog(BuildContext context, List<Note> notes,
             ),
             DropdownButton(
                 value: current,
-                items: [ExportType.ZIP, ExportType.PDF, ExportType.TEXT]
+                items: options
                     .map((e) => DropdownMenuItem(
                         child: Text(getExtension(e)), value: e))
                     .toList(),

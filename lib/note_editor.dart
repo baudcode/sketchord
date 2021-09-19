@@ -45,15 +45,12 @@ class NoteEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (view != null) return NoteEditorContent(note, view);
-
     return FutureBuilder(
         builder: (BuildContext context, AsyncSnapshot<Settings> snap) {
           print("snap data: ${snap}, ${snap.hasData}");
           if (snap.hasData) {
-            EditorView v =
-                (snap.data == null) ? EditorView.tabs : snap.data.editorView;
-            return NoteEditorContent(note, v);
+            EditorView v = (view == null) ? view : snap.data.editorView;
+            return NoteEditorContent(note, v, snap.data.sectionContentFontSize);
           } else {
             return CircularProgressIndicator();
           }
@@ -65,8 +62,9 @@ class NoteEditor extends StatelessWidget {
 class NoteEditorContent extends StatefulWidget {
   final Note note;
   final EditorView view;
+  final double sectionContentFontSize;
 
-  NoteEditorContent(this.note, this.view);
+  NoteEditorContent(this.note, this.view, this.sectionContentFontSize);
 
   @override
   State<StatefulWidget> createState() {
@@ -358,6 +356,7 @@ class NoteEditorState extends State<NoteEditorContent>
       items[TabType.structure].add(SectionListItem(
           globalKey: dismissables[store.note.sections[i]],
           section: store.note.sections[i],
+          contentFontSize: widget.sectionContentFontSize,
           moveDown: showMoveDown,
           moveUp: showMoveUp));
     }

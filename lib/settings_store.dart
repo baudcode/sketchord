@@ -8,12 +8,7 @@ import 'package:sound/recorder_store.dart';
 class SettingsStore extends Store {
   // default values
 
-  Settings _settings = Settings(
-      audioFormat: AudioFormat.WAV,
-      theme: SettingsTheme.dark,
-      name: null,
-      noteListType: NoteListType.double,
-      editorView: EditorView.tabs);
+  Settings _settings = Settings.defaults();
 
   // getter
   SettingsTheme get theme => _settings.theme;
@@ -77,9 +72,15 @@ class SettingsStore extends Store {
     updateSettings.listen((s) {
       if (s != null) {
         _settings = s;
-        print("settings audio format");
+        print("Update Settings in store");
         trigger();
       }
+    });
+
+    changeSectionContentFontSize.listen((value) async {
+      _settings.sectionContentFontSize = value;
+      await LocalStorage().syncSettings(_settings);
+      trigger();
     });
   }
 }
@@ -90,6 +91,7 @@ Action<String> setName = Action();
 Action<NoteListType> setDefaultNoteListType = Action();
 Action<EditorView> setDefaultEditorView = Action();
 Action<AudioFormat> setDefaultAudioFormat = Action();
+Action<double> changeSectionContentFontSize = Action();
 Action<Settings> updateSettings = Action();
 Action<SortDirection> setDefaultSortDirection = Action();
 Action<SortBy> setDefaultSortBy = Action();

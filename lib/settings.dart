@@ -1,6 +1,7 @@
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/change_number_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
@@ -86,6 +87,24 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
         Expanded(child: Text("AudioFormat: ")),
         ElevatedButton(
             child: Text(_audioFormatAsString()), onPressed: _toggleAudioFormat),
+      ],
+    ));
+  }
+
+  _changeContentSectionTextSize() {
+    return _wrapItem(Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Expanded(child: Text("Section Font Size: ")),
+        ElevatedButton(
+            child: Text(store.settings.sectionContentFontSize.toString()),
+            onPressed: () {
+              showChangeNumberDialog(
+                  context, "", store.settings.sectionContentFontSize, (value) {
+                changeSectionContentFontSize(value);
+              });
+            }),
       ],
     ));
   }
@@ -224,6 +243,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       _themeItem(),
       _audioFormatItem(),
       _editorViewItem(),
+      _changeContentSectionTextSize(),
       SizedBox(height: 10),
       ElevatedButton(child: Text("Backup"), onPressed: _onBackup),
       SizedBox(height: 10),

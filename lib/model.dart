@@ -390,6 +390,7 @@ class Settings {
   bool isInitialStart;
   SortBy sortBy;
   SortDirection sortDirection;
+  double sectionContentFontSize;
 
   Settings(
       {this.theme,
@@ -399,7 +400,8 @@ class Settings {
       this.isInitialStart,
       this.sortBy,
       this.sortDirection,
-      this.editorView});
+      this.editorView,
+      this.sectionContentFontSize});
 
   Map<String, dynamic> toJson() {
     return {
@@ -410,7 +412,8 @@ class Settings {
       "sortDirection": serializeSortDirection(sortDirection),
       "name": name,
       "isInitialStart": isInitialStart,
-      "noteListType": serializeNoteListType(noteListType)
+      "noteListType": serializeNoteListType(noteListType),
+      "sectionContentFontSize": sectionContentFontSize
     };
   }
 
@@ -422,6 +425,7 @@ class Settings {
         sortBy: SortBy.created,
         sortDirection: SortDirection.down,
         name: null,
+        sectionContentFontSize: 10,
         noteListType: NoteListType.double,
         editorView: EditorView.tabs);
   }
@@ -446,6 +450,10 @@ class Settings {
                 ? SortDirection.up
                 : SortDirection.down
             : SortDirection.up,
+        sectionContentFontSize: json.containsKey("sectionContentFontSize") &&
+                json['sectionContentFontSize'] != null
+            ? json['sectionContentFontSize']
+            : 10,
         sortBy: json.containsKey('sortBy')
             ? deserializeSortBy(json['sortBy'])
             : SortBy.lastModified);
