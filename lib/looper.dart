@@ -44,9 +44,9 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
 
   _changeRangeValues(RangeValues values) {
     print("CHANGE.....");
-    AudioFile newFile = store.currentAudioFile;
-    newFile.loopRange = values;
-    changeAudioFile(newFile);
+    //AudioFile newFile = store.currentAudioFile;
+    //newFile.loopRange = values;
+    //changeAudioFile(newFile);
 
     setLoopRange(values);
 

@@ -339,10 +339,12 @@ class RecorderBottomSheetStore extends Store {
     });
 
     setLoopRange.listen((range) async {
+      print("SetLoopRange $range $loopRange $_state");
       if (range != null &&
           (loopRange == null ||
               (loopRange != null && range.start != loopRange.start))) {
         if (_state == RecorderState.PLAYING) {
+          print("seeking to start of range");
           var start = Duration(milliseconds: (range.start * 1000).floor());
           await _player.seek(start);
         }
