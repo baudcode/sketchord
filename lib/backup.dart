@@ -95,6 +95,16 @@ class Backup {
         }
         var noteMap = jsonDecode(decodeZipContent(noteFile));
         Note note = Note.fromJson(noteMap, noteMap['id']);
+        note.id = Uuid().v4();
+
+        for (Section section in note.sections) {
+          section.id = Uuid().v4();
+        }
+
+        for (AudioFile f in note.audioFiles) {
+          f.id = Uuid().v4();
+        }
+
         notes.add(note);
       }
 
@@ -125,18 +135,35 @@ class Backup {
       final audioFilesFile = archive.files
           .firstWhere((a) => a.name == AUDIOFILES_FILENAME, orElse: () => null);
 
+      Map<String, String> renameMap = {};
+
       if (audioFilesFile == null) {
         print("cannot find audiofiles json");
       } else {
         print("restoring audio files");
         Map<String, dynamic> audioFilesMap =
             jsonDecode(decodeZipContent(audioFilesFile));
+        final filesDir = await getFilesDir();
+
         audioFilesMap.forEach((internalName, path) {
           final file = archive.files
               .firstWhere((a) => a.name == internalName, orElse: () => null);
-          if (File(path).existsSync() || file == null) {
+          if (file == null) {
             print(
-                "Error: cannot find audio file / already exists $internalName that maps to $path");
+                "Error: cannot find audio file in archive $internalName that maps to $path");
+          } else if (File(path).existsSync() && !renameMap.containsKey(path)) {
+            final data = file.content as List<int>;
+
+            final ext = p.extension(path);
+            final newPath = p.join(filesDir.path, Uuid().v4() + ext);
+
+            print("write file to new path $newPath because it already exists");
+
+            File(newPath)
+              ..createSync(recursive: true)
+              ..writeAsBytesSync(data);
+
+            renameMap[path] = newPath;
           } else {
             try {
               print(
@@ -151,6 +178,14 @@ class Backup {
             }
           }
         });
+
+        for (Note note in notes) {
+          for (AudioFile f in note.audioFiles) {
+            if (renameMap.containsKey(f.path)) {
+              f.path = renameMap[f.path];
+            }
+          }
+        }
       }
     } catch (e) {
       print("unknwon error occurred $e");
