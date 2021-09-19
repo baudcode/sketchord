@@ -80,9 +80,24 @@ hideSnack(BuildContext context) {
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
 }
 
-showSnack(var state, String message, {Duration duration = defaultDuration}) {
-  var snackbar = SnackBar(content: Text(message), duration: duration);
+showSnack(ScaffoldState state, String message,
+    {Duration duration = defaultDuration}) {
+  var snackbar = SnackBar(
+      content: Text(message,
+          style: Theme.of(state.context).appBarTheme.textTheme.bodyText1),
+      duration: duration);
+
   state.showSnackBar(snackbar);
+}
+
+showSnackByContext(BuildContext context, String message,
+    {Duration duration = defaultDuration}) {
+  var snackbar = SnackBar(
+      content: Text(message,
+          style: Theme.of(context).appBarTheme.textTheme.bodyText1),
+      duration: duration);
+
+  ScaffoldMessenger.of(context).showSnackBar(snackbar);
 }
 
 Color getSelectedCardColor(BuildContext context) {

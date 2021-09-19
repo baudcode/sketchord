@@ -129,7 +129,7 @@ showTextImportDialog(BuildContext context, String text) async {
       showImportDialog(
           context, "Import ${ultimateNote.title}", onNew, onImport);
     } else {
-      showSnack(Scaffold.of(context), "Cannot retrieve note from $text");
+      showSnackByContext(context, "Cannot retrieve note from $text");
     }
   } else {
     ParsedNote parsed = parseText(text);
