@@ -11,7 +11,6 @@ import 'file_manager.dart';
 import 'note_list.dart';
 import 'storage.dart';
 import 'package:flutter_flux/flutter_flux.dart';
-import 'dart:ui';
 import 'note_editor.dart';
 import 'model.dart';
 //import 'recorder.dart';
