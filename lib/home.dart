@@ -202,22 +202,47 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliverNoteSelectionAppBar() {
-    return SliverAppBar(
-      pinned: true,
-      flexibleSpace: _sortingView(),
-      expandedHeight: 80,
-      leading: IconButton(
-          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
-      title: Text(storage.selectedNotes.length.toString()),
-      actions: <Widget>[
-        IconButton(
-            icon: Icon(Icons.share),
-            onPressed: () {
-              showExportDialog(context, storage.selectedNotes);
-            }),
-        IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () {
+    var actions = <Widget>[
+      IconButton(
+          icon: Icon(Icons.share),
+          onPressed: () {
+            showExportDialog(context, storage.selectedNotes);
+          }),
+      IconButton(
+          icon: Icon(Icons.delete),
+          onPressed: () async {
+            bool contains = false;
+
+            for (Note note in storage.selectedNotes) {
+              if (await LocalStorage().getNumCollectionsByNoteId(note.id) > 0)
+                contains = true;
+            }
+
+            if (contains) {
+              String oneOrMore =
+                  "One or more notes are part of a set. Notes will be removed from their sets. Are you sure you want to continue?";
+
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      content: Text(oneOrMore),
+                      actions: <Widget>[
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text("No")),
+                        ElevatedButton(
+                            onPressed: () {
+                              discardAllSelectedNotes(true);
+                              Navigator.of(context).pop();
+                            },
+                            child: Text("Yes"))
+                      ],
+                    );
+                  });
+            } else {
               showUndoSnackbar(
                   data: null,
                   context: context,
@@ -228,42 +253,49 @@ class HomeContentState extends State<HomeContent>
                   message:
                       "Moved ${storage.selectedNotes.length} Notes to Trash");
 
-              discardAllSelectedNotes();
-
-              // showSnack(Scaffold.of(context),
-              //     "Moved ${storage.selectedNotes.length} Notes to Trash");
-            }),
-        IconButton(
-            icon: Icon(Icons.color_lens),
-            onPressed: () {
-              showColorPickerDialog(context, null, (c) {
-                colorAllSelectedNotes(c);
-              });
-            }),
-        IconButton(
-            icon: Icon((storage.selectedNotes
-                            .where((e) => e.starred)
-                            .toList()
-                            .length
-                            .toDouble() /
-                        storage.selectedNotes.length.toDouble()) <
-                    0.5
-                ? Icons.star
-                : Icons.star_border),
-            onPressed: () {
-              if ((storage.selectedNotes
+              discardAllSelectedNotes(false);
+            }
+          }),
+      IconButton(
+          icon: Icon(Icons.color_lens),
+          onPressed: () {
+            showColorPickerDialog(context, null, (c) {
+              colorAllSelectedNotes(c);
+            });
+          }),
+      IconButton(
+          icon: Icon((storage.selectedNotes
                           .where((e) => e.starred)
                           .toList()
                           .length
                           .toDouble() /
                       storage.selectedNotes.length.toDouble()) <
-                  0.5) {
-                starAllSelectedNotes();
-              } else {
-                unstarAllSelectedNotes();
-              }
-            }),
-      ],
+                  0.5
+              ? Icons.star
+              : Icons.star_border),
+          onPressed: () {
+            if ((storage.selectedNotes
+                        .where((e) => e.starred)
+                        .toList()
+                        .length
+                        .toDouble() /
+                    storage.selectedNotes.length.toDouble()) <
+                0.5) {
+              starAllSelectedNotes();
+            } else {
+              unstarAllSelectedNotes();
+            }
+          })
+    ];
+
+    return SliverAppBar(
+      pinned: true,
+      flexibleSpace: _sortingView(),
+      expandedHeight: 80,
+      leading: IconButton(
+          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
+      title: Text(storage.selectedNotes.length.toString()),
+      actions: actions,
     );
   }
 

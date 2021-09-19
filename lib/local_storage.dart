@@ -293,6 +293,18 @@ class LocalStorage {
     _collectionController.sink.add(collections);
   }
 
+  Future<int> getNumCollectionsByNoteId(String noteId) async {
+    final List<Map<String, dynamic>> maps = await (await getDatabase()).query(
+        collectionMappingTable,
+        where: "noteId = ?",
+        whereArgs: [noteId]);
+
+    if (maps == null)
+      return 0;
+    else
+      return maps.length;
+  }
+
   Future<List<Note>> getNotesByCollectionId(String collectionId) async {
     final List<Map<String, dynamic>> maps = await (await getDatabase()).query(
         collectionMappingTable,
@@ -373,9 +385,18 @@ class LocalStorage {
     );
   }
 
-  Future<void> discardNote(Note note) async {
+  Future<void> discardNote(Note note, bool removeFromCollection) async {
     note.discarded = true;
     _updateNote(note);
+
+    if (removeFromCollection) {
+      print("removing note from collections");
+
+      final db = await getDatabase();
+
+      await db.delete(collectionMappingTable,
+          where: "noteId = ?", whereArgs: [note.id]);
+    }
   }
 
   Future<void> _updateNote(Note note) async {

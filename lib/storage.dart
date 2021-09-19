@@ -7,107 +7,6 @@ import 'model.dart';
 import 'db.dart';
 import 'package:flutter/material.dart' show Color;
 
-List<Note> notes = [
-  Note(
-      title: "Why am I, why am I the way I am",
-      createdAt: DateTime.now(),
-      lastModified: DateTime.now(),
-      key: "C Major",
-      tuning: "Dadgad",
-      label: "Song",
-      starred: true,
-      audioFiles: [
-        AudioFile.create(
-            duration: Duration(seconds: 5),
-            path: "/data/sdcard/files/test_file.mp4")
-      ],
-      sections: [
-        Section(
-            title: 'Verse 1',
-            content:
-                "The world comes crashing down\nand you are the only one\nWho helps me though the dark/past\nSo Drunk and fallen apart"),
-        Section(
-            title: "Chorus",
-            content: "Why am I, why am I the way I am I don't understand"),
-        Section(
-            title: "Bridge",
-            content:
-                "Lately, I dont like myself\nI cant even look myself in the eye\nSo shockingly evil and vile")
-      ]),
-  Note(
-      title: "Time",
-      createdAt: DateTime.now(),
-      lastModified: DateTime.now(),
-      key: "B Dur",
-      tuning: "Standard",
-      label: "Song",
-      starred: false,
-      audioFiles: [],
-      sections: [
-        Section(
-            title: 'Verse 1',
-            content:
-                """        EM                                         Em.    D C C C 
-Time has gone and young love passed
-     G.        D.             C C C c
-A blurry dot in the dark
-Its difficult to go back to what once was
-A flame sparks again
-To take me back to when
-"""),
-        Section(
-            title: "Chorus", content: "When we were young and full of love"),
-        Section(title: "Verse 2", content: """
-                Em                   Em                D     C      C   C
-Its been some time, since we talked
-         G    G         D       C         
-when was our last walk?
-Em                              G                        D    D        
-oh what makes us happy and what not?
-Em              D       G
-please ask me again
-    em           G             D      D
-or take me back to when
-                """),
-        Section(title: "Bridge", content: """Em Em D/F# D/F# C D D D D  
-Em Em D/F# D/F# C D D D D 
-Em C Em G 
-G G""")
-      ]),
-  Note(
-      title: "Sleep",
-      createdAt: DateTime.now(),
-      lastModified: DateTime.now(),
-      key: "C Dur",
-      capo: "7",
-      tuning: "Standard",
-      label: "Song",
-      starred: false,
-      audioFiles: [],
-      sections: [
-        Section(
-            title: 'Verse 1',
-            content:
-                """   G G            D/B  D/B      C         D           G   G  G
-I'm 25 and I don't know what I want in live
-My girlfriend and I we're moving along the lines
-We're havin jobs that pay nice, they make us feel alright
-But if I am honstest, is this leading to a better life?"""),
-        Section(
-            title: "Chorus",
-            content: """I think that I just want to sleep alright
-And wake up without a gun to my mind
-Mmmmmhh"""),
-        Section(
-            title: "Verse 2",
-            content: """times' changing, its better to live alone
-without someone looking under every stone
-the next thing you remember is having children on your own
-rolling around and looking under every stone"""),
-        Section(title: "Bridge", content: """""")
-      ]),
-];
-
 enum FilterBy { LABEL, TUNING, KEY, CAPO }
 
 class Filter {
@@ -247,10 +146,11 @@ class StaticStorage extends Store {
       trigger();
     });
 
-    discardAllSelectedNotes.listen((_) {
+    discardAllSelectedNotes.listen((removeFromCollections) {
       for (Note note in _selectedNotes) {
-        LocalStorage().discardNote(note);
+        LocalStorage().discardNote(note, removeFromCollections);
       }
+
       _prevDiscardedNoteIds = _selectedNotes.map((e) => e.id).toList();
       _selectedNotes.clear();
       trigger();
@@ -453,7 +353,7 @@ Action openSettings = Action();
 
 Action<Note> triggerSelectNote = Action();
 Action removeAllSelectedNotes = Action();
-Action discardAllSelectedNotes = Action();
+Action<bool> discardAllSelectedNotes = Action();
 Action undoDiscardAllSelectedNotes = Action();
 Action starAllSelectedNotes = Action();
 Action unstarAllSelectedNotes = Action();
