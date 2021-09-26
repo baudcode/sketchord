@@ -193,7 +193,9 @@ class Note {
   DateTime createdAt, lastModified;
   bool discarded;
   Color color;
-  int bpm;
+
+  int bpm; // beats per minute
+  int length; // length in seconds
 
   double scrollOffset;
   double zoom; // text scaling factor
@@ -220,6 +222,7 @@ class Note {
         bpm: null,
         zoom: 1.0,
         scrollOffset: 1.0,
+        length: null, // seconds
         audioFiles: []);
   }
 
@@ -239,6 +242,7 @@ class Note {
       "scrollOffset": scrollOffset,
       "zoom": zoom,
       "bpm": bpm,
+      "length": length,
       "color": color == null ? null : serializeColor(color),
       "sections":
           sections.map<Map<dynamic, dynamic>>((s) => s.toJson()).toList(),
@@ -259,7 +263,7 @@ class Note {
         lastModified: json.containsKey("lastModified")
             ? deserializeDateTime(json['lastModified'])
             : DateTime.now(),
-
+        length: json.containsKey('length') ? json['length'] : null,
         // additional info
         key: json.containsKey("key") ? json['key'] : null,
         tuning: json.containsKey("tuning") ? json['tuning'] : null,
@@ -319,6 +323,7 @@ class Note {
       this.artist,
       this.color,
       this.bpm,
+      this.length,
       this.zoom = 1.0,
       this.scrollOffset = 1.0,
       this.starred = false,
