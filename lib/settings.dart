@@ -103,7 +103,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
               showChangeNumberDialog(
                   context, "", store.settings.sectionContentFontSize, (value) {
                 changeSectionContentFontSize(value);
-              });
+              }, min: 5, max: 15);
             }),
       ],
     ));
