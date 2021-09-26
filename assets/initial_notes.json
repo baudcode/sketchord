@@ -1,0 +1,179 @@
+{
+    "notes": [
+        {
+            "id": "8aefd5f1-2a88-4b9f-a719-67160fb9840d",
+            "title": "The Parting Glass",
+            "createdAt": "2021-9-19-20-0-1-204-292",
+            "lastModified": "2021-9-19-21-25-38-160-353",
+            "key": "A",
+            "tuning": "EADGBE",
+            "capo": null,
+            "instrument": null,
+            "label": "traditional",
+            "artist": "",
+            "starred": 0,
+            "scrollOffset": 1.0,
+            "zoom": 1.0,
+            "bpm": null,
+            "color": null,
+            "sections": [
+                {
+                    "title": "Verse 1",
+                    "content": "F#m      D          A      E\nOf all the money that e'er I had\n     F#m      D       A     E\nI've spent it in good company\n    F#m      D        A         E\nAnd all the harm that e'er I've done\n F#m    D      Bm       F#m\nAlas it was to none but me\n    A        D        A       E\nAnd all I've done for want of wit\n   Bm  A  E     F#m     E\nTo memory now I can't recall\n   F#m     D      A       E\nSo fill to me the parting glass\n     F#m       D      Bm       F#m\nGood night and joy be with you all",
+                    "id": "5089ec8a-09a9-49ab-bdfa-ecec503bf814",
+                    "lastModified": "2021-9-19-20-0-1-204-378",
+                    "createdAt": "2021-9-19-20-0-1-204-378"
+                },
+                {
+                    "title": "Verse 2",
+                    "content": "F#m      D              A      E\nOf all the comrades that e'er I had\n       F#m      D       A     E\nThey are sorry for my going away\n    F#m        D              A         E\nAnd all the sweethearts that e'er I had\n             F#m    D      Bm       F#m\nThey would wish me one more day to stay\n    A        D        A       E\nBut since it falls unto my lot\n     Bm    A  E       F#m     E\nThat I should rise and you should not\n     F#m       D           A         E\nI'll gently rise and I'll softly call\n     F#m       D      Bm       F#m\nGood night and joy be with you all",
+                    "id": "06a9636e-9907-43ac-9dc9-a7489f2cb97c",
+                    "lastModified": "2021-9-19-20-0-1-204-379",
+                    "createdAt": "2021-9-19-20-0-1-204-379"
+                },
+                {
+                    "title": "Verse 3",
+                    "content": "F#m      D        A      E\nA man may drink and not be drunk\n  F#m      D         A      E\nA man may fight and not be slain\n  F#m      D        A      E\nA man may court a pretty girl\n      F#m     D         Bm     F#m\nAnd perhaps be welcomed back again\n    A        D       A        E\nBut since it has so ought to be\n     Bm     A  E        F#m     E\nBy a time to rise and a time to fall\n     F#m     D        A          E\nCome fill to me the parting glass\n     F#m       D           A         E\nGoodnight and joy be with you all\n     F#m       D      Bm       F#m\nGoodnight and joy be with you all",
+                    "id": "05a29601-b485-4189-81cc-e03654d8400c",
+                    "lastModified": "2021-9-19-20-0-1-204-381",
+                    "createdAt": "2021-9-19-20-0-1-204-380"
+                }
+            ],
+            "audioFiles": [],
+            "discarded": 0
+        },
+        {
+            "id": "1ce6c58c-9874-4e11-ae22-5a038d261fe4",
+            "title": "Happy Birthday",
+            "createdAt": "2021-9-19-21-24-10-207-227",
+            "lastModified": "2021-9-19-21-24-57-852-220",
+            "key": "D",
+            "tuning": "EADGBE",
+            "capo": "2",
+            "instrument": "Guitar",
+            "label": "traditional",
+            "artist": null,
+            "starred": 0,
+            "scrollOffset": 1.0,
+            "zoom": 1.0,
+            "bpm": null,
+            "color": null,
+            "sections": [
+                {
+                    "title": "Chorus",
+                    "content": "\n      C           G7\nHappy Birthday to You\n\n      G7          C\nHappy Birthday to You\n\n      C             F\nHappy Birthday dear -NAME-\n\n      C        G7 C\nHappy Birthday to You",
+                    "id": "1101766f-79e7-4c6d-885f-95ac51864a04",
+                    "lastModified": "2021-9-19-21-24-10-208-283",
+                    "createdAt": "2021-9-19-21-24-10-208-284"
+                }
+            ],
+            "audioFiles": [],
+            "discarded": 0
+        },
+        {
+            "id": "e2a2e5fb-0679-4aad-9336-ebbdbffe1d66",
+            "title": "Crossroad Blues",
+            "createdAt": "2021-9-19-21-52-7-833-889",
+            "lastModified": "2021-9-19-22-0-49-925-180",
+            "key": "A#",
+            "tuning": "EADGBE",
+            "capo": "1",
+            "instrument": "Guitar",
+            "label": "95bpm",
+            "artist": "Robert Johnson",
+            "starred": 0,
+            "scrollOffset": 1.0,
+            "zoom": 0.8573749999999999,
+            "bpm": null,
+            "color": null,
+            "sections": [
+                {
+                    "title": "Intro",
+                    "content": "A  E",
+                    "id": "0c817242-0c8c-4eca-aafe-0b9e9870ad16",
+                    "lastModified": "2021-9-19-21-52-5-279-193",
+                    "createdAt": "2021-9-19-21-52-5-279-193"
+                },
+                {
+                    "title": "Verse 1",
+                    "content": "A                                         D                        A\nI went to the crossroad, fell down on my knees\n            D                                                A\nI went to the crossroad, fell down on m kne[A]es\nE\nAsked the Lord above, \"Have mercy now\nD                     A\nSave poor Bob if you please\"",
+                    "id": "8edfd033-020e-4209-878e-481239c027df",
+                    "lastModified": "2021-9-19-21-52-5-381-193",
+                    "createdAt": "2021-9-19-21-52-5-381-193"
+                },
+                {
+                    "title": "Verse 2",
+                    "content": "A                        D                       A\nYeoo, standin' at the crossroad, tried to flag a ride\nD                                            A\nStanding at the crossroads, I tried to flag a ride\nE                               D                      A\nDidn't nobody seem to know me, babe, everybody pass me by",
+                    "id": "814a7755-4709-4cb2-8cd9-c7eb4ab62814",
+                    "lastModified": "2021-9-19-21-52-5-501-193",
+                    "createdAt": "2021-9-19-21-52-5-502-193"
+                },
+                {
+                    "title": "Verse 3",
+                    "content": "A                          D                     A\nAnd if I’m going downwards, God’s gonna catch me in\nD                             A\nHe, eee, eee, what’s God gonna get me in\nE                           D                            A\nI haven’t got no lovin’ sweet woman, Bob, Bob is seeing my girl",
+                    "id": "334c45af-f67a-4fa0-9c5c-c7258337db2f",
+                    "lastModified": "2021-9-19-21-53-43-315-930",
+                    "createdAt": "2021-9-19-21-53-43-315-930"
+                },
+                {
+                    "title": "Verse 4",
+                    "content": "A\nYou can run, you can run, tell my friend poor Willie Brown\nD7                          A7\nYou can run, tell my friend Willie Brown\nE7\nOh, that I stand at the crossroad, babe\nD7                              A\nI believe I’m sinkin' down",
+                    "id": "b605e87e-502e-4a5a-9b19-aabc0a7e131d",
+                    "lastModified": "2021-9-19-21-53-43-316-34",
+                    "createdAt": "2021-9-19-21-53-43-316-34"
+                }
+            ],
+            "audioFiles": [],
+            "discarded": 0
+        },
+        {
+            "id": "676b0ac5-44b1-4133-9fb3-51dd919f57ee",
+            "title": "House Of The Rising Sun",
+            "createdAt": "2021-9-19-21-27-17-613-299",
+            "lastModified": "2021-9-19-21-45-37-44-106",
+            "key": null,
+            "tuning": "GCEA",
+            "capo": null,
+            "instrument": null,
+            "label": "ukulele",
+            "artist": "",
+            "starred": 0,
+            "scrollOffset": 1.0,
+            "zoom": 1.0,
+            "bpm": null,
+            "color": null,
+            "sections": [
+                {
+                    "title": "Intro",
+                    "content": "         Am   C             D                     F\nThere is a house in New Orleans\n           Am       C      E   E\nThey call the Risin' Sun\n                Am       C             D                   F\nAnd it's been the ruin of many a poor boy.\n         Am     E              Am\nAnd God, I know I'm one.\n\nC, D, F, Am, E, Am, E",
+                    "id": "c7bb5035-bb7e-4a30-a55e-e6e47b5eb7f6",
+                    "lastModified": "2021-9-19-21-31-58-781-403",
+                    "createdAt": "2021-9-19-21-31-58-781-404"
+                },
+                {
+                    "title": "Verse 1",
+                    "content": "      Am           C      D           F\nMy mother was a tailor.\n         Am              C             E     E\nShe sewed my new blue jeans.\n       Am     C          D             F\nMy father was a gamblin' man\nAm           E      Am\nDown in New Or-leans.\n\nC, D, F, Am, E, Am, E\n\n                 Am   C          D           F\nNow, the only thing a gambler needs\n     Am       C     E     E\nIs a suitcase and a trunk\n                Am   C               D          F\nAnd the only time that he's satis-fied\n          Am        E    Am\nIs when he's on a drunk\n\nC, D, F, Am, E, Am, E",
+                    "id": "a39be2d8-c34c-46b3-870d-bbf2e4512eb1",
+                    "lastModified": "2021-9-19-21-27-17-613-399",
+                    "createdAt": "2021-9-19-21-27-17-613-399"
+                },
+                {
+                    "title": "Verse 2",
+                    "content": "         Am    C               D            F\nOh, Mother, tell your children\n           Am          C          E     E\nNot to do what I have done.\nAm                C          D                F\nSpend your lives in sin and misery\n           Am                E      Am\nIn the house of the risin' sun.\n\nC, D, F, Am, E, Am, E\n\n         Am                        C              D          F\nWell, I've got one foot on the platform.\n       Am    C                 E     E\nthe other foot on the train.\n    Am       C          D                       F\nI'm goin' back to New Orleans\n   Am                E            Am\nTo wear that ball and chain.\n\nC, D, F, Am, E, Am, E",
+                    "id": "1aec077e-e4ab-4ed7-887c-b421a2de29cb",
+                    "lastModified": "2021-9-19-21-27-17-613-400",
+                    "createdAt": "2021-9-19-21-27-17-613-400"
+                },
+                {
+                    "title": "Chorus",
+                    "content": "         Am   C             D                     F\nThere is a house in New Orleans\n           Am       C      E   E\nThey call the Risin' Sun\n                Am       C             D                   F\nAnd it's been the ruin of many a poor boy.\n         Am     E              Am\nAnd God, I know I'm one.\n\nC, D, F, Am, E, \nAm, D, Am, D, Am, D",
+                    "id": "ecfaa248-7d88-4d64-9a2f-85997a9963a9",
+                    "lastModified": "2021-9-19-21-30-51-684-104",
+                    "createdAt": "2021-9-19-21-30-51-684-106"
+                }
+            ],
+            "audioFiles": [],
+            "discarded": 0
+        }
+    ]
+}
