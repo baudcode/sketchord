@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:sound/note_views/appbar.dart';
+import 'package:sound/utils.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
@@ -179,6 +180,9 @@ Color deserializeColor(dynamic data) {
 }
 
 class Note {
+  static int defaultBPM = 80;
+  static int defaultLength = 3 * 60;
+
   List<Section> sections;
   String id;
   List<AudioFile> audioFiles;
@@ -200,6 +204,13 @@ class Note {
   double scrollOffset;
   double zoom; // text scaling factor
 
+  String get lengthStr {
+    if (this.length == null)
+      return "";
+    else
+      return toTime(length);
+  }
+
   bool get hasEmptyTitle {
     return this.title == null || this.title.trim() == "";
   }
@@ -219,10 +230,10 @@ class Note {
         starred: false,
         sections: [Section(content: "", title: "")],
         color: null,
+        length: null, // seconds
         bpm: null,
         zoom: 1.0,
         scrollOffset: 1.0,
-        length: null, // seconds
         audioFiles: []);
   }
 
@@ -263,14 +274,18 @@ class Note {
         lastModified: json.containsKey("lastModified")
             ? deserializeDateTime(json['lastModified'])
             : DateTime.now(),
-        length: json.containsKey('length') ? json['length'] : null,
+        length: (!json.containsKey('length') || json['length'] == null)
+            ? null
+            : json['length'].toInt(),
         // additional info
         key: json.containsKey("key") ? json['key'] : null,
         tuning: json.containsKey("tuning") ? json['tuning'] : null,
         capo: json.containsKey("capo") ? json['capo'] : null,
         instrument: json.containsKey("instrument") ? json['instrument'] : null,
         label: json.containsKey("label") ? json['label'] : null,
-        bpm: json.containsKey("bpm") ? json['bpm'] : null,
+        bpm: (!json.containsKey("bpm") || json['bpm'] == null)
+            ? null
+            : json['bpm'].toInt(),
         starred: json.containsKey("starred") ? json['starred'] == 1 : false,
         color:
             json.containsKey("color") ? deserializeColor(json['color']) : null,

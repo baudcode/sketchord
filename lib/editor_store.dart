@@ -189,6 +189,20 @@ class NoteEditorStore extends Store {
       await LocalStorage().syncNoteAttr(_note, 'audioFiles');
       trigger();
     });
+
+    changeBPM.listen((int event) async {
+      _note.bpm = event;
+      print("setting bpm to $event");
+      await LocalStorage().syncNoteAttr(_note, 'bpm');
+      trigger();
+    });
+
+    changeLength.listen((int event) async {
+      _note.length = event;
+      print("setting legnth to $event");
+      await LocalStorage().syncNoteAttr(_note, 'length');
+      trigger();
+    });
   }
 }
 
@@ -207,6 +221,8 @@ Action<String> changeTuning = Action();
 Action<String> changeKey = Action();
 Action<String> changeLabel = Action();
 Action<String> changeArtist = Action();
+Action<int> changeBPM = Action();
+Action<int> changeLength = Action();
 Action<String> changeInstrument = Action();
 Action<AudioFile> changeAudioFile = Action();
 Action<Tuple2<Section, String>> changeContent = Action();

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sound/dialogs/change_number_dialog.dart';
+import 'package:sound/editor_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
@@ -126,6 +128,8 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
   Map<AdditionalInfoItem, FocusNode> focusNodes = {};
   Map<AdditionalInfoItem, TextEditingController> controllers = {};
 
+  TextEditingController bpmController, lengthController;
+
   @override
   void didUpdateWidget(NoteEditorAdditionalInfo oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -145,6 +149,13 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
             TextSelection.fromPosition(TextPosition(offset: data.length));
       }
     });
+
+    if (widget.note.bpm != null) {
+      bpmController.text = widget.note.bpm.toString();
+    }
+    if (widget.note.length != null) {
+      lengthController.text = widget.note.lengthStr;
+    }
   }
 
   @override
@@ -165,6 +176,10 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
       String text = getAddtionalInfoItemFromNote(widget.note, item);
       controllers[item] = TextEditingController(text: text == null ? "" : text);
     });
+
+    bpmController = TextEditingController(
+        text: widget.note.bpm == null ? null : widget.note.bpm.toString());
+    lengthController = TextEditingController(text: widget.note.lengthStr);
   }
 
   _edit({initial, title, hint, item}) {
@@ -248,7 +263,63 @@ class _NoteEditorAdditionalInfoState extends State<NoteEditorAdditionalInfo> {
   @override
   Widget build(BuildContext context) {
     var edits = widget.items.map<Widget>((item) => getEdit(item)).toList();
+
+    // add bpm and length
+    // default length: 3 minutes
+    print(widget.note.bpm);
+
+    // show
+    var bpmField = GestureDetector(
+        onTap: () {
+          if (widget.allowEdit) {
+            FocusScope.of(context).unfocus();
+
+            showChangeNumberDialog(
+                context,
+                "BPM",
+                widget.note.bpm == null
+                    ? Note.defaultBPM.toDouble()
+                    : widget.note.bpm.toDouble(), (value) {
+              print("setting bpm to $value");
+              changeBPM(value.toInt());
+            }, min: 0, max: 300, longPressStep: 5);
+          }
+        },
+        child: TextFormField(
+          enabled: false,
+          controller: bpmController,
+          //focusNode: widget.focus,
+          decoration:
+              InputDecoration(labelText: "BPM", border: InputBorder.none),
+        ));
+
+    var lengthField = GestureDetector(
+        onTap: () {
+          if (widget.allowEdit) {
+            FocusScope.of(context).unfocus();
+
+            showChangeNumberDialog(
+                context,
+                "Length",
+                widget.note.length == null
+                    ? Note.defaultLength.toDouble()
+                    : widget.note.length.toDouble(), (value) {
+              print("setting length to $value");
+              changeLength(value.toInt());
+            }, min: 0, max: 300, isTime: true, longPressStep: 10);
+          }
+        },
+        child: TextFormField(
+          enabled: false,
+          controller: lengthController,
+          //focusNode: widget.focus,
+          decoration:
+              InputDecoration(labelText: "Length", border: InputBorder.none),
+        ));
+
     var extra = <Widget>[
+      lengthField,
+      bpmField,
       _extra(text: dateToString(widget.note.createdAt), title: "Created At"),
       _extra(
           text: dateToString(widget.note.lastModified),

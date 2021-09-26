@@ -6,6 +6,23 @@ String getFormattedDate(DateTime date) {
   return date.toString().substring(0, _date.length - 7).replaceAll(":", "-");
 }
 
+String _formatDateInt(int v) {
+  if (v > 9) {
+    return v.toString();
+  } else {
+    return "0$v";
+  }
+}
+
+String toTime(int length) {
+  if (length == null) return "";
+
+  int m = length ~/ 60;
+  int s = length % 60;
+
+  return "${_formatDateInt(m)}:${_formatDateInt(s)}";
+}
+
 String dateToString(DateTime date) {
   String _date = DateTime.now().toString();
   return date.toString().substring(0, _date.length - 7);

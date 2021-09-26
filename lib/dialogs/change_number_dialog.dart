@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sound/utils.dart';
 
 showChangeNumberDialog(BuildContext context, String title, double _value,
     ValueChanged<double> onChange,
@@ -6,12 +7,21 @@ showChangeNumberDialog(BuildContext context, String title, double _value,
     bool asInt = true,
     double max,
     double min,
+    bool isTime = false,
     double longPressStep = 2}) {
   showDialog(
       context: context,
       builder: (context) {
         double value = _value;
         bool isLongPressed = false;
+
+        String getValue() {
+          if (isTime) {
+            return toTime(value.toInt());
+          } else {
+            return asInt ? value.toInt().toString() : value.toString();
+          }
+        }
 
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
@@ -46,7 +56,7 @@ showChangeNumberDialog(BuildContext context, String title, double _value,
                             });
                           }),
                     ),
-                    Text(asInt ? value.toInt().toString() : value.toString(),
+                    Text(getValue(),
                         style: Theme.of(context)
                             .textTheme
                             .caption
