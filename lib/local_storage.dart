@@ -69,6 +69,16 @@ class LocalStorage {
     return f.delete();
   }
 
+  Future<bool> anyNote() async {
+    final List<Map<String, dynamic>> maps =
+        await (await getDatabase()).query(noteTable, limit: 1);
+
+    if (maps == null || (maps.length == 0))
+      return false;
+    else
+      return true;
+  }
+
   Future<Database> getDatabase() async {
     return openDatabase(
         // Set the path to the database. Note: Using the `join` function from the
