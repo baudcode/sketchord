@@ -445,7 +445,7 @@ class Settings {
         sortBy: SortBy.created,
         sortDirection: SortDirection.down,
         name: null,
-        sectionContentFontSize: 10,
+        sectionContentFontSize: 9,
         noteListType: NoteListType.double,
         editorView: EditorView.tabs);
   }

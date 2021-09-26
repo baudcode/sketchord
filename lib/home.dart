@@ -32,16 +32,6 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration(milliseconds: 1000), () async {
-      bool initialStart = await LocalStorage().isInitialStart();
-      //initialStart = false;
-      if (initialStart) {
-        showInitialImportDialog(context, (_) {
-          LocalStorage().setInitialStartDone();
-        });
-      }
-    });
-
     LocalStorage().getNotes().then((value) => LocalStorage()
         .controller
         .sink
@@ -124,6 +114,19 @@ class HomeContentState extends State<HomeContent>
 
     // init filemanager
     FileManager();
+
+    //LocalStorage().setInitialStart(false);
+
+    //  Future.delayed(Duration(milliseconds: 1000), () async {
+
+    LocalStorage().isInitialStart().then((initalStart) {
+      if (initalStart) {
+        showInitialImportDialog(context, (_) {
+          print("set initial start done...");
+          LocalStorage().setInitialStartDone();
+        });
+      }
+    });
   }
 
   _activeFiltersView() {

@@ -65,15 +65,18 @@ class NoteViewerContent extends StatelessWidget {
     }
 
     if (showAdditionalInformation) {
-      items.add(NoteEditorAdditionalInfo(
-        note,
-        allowEdit: false,
+      items.add(Container(
+        padding: EdgeInsets.symmetric(horizontal: 8),
+        child: NoteEditorAdditionalInfo(
+          note,
+          allowEdit: false,
+        ),
       ));
     }
 
     if (showAudioFiles) {
       items.add(Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 8),
           child: Text(
             'Audio Files',
             style: Theme.of(context).textTheme.subtitle1,
@@ -83,7 +86,7 @@ class NoteViewerContent extends StatelessWidget {
         return AudioFileListItem(e, onPressed: () {
           playInDialog(context, e);
         });
-      }));
+      }).toList());
     }
 
     if (showSheet) {
@@ -93,7 +96,7 @@ class NoteViewerContent extends StatelessWidget {
     return Container(
       child: Stack(children: [
         Container(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(8),
             child: ListView.builder(
               controller: controller,
               itemBuilder: (context, index) => items[index],
@@ -131,6 +134,7 @@ class NoteViewer extends StatelessWidget {
       showZoomPlayback: showZoomPlayback,
       showTitle: showTitle,
       showSheet: showSheet,
+      showAudioFiles: showAudioFiles,
       showAdditionalInformation: showAdditionalInformation,
     );
   }

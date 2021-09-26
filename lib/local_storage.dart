@@ -461,6 +461,11 @@ class LocalStorage {
     await prefs.setBool('started', true);
   }
 
+  Future<void> setInitialStart(bool initialStart) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('started', initialStart);
+  }
+
   Future<List<Note>> getActiveNotes() async {
     return (await getNotes()).where((n) => !n.discarded).toList();
   }

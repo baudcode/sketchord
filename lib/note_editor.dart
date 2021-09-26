@@ -225,7 +225,7 @@ class NoteEditorState extends State<NoteEditorContent>
 
   _buildTabView(List<Widget> items) {
     return Container(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(8),
         child: ListView.builder(
           itemBuilder: (context, index) => items[index],
           itemCount: items.length,
@@ -364,10 +364,12 @@ class NoteEditorState extends State<NoteEditorContent>
     items[TabType.structure].add(AddSectionItem());
 
     // all additional info
-    items[TabType.info].add(NoteEditorAdditionalInfo(store.note,
-        onChange: (data) =>
-            _onAdditionalInfoValueChange(data.item1, data.item2),
-        onFocusChange: _onAdditionalInfoFocusChange));
+    items[TabType.info].add(Container(
+        padding: EdgeInsets.only(left: 8, right: 8),
+        child: NoteEditorAdditionalInfo(store.note,
+            onChange: (data) =>
+                _onAdditionalInfoValueChange(data.item1, data.item2),
+            onFocusChange: _onAdditionalInfoFocusChange)));
 
     // audio files as stack
     if (store.note.audioFiles.length > 0 && !useTabs)
@@ -557,6 +559,7 @@ class NoteEditorState extends State<NoteEditorContent>
         ));
 
     var width = MediaQuery.of(context).size.width;
+
     Scaffold scaffold = Scaffold(
         key: _globalKey,
         appBar: AppBar(

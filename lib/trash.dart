@@ -177,6 +177,7 @@ class _TrashState extends State<Trash> {
                         )
                       ],
                       showZoomPlayback: false,
+                      showAudioFiles: true,
                     )));
       }
     }

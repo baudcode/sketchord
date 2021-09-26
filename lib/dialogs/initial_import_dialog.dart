@@ -14,9 +14,16 @@ Future<List<Note>> getExampleNotes() async {
   return _notes.map<Note>((s) => Note.fromJson(s, s['id'])).toList();
 }
 
+Future<List<Note>> getInitialNotes() async {
+  String path = "assets/initial_notes.json";
+  String data = await rootBundle.loadString(path);
+  Map map = jsonDecode(data);
+  return map['notes'].map<Note>((s) => Note.fromJson(s, s['id'])).toList();
+}
+
 showInitialImportDialog(
     BuildContext context, ValueChanged<BackupData> onDone) async {
-  List<Note> exampleNotes = await getExampleNotes();
+  List<Note> exampleNotes = await getInitialNotes();
   NoteCollection exampleCollection = NoteCollection.empty();
   exampleCollection.notes = exampleNotes;
   exampleCollection.title = "Example Set";
@@ -48,7 +55,8 @@ showSelectNotesImportDialog(
     }
 
     onDone(backup);
-  }, () {}, backup.notes, title: title);
+  }, () => onDone(BackupData(notes: [], collections: [])), backup.notes,
+      title: title);
 }
 
 typedef NoteListCallback = Future<void> Function(List<Note>);
