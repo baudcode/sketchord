@@ -2,6 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
+showDeleteDialog(BuildContext context, Note note, Function onDelete) async {
+  bool isInCollection =
+      await LocalStorage().getNumCollectionsByNoteId(note.id) > 0;
+
+  String message = "Are you sure you want to delete this note?";
+
+  if (isInCollection) {
+    message =
+        "Note is part of a collection. When removing this note it will be automatically removed from its collections. \n Are you sure you want to delete this note?";
+  }
+
+  showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("No")),
+            ElevatedButton(
+                onPressed: () {
+                  onDelete();
+                  Future.delayed(Duration(milliseconds: 100), () {
+                    onDelete();
+                  });
+                },
+                child: Text("Yes"))
+          ],
+        );
+      });
+}
+
 showDeleteForeverDialog({
   BuildContext context,
   Note note,

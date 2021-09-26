@@ -5,6 +5,7 @@ import 'package:flutter_flux/flutter_flux.dart' show StoreWatcherMixin;
 import 'package:flutter_share/flutter_share.dart';
 import 'package:sound/dialogs/add_to_collection_dialog.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
+import 'package:sound/dialogs/confirmation_dialogs.dart';
 import 'package:sound/dialogs/import_dialog.dart';
 import 'package:sound/dialogs/permissions_dialog.dart';
 import 'package:sound/editor_views/additional_info.dart';
@@ -82,8 +83,14 @@ class NoteEditorState extends State<NoteEditorContent>
   RecorderBottomSheetStore recorderStore;
   NoteEditorStore store;
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
-  List<String> popupMenuActions = ["export", "share", "copy", "add"];
-  List<String> popupMenuActionsLong = ["Export", "Share", "Copy", "Add to Set"];
+  List<String> popupMenuActions = ["export", "share", "copy", "add", 'delete'];
+  List<String> popupMenuActionsLong = [
+    "Export",
+    "Share",
+    "Copy",
+    "Add to Set",
+    "Delete"
+  ];
   bool get useTabs => widget.view == EditorView.tabs;
   final Key bottomSheetKey = Key('bottomSheet');
   Map<Section, GlobalKey> dismissables = {};
@@ -217,6 +224,12 @@ class NoteEditorState extends State<NoteEditorContent>
         break;
       case "add":
         showAddToCollectionDialog(context, store.note);
+        break;
+      case 'delete':
+        showDeleteDialog(context, store.note, () async {
+          await LocalStorage().deleteNote(store.note);
+          Navigator.of(context).pop();
+        });
         break;
       default:
         break;
