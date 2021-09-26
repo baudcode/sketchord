@@ -148,7 +148,13 @@ class AudioFileView extends StatelessWidget {
               color: Theme.of(context).scaffoldBackgroundColor,
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[Icon(Icons.share)]),
+                  children: <Widget>[
+                    Icon(Icons.share),
+                    Container(width: 8),
+                    Icon(Icons.move_to_inbox),
+                    Container(width: 8),
+                    Icon(Icons.copy),
+                  ]),
               padding: EdgeInsets.all(10))),
       background: Card(
           child: Container(
