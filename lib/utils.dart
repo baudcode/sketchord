@@ -14,13 +14,19 @@ String _formatDateInt(int v) {
   }
 }
 
-String toTime(int length) {
+String toTime(int length, {bool includeHour = false}) {
   if (length == null) return "";
 
   int m = length ~/ 60;
   int s = length % 60;
 
-  return "${_formatDateInt(m)}:${_formatDateInt(s)}";
+  String data = "${_formatDateInt(m)}:${_formatDateInt(s)}";
+  if (includeHour) {
+    int h = s ~/ 3600;
+    data = "${_formatDateInt(h)}:$data";
+  }
+
+  return data;
 }
 
 String dateToString(DateTime date) {
@@ -90,7 +96,7 @@ showUndoSnackbar(
   ScaffoldMessenger.of(context)
       .showSnackBar(snackbar)
       .closed
-      .then((value) => onClose());
+      .then((value) => (onClose != null) ? onClose() : () {});
 }
 
 hideSnack(BuildContext context) {

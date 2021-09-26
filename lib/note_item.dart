@@ -219,7 +219,7 @@ class NoteItem extends AbstractNoteItem {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text((note.key == null || note.key.trim() == "") ? '' : note.key),
+            Text(note.lengthStr),
             Text((note.capo == null || note.capo.trim() == "")
                 ? ""
                 : "Capo ${note.capo}")

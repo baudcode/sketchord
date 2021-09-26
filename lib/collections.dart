@@ -301,6 +301,11 @@ class _CollectionEditorState extends State<CollectionEditor>
               hint: "Description...",
               onChanged: changeCollectionDescription,
               maxlines: 1),
+          (store.collection.lengthStr == "")
+              ? Container()
+              : Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text("Length: " + store.collection.lengthStr)),
           Padding(
               padding: EdgeInsets.only(top: 16, bottom: 8),
               child: Row(children: [

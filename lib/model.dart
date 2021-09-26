@@ -488,6 +488,22 @@ class NoteCollection {
 
   DateTime lastModified, createdAt;
 
+  String get lengthStr {
+    int length = this.length;
+    if (length == 0)
+      return "";
+    else
+      return toTime(length, includeHour: true);
+  }
+
+  int get length {
+    if (this.notes.length == 0) return 0;
+    return this
+        .notes
+        .map((e) => e.length == null ? 0 : e.length)
+        .reduce((value, element) => value + element);
+  }
+
   NoteCollection(
       {this.id,
       this.notes,
