@@ -215,6 +215,7 @@ class _NoteViewerState extends State<NotesViewer>
 
   _updateScrollOffset() async {
     note.scrollOffset = offset;
+    print("scroll offset: $offset");
     await LocalStorage().syncNoteAttr(note, "scrollOffset");
   }
 
@@ -275,6 +276,8 @@ class _NoteViewerState extends State<NotesViewer>
     List<Widget> actions = [];
 
     if (widget.showZoomPlayback && !isPlaying) {
+      // check scroll range
+      //double maxScroll = _scollController.position.maxScrollExtent;
       actions.addAll([
         IconButton(
             icon: Icon(Icons.play_arrow),
@@ -285,16 +288,21 @@ class _NoteViewerState extends State<NotesViewer>
                   isPlaying = true;
                 });
                 Future.microtask(() async {
-                  bool atEdge = false;
-                  while (!atEdge && isPlaying) {
+                  int microseconds = 0;
+
+                  do {
+                    microseconds = (10000 ~/ offset).toInt();
+                    //print("waiting $microseconds");
                     try {
                       await _scollController.animateTo(
-                          _scollController.offset + offset,
-                          duration: Duration(milliseconds: 50),
+                          _scollController.offset + 0.5,
+                          duration: Duration(microseconds: microseconds),
                           curve: Curves.ease);
-                      atEdge = _scollController.position.atEdge;
-                    } catch (e) {}
-                  }
+                    } catch (e) {
+                      print("execption: $e");
+                      break;
+                    }
+                  } while (!_scollController.position.atEdge && isPlaying);
                   setState(() {
                     isPlaying = false;
                   });
