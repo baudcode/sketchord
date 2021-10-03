@@ -103,9 +103,11 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         highlightColor: Colors.black54,
         cardColor: Colors.grey.shade800,
         selectedRowColor: mainColor,
+        //iconTheme: ThemeData.dark().iconTheme.copyWith(color: Colors.white),
         appBarTheme: ThemeData.dark().appBarTheme.copyWith(
-            brightness: Brightness.dark,
+            brightness: Brightness.light,
             color: appBarColor,
+            foregroundColor: Colors.white,
             textTheme: ThemeData.dark().textTheme
             //titleTextStyle: ThemeData.dark()
             //    .appBarTheme
@@ -185,7 +187,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
         ));
 
     return MaterialApp(
-        //debugShowCheckedModeBanner: false,
+        debugShowCheckedModeBanner: false,
         title: 'SketChord',
         theme: store.theme == SettingsTheme.dark ? dark : light,
         home: Menu());
