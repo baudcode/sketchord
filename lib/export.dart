@@ -245,7 +245,8 @@ class Exporter {
   static Future<String> zip(List<Note> notes,
       {List<NoteCollection> collections, String title}) async {
     return await Backup().exportZip(notes,
-        collections: collections, filename: getFilename(notes, 'zip'));
+        collections: collections,
+        filename: getFilename(notes, 'zip', title: title));
   }
 
   static Future<void> exportShare(List<Note> notes, ExportType t,
