@@ -185,3 +185,10 @@ String resolveRichContent(String data) {
   }
   return resolved.join("\n");
 }
+
+bool isDebug() {
+  const flavor = String.fromEnvironment('app.flavor');
+  print("flavor: $flavor");
+  if (flavor == 'dev') return true;
+  return !kReleaseMode;
+}

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
@@ -237,6 +238,20 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     }
   }
 
+  _initialImportItem() {
+    if (!isDebug()) {
+      return Container();
+    } else {
+      return ElevatedButton(
+          onPressed: () {
+            showInitialImportDialog(context, (_) {
+              print("done importing...");
+            });
+          },
+          child: Text("Show Initial Import Dialog"));
+    }
+  }
+
   _list() {
     var items = [
       _setName(),
@@ -244,6 +259,7 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
       _audioFormatItem(),
       _editorViewItem(),
       _changeContentSectionTextSize(),
+      _initialImportItem(),
       SizedBox(height: 10),
       ElevatedButton(child: Text("Backup"), onPressed: _onBackup),
       SizedBox(height: 10),
