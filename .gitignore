@@ -48,3 +48,4 @@ backend/data/
 backend/data.json
 
 android/app/google-services.json
+.gradle/
