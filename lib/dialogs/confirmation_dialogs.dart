@@ -13,6 +13,16 @@ showDeleteDialog(BuildContext context, Note note, Function onDelete) async {
         "Note is part of a collection. When removing this note it will be automatically removed from its collections. \n Are you sure you want to delete this note?";
   }
 
+  _deleteDialog(context, message, onDelete);
+}
+
+showNoteCollectionDeleteDialog(
+    BuildContext context, NoteCollection c, Function onDelete) async {
+  String message = "Are you sure you want to delete this collection?";
+  _deleteDialog(context, message, onDelete);
+}
+
+_deleteDialog(BuildContext context, String message, Function onDelete) {
   showDialog(
       context: context,
       builder: (context) {

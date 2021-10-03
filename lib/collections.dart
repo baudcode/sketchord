@@ -3,7 +3,9 @@ import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/collection_editor_store.dart';
 import 'package:sound/db.dart';
 import 'package:sound/dialogs/choose_note_dialog.dart';
+import 'package:sound/dialogs/confirmation_dialogs.dart';
 import 'package:sound/dialogs/export_dialog.dart';
+import 'package:sound/export.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/collections_store.dart';
@@ -268,6 +270,33 @@ class _CollectionEditorState extends State<CollectionEditor>
         collections: [store.collection], title: title);
   }
 
+  _onSharePDF() async {
+    String title =
+        (store.collection.title.trim() == "" ? null : store.collection.title);
+    await Exporter.exportShare(store.collection.notes, ExportType.PDF,
+        title: title);
+  }
+
+  _onDelete() {
+    showNoteCollectionDeleteDialog(context, store.collection, () async {
+      await LocalStorage().deleteCollection(store.collection);
+      Navigator.of(context).pop();
+    });
+  }
+
+  _runPopupAction(String action) {
+    switch (action) {
+      case "delete":
+        _onDelete();
+        break;
+      case "export":
+        _onExport();
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var notes = [];
@@ -328,13 +357,32 @@ class _CollectionEditorState extends State<CollectionEditor>
         )));
 
     List<Widget> actions = [
-      IconButton(icon: Icon(Icons.share), onPressed: _onExport),
+      IconButton(icon: Icon(Icons.share), onPressed: _onSharePDF),
+      //IconButton(icon: Icon(Icons.share), onPressed: _onExport),
       IconButton(icon: Icon(Icons.play_circle), onPressed: _onPlay),
       IconButton(
           icon:
               Icon((store.collection.starred) ? Icons.star : Icons.star_border),
           onPressed: toggleCollectionStarred),
     ];
+
+    List<String> popupMenuActions = ["export", "delete"];
+    List<String> popupMenuActionsLong = [
+      "Export",
+      "Delete",
+    ];
+
+    PopupMenuButton popup = PopupMenuButton<String>(
+      onSelected: _runPopupAction,
+      itemBuilder: (context) {
+        return popupMenuActions.map<PopupMenuItem<String>>((String action) {
+          int index = popupMenuActions.indexOf(action);
+
+          return PopupMenuItem(
+              value: action, child: Text(popupMenuActionsLong[index]));
+        }).toList();
+      },
+    );
 
     return WillPopScope(
         onWillPop: () async {
@@ -358,7 +406,7 @@ class _CollectionEditorState extends State<CollectionEditor>
               ),
               appBar: AppBar(
                 //backgroundColor: store.note.color,
-                actions: actions,
+                actions: actions..add(popup),
                 title: Text("Edit Set"),
               ),
               body: Container(child: Stack(children: stackChildren))),
