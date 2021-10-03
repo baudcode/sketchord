@@ -151,6 +151,7 @@ class LocalStorage {
 
       int id = await db.insert(sectionTable, sectionData,
           conflictAlgorithm: ConflictAlgorithm.replace);
+
       print("insert section ${note.sections[i].title} => $id");
     }
 
@@ -171,8 +172,20 @@ class LocalStorage {
     data.remove('sections');
     data.remove('audioFiles');
 
-    int row = await db.insert(noteTable, data,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    // check if note already exists
+    List<Map> noteQuery = await db.query(noteTable,
+        where: "id = ?", whereArgs: [note.id], limit: 1);
+    int row;
+
+    if (noteQuery.length == 1) {
+      row = await db.update(noteTable, data,
+          where: "id = ?",
+          whereArgs: [note.id],
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    } else {
+      row = await db.insert(noteTable, data,
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
 
     print("Done Syncing ${note.id} in row $row");
     _controller.sink.add(await getNotes());
