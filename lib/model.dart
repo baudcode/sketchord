@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:sound/note_views/appbar.dart';
 import 'package:sound/utils.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
@@ -445,7 +444,7 @@ class Settings {
         sortBy: SortBy.created,
         sortDirection: SortDirection.down,
         name: null,
-        sectionContentFontSize: 9,
+        sectionContentFontSize: 10,
         noteListType: NoteListType.double,
         editorView: EditorView.tabs);
   }
