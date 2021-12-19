@@ -25,7 +25,10 @@ import 'db.dart';
 class NoteSearchViewLoader extends StatelessWidget {
   final NoteCollection collection;
   final ValueChanged<List<Note>> onAddNotes;
-  const NoteSearchViewLoader({this.collection, this.onAddNotes, Key key})
+  final int maxSelectable;
+
+  const NoteSearchViewLoader(
+      {this.collection, this.onAddNotes, this.maxSelectable = -1, Key key})
       : super(key: key);
 
   @override
@@ -46,7 +49,9 @@ class NoteSearchViewLoader extends StatelessWidget {
             }).toList());
 
             return _NoteSearchView(
-                collection: collection, onAddNotes: onAddNotes);
+                collection: collection,
+                onAddNotes: onAddNotes,
+                maxSelectable: maxSelectable);
           }
         },
         future: LocalStorage().getActiveNotes());
@@ -57,8 +62,8 @@ class NoteSearchViewLoader extends StatelessWidget {
 class _NoteSearchView extends StatefulWidget {
   final NoteCollection collection;
   final ValueChanged<List<Note>> onAddNotes; // function that will be called
-
-  _NoteSearchView({this.collection, this.onAddNotes});
+  final int maxSelectable;
+  _NoteSearchView({this.collection, this.onAddNotes, this.maxSelectable = -1});
 
   @override
   State<StatefulWidget> createState() {
@@ -195,11 +200,17 @@ class _NoteSearchViewState extends State<_NoteSearchView>
 
   _sliver() {
     onTap(Note note) {
-      triggerSelectNote(note);
+      if (widget.maxSelectable == -1 ||
+          (storage.selectedNotes.length < widget.maxSelectable)) {
+        triggerSelectNote(note);
+      }
     }
 
     onLongPress(Note note) {
-      triggerSelectNote(note);
+      if (widget.maxSelectable == -1 ||
+          (storage.selectedNotes.length < widget.maxSelectable)) {
+        triggerSelectNote(note);
+      }
     }
 
     List<Widget> noteList = [];
