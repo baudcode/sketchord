@@ -9,12 +9,12 @@ class Looper extends StatefulWidget {
   final Color color;
   final Function onMinimize;
   final bool enableMinimize;
-  final String title;
+  final bool showTitle;
   final bool enableRepeat;
 
   Looper(this.color, this.onMinimize,
       {this.enableMinimize = true,
-      this.title,
+      this.showTitle = false,
       Key key,
       this.enableRepeat = false})
       : super(key: key);
@@ -25,6 +25,7 @@ class Looper extends StatefulWidget {
 
 class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
   RangeValues range;
+
   RecorderBottomSheetStore store;
   ActionSubscription audioFileChange;
 
@@ -74,10 +75,15 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
     print("lowerValue: $lowerValue");
     print('max: $rangeMax');
     print("currentLength: ${store.currentLength}");
+    var title = null;
+    //  (store.currentAudioFile != null &&
+    //         widget.showTitle)
+    //     ? store.currentAudioFile.name
+    //     : null;
 
     return Container(
       color: widget.color,
-      height: widget.title != null ? 150 : 120,
+      height: title != null ? 150 : 120,
       child: Column(children: [
         Row(
             mainAxisSize: MainAxisSize.max,
@@ -119,17 +125,17 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
                     ],
                   ))
             ]),
-        widget.title != null
+        title != null
             ? Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  widget.title,
+                  title,
                   softWrap: false,
                   overflow: TextOverflow.clip,
                   style: Theme.of(context).textTheme.headline6,
                 ))
             : Container(),
-        widget.title != null ? SizedBox(height: 29) : SizedBox(height: 19),
+        title != null ? SizedBox(height: 29) : SizedBox(height: 19),
         Container(
             height: 50,
             child: Column(children: [

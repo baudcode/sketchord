@@ -97,6 +97,9 @@ class RecorderBottomSheetStore extends Store {
   List<AudioFile> _queue = [];
   List<AudioFile> get queue => _queue;
 
+  // whehter the repeat was stopped
+  bool _forcedStopped = false;
+
   getCurrentQueueIndex() {
     if (currentAudioFile == null) return -1;
     return _queue.indexWhere((element) => element.id == currentAudioFile.id);
@@ -131,6 +134,7 @@ class RecorderBottomSheetStore extends Store {
     print("playing $path");
     // set length not yet available
     _player = AudioPlayer();
+    _forcedStopped = false;
 
     _player.onAudioPositionChanged.listen((pos) async {
       if (loopRange != null && pos >= getDurationLoopEnd()) {
@@ -158,7 +162,7 @@ class RecorderBottomSheetStore extends Store {
       print("player completed");
       print("repeat: $_repeat; length: ${_queue.length}");
 
-      if (_repeat == Repeat.all && _queue.length > 0) {
+      if (_repeat == Repeat.all && _queue.length > 0 && !_forcedStopped) {
         int index = getCurrentQueueIndex();
         if (index == -1) {
           print("cannot find next file, stopping...");
@@ -288,6 +292,7 @@ class RecorderBottomSheetStore extends Store {
         print("Init Audio file with Loop Range: ${f.loopRange}");
 
         startPlayer(f.path).then((t) {
+          playbackStarted();
           //   _state = RecorderState.PLAYING;
           // trigger();
         });
@@ -295,6 +300,7 @@ class RecorderBottomSheetStore extends Store {
     });
 
     stopAction.listen((force) {
+      _forcedStopped = force;
       if (_state == RecorderState.RECORDING ||
           _state == RecorderState.PLAYING ||
           _state == RecorderState.PAUSING) {
@@ -303,7 +309,6 @@ class RecorderBottomSheetStore extends Store {
           stopPlayer(force).then((r) {
             if (r != -10) {
               _state = RecorderState.STOP;
-              playbackStoppedAction();
             }
           });
         } else {
@@ -314,10 +319,6 @@ class RecorderBottomSheetStore extends Store {
           });
         }
       }
-    });
-
-    playbackStoppedAction.listen((_) {
-      trigger();
     });
 
     startRecordingAction.listen((_) {
@@ -425,7 +426,7 @@ Action<String> setPath = Action();
 Action<bool> stopAction = Action();
 Action pauseAction = Action();
 Action resumeAction = Action();
-Action playbackStoppedAction = Action();
+Action playbackStarted = Action();
 Action<Duration> setElapsed = Action();
 Action<Duration> skipTo = Action();
 Action<AudioFile> recordingFinished = Action();

@@ -376,7 +376,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
   Animation<double> _scaleAnimation, _sheetScaleAnimation;
 
   bool minimized = true;
-  ActionSubscription sub, reloadSub;
+  ActionSubscription sub, sub2;
 
   @override
   void initState() {
@@ -404,6 +404,10 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
         animateForward();
       }
     });
+
+    sub2 = stopAction.listen((event) {
+      setState(() {});
+    });
   }
 
   @override
@@ -411,7 +415,10 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     if (sub != null) {
       sub.cancel();
     }
-    if (reloadSub != null) reloadSub.cancel();
+
+    if (sub2 != null) {
+      sub2.cancel();
+    }
 
     if (_controller != null) {
       _controller.dispose();
@@ -491,7 +498,6 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     double width = MediaQuery.of(context).size.width;
 
-    print("NAME: ${store.currentAudioFile.name}");
     Looper looper = Looper(color, () {
       // on
       if (onMinimize != null) {
@@ -500,9 +506,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     },
         enableMinimize: true,
         enableRepeat: widget.showRepeat,
-        title: (widget.showTitle && store.currentAudioFile != null)
-            ? store.currentAudioFile.name
-            : null);
+        showTitle: widget.showTitle);
 
     BottomInfo info = BottomInfo(color);
 
