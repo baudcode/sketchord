@@ -17,10 +17,17 @@ class AudioListStore extends Store {
       await LocalStorage().deleteAudioIdea(f);
       trigger();
     });
+
+    toggleStarredAudioIdea.listen((AudioFile f) async {
+      f.starred = !f.starred;
+      await LocalStorage().syncAudioFile(f);
+      trigger();
+    });
   }
 }
 
 Action<AudioFile> addAudioIdea = Action<AudioFile>();
 Action<AudioFile> deleteAudioIdea = Action<AudioFile>();
+Action<AudioFile> toggleStarredAudioIdea = Action<AudioFile>();
 
 StoreToken audioListToken = StoreToken(AudioListStore());

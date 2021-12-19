@@ -25,10 +25,10 @@ import 'db.dart';
 class NoteSearchViewLoader extends StatelessWidget {
   final NoteCollection collection;
   final ValueChanged<List<Note>> onAddNotes;
-  final int maxSelectable;
+  final bool single;
 
   const NoteSearchViewLoader(
-      {this.collection, this.onAddNotes, this.maxSelectable = -1, Key key})
+      {this.collection, this.onAddNotes, this.single = false, Key key})
       : super(key: key);
 
   @override
@@ -49,9 +49,7 @@ class NoteSearchViewLoader extends StatelessWidget {
             }).toList());
 
             return _NoteSearchView(
-                collection: collection,
-                onAddNotes: onAddNotes,
-                maxSelectable: maxSelectable);
+                collection: collection, onAddNotes: onAddNotes, single: single);
           }
         },
         future: LocalStorage().getActiveNotes());
@@ -62,8 +60,8 @@ class NoteSearchViewLoader extends StatelessWidget {
 class _NoteSearchView extends StatefulWidget {
   final NoteCollection collection;
   final ValueChanged<List<Note>> onAddNotes; // function that will be called
-  final int maxSelectable;
-  _NoteSearchView({this.collection, this.onAddNotes, this.maxSelectable = -1});
+  final bool single;
+  _NoteSearchView({this.collection, this.onAddNotes, this.single = false});
 
   @override
   State<StatefulWidget> createState() {
@@ -200,17 +198,21 @@ class _NoteSearchViewState extends State<_NoteSearchView>
 
   _sliver() {
     onTap(Note note) {
-      if (widget.maxSelectable == -1 ||
-          (storage.selectedNotes.length < widget.maxSelectable)) {
+      if (widget.single && (storage.selectedNotes.length == 1)) {
+        if (storage.isSelected(note)) {
+          removeAllSelectedNotes();
+        } else {
+          removeAllSelectedNotes();
+          triggerSelectNote(note);
+        }
+      } else {
         triggerSelectNote(note);
       }
     }
 
     onLongPress(Note note) {
-      if (widget.maxSelectable == -1 ||
-          (storage.selectedNotes.length < widget.maxSelectable)) {
-        triggerSelectNote(note);
-      }
+      if (widget.single && (storage.selectedNotes.length == 1)) return;
+      triggerSelectNote(note);
     }
 
     List<Widget> noteList = [];

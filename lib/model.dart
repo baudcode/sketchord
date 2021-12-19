@@ -25,6 +25,8 @@ String serializeRangeValues(RangeValues v) {
 class AudioFile {
   String path, id, name, text;
   DateTime createdAt, lastModified;
+  bool starred;
+
   RangeValues loopRange;
 
   File get file => File(path);
@@ -41,11 +43,13 @@ class AudioFile {
       this.lastModified,
       this.name,
       this.loopRange,
-      this.text}) {
+      this.text,
+      this.starred}) {
     //print("creating audio file with ${this.name} ${this.id}");
     if (id == null) id = Uuid().v4().toString();
     if (createdAt == null) createdAt = DateTime.now();
     if (lastModified == null) lastModified = DateTime.now();
+    if (starred == null) starred = false;
     if (name == null) {
       name = path
           .split('/')
@@ -58,7 +62,12 @@ class AudioFile {
   }
 
   factory AudioFile.create(
-      {String path, Duration duration, String id, String name, String text}) {
+      {String path,
+      Duration duration,
+      String id,
+      String name,
+      String text,
+      bool starred}) {
     return AudioFile(
         createdAt: DateTime.now(),
         lastModified: DateTime.now(),
@@ -66,6 +75,7 @@ class AudioFile {
         duration: duration,
         id: id,
         name: name,
+        starred: starred,
         text: text);
   }
 
@@ -76,6 +86,7 @@ class AudioFile {
         duration: deserializeDuration(map["duration"]),
         loopRange: deserializeRangeValues(map['loopRange']),
         text: (map.containsKey("text") ? map['text'] : ""),
+        starred: (map.containsKey('starred') ? map['starred'] == 1 : false),
         id: map["id"],
         name: map['name'],
         path: map["path"]);
@@ -90,6 +101,7 @@ class AudioFile {
       "path": path,
       "name": name,
       "text": text,
+      "starred": (starred) ? 1 : 0,
       "duration": serializeDuration(duration)
     };
   }

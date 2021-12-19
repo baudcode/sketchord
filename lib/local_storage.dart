@@ -55,6 +55,14 @@ final migrations = {
   5: {
     4: [
       "ALTER TABLE $audioFileTable DROP COLUMN text",
+    ],
+    6: [
+      "ALTER TABLE $audioFileTable ADD starred INTEGER",
+    ]
+  },
+  6: {
+    5: [
+      "ALTER TABLE $audioFileTable DROP COLUMN starred",
     ]
   }
 };
@@ -125,7 +133,7 @@ class LocalStorage {
     },
         // Set the version. This executes the onCreate function and provides a
         // path to perform database upgrades and downgrades.
-        version: 5);
+        version: 6);
   }
 
   Future<void> createDatabase(Database db) async {
@@ -208,6 +216,14 @@ class LocalStorage {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<int> syncAudioFile(AudioFile f) async {
+    var db = await getDatabase();
+    return await db.update(audioFileTable, f.toJson(),
+        where: "id = ?",
+        whereArgs: [f.id],
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<List<Section>> getSections(String noteId) async {
     List<Map<String, dynamic>> maps = await (await getDatabase())
         .query(sectionTable, where: 'noteId = ?', whereArgs: [noteId]);
@@ -231,14 +247,18 @@ class LocalStorage {
     return maps.map((s) => AudioFile.fromJson(s)).toList();
   }
 
-  Future<List<AudioFile>> getAudioIdeas() async {
+  Future<List<AudioFile>> getAudioIdeas({bool descending = true}) async {
     List<Map<String, dynamic>> maps = await (await getDatabase())
         .query(audioFileTable, where: 'noteId IS NULL', whereArgs: []);
     if (maps == null) return [];
 
     // copy maps to sort them properly
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
-    return maps.map((s) => AudioFile.fromJson(s)).toList();
+    var files = maps.map((s) => AudioFile.fromJson(s)).toList();
+    if (descending) {
+      files.sort((a1, a2) => a2.createdAt.compareTo(a1.createdAt));
+    }
+    return files;
   }
 
   Future<Note> parseNote(Map<String, dynamic> data) async {

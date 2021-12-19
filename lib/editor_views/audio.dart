@@ -43,7 +43,7 @@ class AudioFileView extends StatelessWidget {
   final AudioFile file;
   final int index;
   final GlobalKey globalKey;
-  final Function onDelete, onMove, onShare, onDuplicate;
+  final Function onDelete, onMove, onShare, onDuplicate, onToggleStarred;
 
   const AudioFileView(
       {@required this.file,
@@ -53,6 +53,7 @@ class AudioFileView extends StatelessWidget {
       @required this.onShare,
       @required this.onMove,
       @required this.globalKey,
+      this.onToggleStarred,
       Key key})
       : super(key: key);
 
@@ -123,11 +124,32 @@ class AudioFileView extends StatelessWidget {
           var id2action = {
             AudioActionEnum.share.index: onShare,
             AudioActionEnum.move.index: onMove,
+            AudioActionEnum.duplicate.index: onDuplicate,
+            AudioActionEnum.star.index: onToggleStarred,
+            AudioActionEnum.unstar.index: onToggleStarred,
           };
-          var order = [
-            AudioActionEnum.share,
-            AudioActionEnum.move,
-          ];
+
+          var order = <AudioActionEnum>[];
+
+          if (onShare != null) {
+            order.add(AudioActionEnum.share);
+          }
+
+          if (onMove != null) {
+            order.add(AudioActionEnum.move);
+          }
+
+          if (onDuplicate != null) {
+            order.add(AudioActionEnum.duplicate);
+          }
+
+          if (onToggleStarred != null) {
+            if (file.starred) {
+              order.add(AudioActionEnum.unstar);
+            } else {
+              order.add(AudioActionEnum.star);
+            }
+          }
 
           showAudioActionDialog(context, order, (action) {
             Navigator.of(context).pop();

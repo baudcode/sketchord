@@ -90,8 +90,7 @@ class AudioListState extends State<AudioList>
 
   _onMove(AudioFile f) {
     showMoveToNoteDialog(context, () {
-      setState(() {});
-      Navigator.of(context).pop();
+      //Navigator.of(context).pop();
     }, f);
   }
 
@@ -99,61 +98,147 @@ class AudioListState extends State<AudioList>
     shareFile(f.path);
   }
 
+  _onToggleStarred(AudioFile f) {
+    toggleStarredAudioIdea(f);
+  }
+
+  _makeAudioFile(AudioFile f) {
+    return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
+        child: AudioFileView(
+            index: -1,
+            globalKey: _globalKey,
+            file: f,
+            onDelete: () => _onDelete(f),
+            onDuplicate: null,
+            onToggleStarred: () => _onToggleStarred(f),
+            onMove: () => _onMove(f),
+            onShare: () => _onShare(f)));
+  }
+
+  _makeAudioFileViewList(List<AudioFile> files) {
+    return SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+      return _makeAudioFile(files[index]);
+    }, childCount: files.length));
+  }
+
+  _silver(List<AudioFile> files) {
+    bool isAnyAudioFileStarred() {
+      return files.any((element) => element.starred);
+    }
+
+    List<Widget> noteList = [];
+
+    if (isAnyAudioFileStarred()) {
+      print("notes are starred");
+      List<AudioFile> items = files.where((n) => !n.starred).toList();
+      List<AudioFile> starrtedItems = files.where((n) => n.starred).toList();
+
+      noteList = [
+        SliverList(
+            delegate: SliverChildListDelegate([
+          Padding(
+              padding: EdgeInsets.only(left: 16, top: 16),
+              child: Row(children: [
+                Text("Starred", style: Theme.of(context).textTheme.caption),
+                Padding(
+                    padding: EdgeInsets.only(left: 8, bottom: 0),
+                    child: Icon(Icons.star, size: 16))
+              ]))
+        ])),
+        _makeAudioFileViewList(starrtedItems),
+        SliverList(
+            delegate: SliverChildListDelegate([
+          Padding(
+              padding: EdgeInsets.only(left: 16),
+              child: Text("Other", style: Theme.of(context).textTheme.caption))
+        ])),
+        _makeAudioFileViewList(items),
+      ];
+    } else {
+      noteList = [
+        _makeAudioFileViewList(files),
+      ];
+    }
+
+    SliverAppBar appBar = _sliverAppBar();
+
+    return CustomScrollView(
+      slivers: [appBar]..addAll(noteList),
+    );
+  }
+
+  _sliverAppBar() {
+    return SliverAppBar(
+      titleSpacing: 5.0,
+      leading:
+          IconButton(icon: Icon(Icons.menu), onPressed: widget.onMenuPressed),
+      title: Center(
+          child: Align(child: Text("Ideas"), alignment: Alignment.centerLeft)),
+      floating: false,
+      pinned: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
         child: Scaffold(
-      key: _globalKey,
-      appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: _onMenu,
-          ),
-          title: Text("Ideas")),
-      bottomSheet: showRecordingButton()
-          ? null
-          : RecorderBottomSheet(key: Key("idea-bottom-sheet"), showTitle: true),
-      floatingActionButton: showRecordingButton()
-          ? FloatingActionButton(
-              child: (recorderStore.state == RecorderState.RECORDING)
-                  ? Icon(Icons.stop)
-                  : Icon(Icons.mic),
-              backgroundColor: (recorderStore.state == RecorderState.RECORDING)
-                  ? Theme.of(context).accentColor
-                  : null,
-              onPressed: () {
-                if (recorderStore.state == RecorderState.STOP) {
-                  startRecordingAction();
-                } else if (recorderStore.state == RecorderState.RECORDING) {
-                  stopAction();
-                }
-              })
-          : null,
-      body: Container(
-          padding: EdgeInsets.all(8),
-          child: FutureBuilder<List<AudioFile>>(
-              initialData: [],
-              future: LocalStorage().getAudioIdeas(),
-              builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
-                return ListView.builder(
-                    itemCount: snap.data.length,
-                    itemBuilder: (context, index) {
-                      AudioFile f = snap.data[index];
+            key: _globalKey,
+            bottomSheet: showRecordingButton()
+                ? null
+                : RecorderBottomSheet(
+                    key: Key("idea-bottom-sheet"), showTitle: true),
+            floatingActionButton: showRecordingButton()
+                ? FloatingActionButton(
+                    child: (recorderStore.state == RecorderState.RECORDING)
+                        ? Icon(Icons.stop)
+                        : Icon(Icons.mic),
+                    backgroundColor:
+                        (recorderStore.state == RecorderState.RECORDING)
+                            ? Theme.of(context).accentColor
+                            : null,
+                    onPressed: () {
+                      if (recorderStore.state == RecorderState.STOP) {
+                        startRecordingAction();
+                      } else if (recorderStore.state ==
+                          RecorderState.RECORDING) {
+                        stopAction();
+                      }
+                    })
+                : null,
+            body: FutureBuilder<List<AudioFile>>(
+                initialData: [],
+                future: LocalStorage().getAudioIdeas(),
+                builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
+                  return _silver(snap.data);
+                })));
+    // body: Container(
+    //     padding: EdgeInsets.all(8),
+    //     child: FutureBuilder<List<AudioFile>>(
+    //         initialData: [],
+    //         future: LocalStorage().getAudioIdeas(),
+    //         builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
+    //           return ListView.builder(
+    //               itemCount: snap.data.length,
+    //               itemBuilder: (context, index) {
+    //                 AudioFile f = snap.data[index];
 
-                      return AudioFileView(
-                          index: index,
-                          globalKey: _globalKey,
-                          file: snap.data[index],
-                          onDelete: () => _onDelete(f),
-                          onDuplicate: null,
-                          onMove: () => _onMove(f),
-                          onShare: () => _onShare(f));
-                    });
-              })),
-    ));
+    //                 return AudioFileView(
+    //                     index: index,
+    //                     globalKey: _globalKey,
+    //                     file: snap.data[index],
+    //                     onDelete: () => _onDelete(f),
+    //                     onDuplicate: null,
+    //                     onToggleStarred: () => _onToggleStarred(f),
+    //                     onMove: () => _onMove(f),
+    //                     onShare: () => _onShare(f));
+    //               });
+    //         })),
+    // ));
   }
 }
-
 
 /* 
 

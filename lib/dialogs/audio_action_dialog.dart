@@ -13,7 +13,16 @@ class AudioAction {
   AudioAction(this.id, this.icon, this.description);
 }
 
-enum AudioActionEnum { share, move, duplicate, copy, move_to_new, search }
+enum AudioActionEnum {
+  share,
+  move,
+  duplicate,
+  copy,
+  move_to_new,
+  search,
+  star,
+  unstar
+}
 
 var enum2Action = {
   AudioActionEnum.duplicate:
@@ -26,6 +35,10 @@ var enum2Action = {
       AudioAction(AudioActionEnum.search.index, Icons.search, "Search"),
   AudioActionEnum.share:
       AudioAction(AudioActionEnum.share.index, Icons.share, "Share"),
+  AudioActionEnum.star:
+      AudioAction(AudioActionEnum.star.index, Icons.star_border, "Star"),
+  AudioActionEnum.unstar:
+      AudioAction(AudioActionEnum.unstar.index, Icons.star, "Unstar"),
 };
 
 showAudioActionDialog(BuildContext context, List<AudioActionEnum> actionEnums,
@@ -81,6 +94,7 @@ showMoveToNoteDialog(BuildContext context, Function onDone, AudioFile f) {
         context,
         new MaterialPageRoute(
             builder: (context) => NoteSearchViewLoader(
+                  single: true,
                   collection: NoteCollection.empty(),
                   onAddNotes: (List<Note> notes) {
                     print("selected notes: ${notes.map((e) => e.title)}");
@@ -91,14 +105,22 @@ showMoveToNoteDialog(BuildContext context, Function onDone, AudioFile f) {
     });
   }
 
+  toggleStar() async {
+    f.starred = !f.starred;
+    await LocalStorage().syncAudioFile(f);
+  }
+
   var id2action = {
     AudioActionEnum.move_to_new.index: onMoveToNew,
     AudioActionEnum.search.index: onSearch,
+    AudioActionEnum.star.index: toggleStar,
+    AudioActionEnum.unstar.index: toggleStar,
   };
   var order = [
     AudioActionEnum.move_to_new,
     AudioActionEnum.search,
   ];
+
   showAudioActionDialog(context, order, (value) {
     id2action[value.id]();
   });
