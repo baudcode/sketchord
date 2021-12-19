@@ -9,4 +9,4 @@ flutter run --flavor dev
 
 # Create Release
 1. Change Version
-2. Build bundle `flutter build appbundle`
+2. Build bundle `flutter build appbundle --flavor prod`
