@@ -29,7 +29,9 @@ setupIntentReceivers(BuildContext context) {
           (f) => audioExtensions.any((e) => f.path.toLowerCase().endsWith(e)));
 
       if (_validFiles.length == 0) {
-        showDataInvalidSnack(context);
+        if (value.length > 0) {
+          showDataInvalidSnack(context);
+        }
         return;
       }
 
