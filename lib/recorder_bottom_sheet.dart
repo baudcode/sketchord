@@ -4,6 +4,50 @@ import 'package:sound/looper.dart';
 import 'package:sound/utils.dart';
 import 'recorder_store.dart';
 
+class Skipper extends StatefulWidget {
+  final Color color;
+  Skipper(this.color, {Key key}) : super(key: key);
+
+  @override
+  _SkipperState createState() => _SkipperState();
+}
+
+class _SkipperState extends State<Skipper> with StoreWatcherMixin<Skipper> {
+  PlayerPositionStore playerPositionStore;
+
+  @override
+  void initState() {
+    super.initState();
+    playerPositionStore = listenToStore(playerPositionStoreToken);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+
+    var children = [
+      IconButton(icon: Icon(Icons.plus_one)),
+      IconButton(icon: Icon(Icons.thirty_fps))
+    ];
+
+    return Container(
+        // decoration: BoxDecoration(
+        //     color: widget.color,
+        //     borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Theme.of(context).appBarTheme.color,
+        //         spreadRadius: 2,
+        //         blurRadius: 10,
+        //       ),
+        //     ]),
+        color: widget.color,
+        child: Row(
+            children: children,
+            mainAxisAlignment: MainAxisAlignment.spaceAround));
+  }
+}
+
 class BottomInfo extends StatefulWidget {
   final Color color;
   final double pad;
@@ -153,6 +197,7 @@ class _PlayerSliderState extends State<PlayerSlider>
     return Container(
         height: 50,
         child: Column(children: [
+          Text("Player:"),
           Expanded(
               child: Slider(
             min: 0.0,
@@ -172,7 +217,9 @@ class _PlayerSliderState extends State<PlayerSlider>
 }
 
 class RecorderBottomSheet extends StatefulWidget {
-  RecorderBottomSheet({Key key}) : super(key: key);
+  final bool showTitle;
+
+  RecorderBottomSheet({this.showTitle = false, Key key}) : super(key: key);
 
   @override
   _RecorderBottomSheetState createState() => _RecorderBottomSheetState();
@@ -313,11 +360,16 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       if (onMinimize != null) {
         onMinimize();
       }
-    }, enableMinimize: true);
+    },
+        enableMinimize: true,
+        title: (widget.showTitle && store.currentAudioFile != null)
+            ? store.currentAudioFile.name
+            : null);
 
     BottomInfo info = BottomInfo(color);
 
     Widget controls;
+    Skipper skipper; // = Skipper(color);
 
     print("showLooper: $showLooper");
 
@@ -337,16 +389,20 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
               (!minimized)
                   ? Container(
                       color: Theme.of(context).bottomAppBarColor,
-                      height: bottomHeight + maxMinimizeHeight,
+                      height: bottomHeight +
+                          maxMinimizeHeight +
+                          (widget.showTitle ? 30 : 0),
                       width: width,
                       child: Column(children: [
                         Container(
                             child: Column(children: [
                           SizedBox(height: 10),
                           looper,
-                          SizedBox(height: 50),
-                          Text("Player:"),
+                          SizedBox(height: 40),
                           PlayerSlider(),
+                          (widget.showTitle
+                              ? SizedBox(height: 30)
+                              : Container())
                         ])),
                         //Expanded(child: Container()),
                       ]),
@@ -365,7 +421,8 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
                             icon: Icon(Icons.arrow_upward, size: 16)),
                       ))
                   : Container(),
-              info
+              info,
+              (skipper != null) ? skipper : Container()
             ]),
       );
     } else {

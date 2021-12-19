@@ -9,8 +9,10 @@ class Looper extends StatefulWidget {
   final Color color;
   final Function onMinimize;
   final bool enableMinimize;
+  final String title;
 
-  Looper(this.color, this.onMinimize, {this.enableMinimize = true, Key key})
+  Looper(this.color, this.onMinimize,
+      {this.enableMinimize = true, this.title, Key key})
       : super(key: key);
 
   @override
@@ -71,7 +73,7 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
 
     return Container(
       color: widget.color,
-      height: 100,
+      height: widget.title != null ? 150 : 120,
       child: Column(children: [
         Row(
             mainAxisSize: MainAxisSize.max,
@@ -93,27 +95,41 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
                           ? () => _changeRangeValues(null)
                           : null))
             ]),
-        Text(
-          "Looper:",
-        ),
-        SizedBox(height: 20),
-        Expanded(
-            child: frs.RangeSlider(
-          min: 0,
-          onChangeEnd: (double endLowerValue, double endUpperValue) {
-            _changeRangeValues(RangeValues(endLowerValue, endUpperValue));
-          },
-          max: (rangeMax > upperValue) ? rangeMax : upperValue,
-          showValueIndicator: true,
-          lowerValue: lowerValue,
-          upperValue: upperValue,
-          onChanged: (double newLowerValue, double newUpperValue) {
-            setState(() {
-              print("change looper.....");
-              range = RangeValues(newLowerValue, newUpperValue);
-            });
-          },
-        ))
+        widget.title != null
+            ? Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  widget.title,
+                  softWrap: false,
+                  overflow: TextOverflow.clip,
+                  style: Theme.of(context).textTheme.headline6,
+                ))
+            : Container(),
+        widget.title != null ? SizedBox(height: 29) : SizedBox(height: 19),
+        Container(
+            height: 50,
+            child: Column(children: [
+              Text(
+                "Looper:",
+              ),
+              Expanded(
+                  child: frs.RangeSlider(
+                min: 0,
+                onChangeEnd: (double endLowerValue, double endUpperValue) {
+                  _changeRangeValues(RangeValues(endLowerValue, endUpperValue));
+                },
+                max: (rangeMax > upperValue) ? rangeMax : upperValue,
+                showValueIndicator: true,
+                lowerValue: lowerValue,
+                upperValue: upperValue,
+                onChanged: (double newLowerValue, double newUpperValue) {
+                  setState(() {
+                    print("change looper.....");
+                    range = RangeValues(newLowerValue, newUpperValue);
+                  });
+                },
+              ))
+            ]))
       ]),
     );
   }
