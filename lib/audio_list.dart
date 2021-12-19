@@ -119,7 +119,7 @@ class AudioListState extends State<AudioList>
                   ? Icon(Icons.stop)
                   : Icon(Icons.mic),
               backgroundColor: (recorderStore.state == RecorderState.RECORDING)
-                  ? Theme.of(context).errorColor
+                  ? Theme.of(context).accentColor
                   : null,
               onPressed: () {
                 if (recorderStore.state == RecorderState.STOP) {

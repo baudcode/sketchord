@@ -4,6 +4,100 @@ import 'package:sound/looper.dart';
 import 'package:sound/utils.dart';
 import 'recorder_store.dart';
 
+class SkipIcon extends StatelessWidget {
+  final int number;
+  final bool direction;
+  final Function onPressed;
+
+  SkipIcon({this.number, this.direction, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    var text = new RichText(
+      text: new TextSpan(
+        // Note: Styles for TextSpans must be explicitly defined.
+        // Child text spans will inherit styles from parent
+        style: new TextStyle(
+          fontSize: 15.0,
+          color: Colors.black,
+        ),
+        children: <TextSpan>[
+          new TextSpan(
+              text: (direction) ? '+' : "-",
+              style: new TextStyle(fontWeight: FontWeight.bold)),
+          new TextSpan(text: number.toString()),
+        ],
+      ),
+    );
+
+    return TextButton(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon((direction) ? Icons.add : Icons.remove,
+              size: 15,
+              color: Theme.of(context).primaryTextTheme.subtitle2.color),
+          SizedBox(width: 5), // give the width that you desire
+          Text(
+            number.toString(),
+            style: Theme.of(context).primaryTextTheme.subtitle2,
+          )
+        ],
+      ),
+      onPressed: onPressed,
+    );
+
+    return TextButton.icon(
+        icon: Icon((direction) ? Icons.add : Icons.remove,
+            size: 15, color: Colors.black),
+        label: Text(
+          number.toString(),
+          style:
+              Theme.of(context).textTheme.button.copyWith(color: Colors.black),
+        ),
+        onPressed: onPressed);
+    //   return TextButton(onPressed: onPressed, child: text);
+  }
+
+  // TextButton(
+  //     onPressed: onPressed,
+  //     child: Stack(
+  //       children: <Widget>[
+  //         new IconButton(
+  //           icon: new Icon(
+  //             (direction) ? Icons.add : Icons.remove,
+  //             size: 15,
+  //           ),
+  //           onPressed: () {},
+  //         ),
+  //         // new Positioned(
+  //         //     top 5.5,
+  //         //     right: 5.0,
+  //         //     child: new Center(
+  //         //       child: new Text(
+  //         //         this.number.toString(),
+  //         //         style:
+  //         //             new TextStyle(fontSize: 11.0, fontWeight: FontWeight.w500),
+  //         //       ),
+  //         // )),
+
+  //         new Positioned(
+  //             top: 15.0,
+  //             right: 0,
+  //             child: new Center(
+  //               child: new Text(
+  //                 this.number.toString(),
+  //                 style: new TextStyle(
+  //                     fontSize: 15.0, fontWeight: FontWeight.w500),
+  //               ),
+  //             )),
+  //       ],
+  //     )),
+  //     ],
+  //   ));
+  // }
+}
+
 class Skipper extends StatefulWidget {
   final Color color;
   Skipper(this.color, {Key key}) : super(key: key);
@@ -21,13 +115,44 @@ class _SkipperState extends State<Skipper> with StoreWatcherMixin<Skipper> {
     playerPositionStore = listenToStore(playerPositionStoreToken);
   }
 
+  skip(int seconds) {
+    Duration current = playerPositionStore.position;
+    Duration skipToPos = current + Duration(seconds: seconds);
+    if (skipToPos.isNegative) {
+      skipToPos = Duration(seconds: 0);
+    }
+    skipTo(skipToPos);
+  }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
 
     var children = [
-      IconButton(icon: Icon(Icons.plus_one)),
-      IconButton(icon: Icon(Icons.thirty_fps))
+      SkipIcon(
+          number: 30,
+          direction: true,
+          onPressed: () {
+            skip(30);
+          }),
+      SkipIcon(
+          number: 10,
+          direction: true,
+          onPressed: () {
+            skip(10);
+          }),
+      SkipIcon(
+          number: 10,
+          direction: false,
+          onPressed: () {
+            skip(-10);
+          }),
+      SkipIcon(
+          number: 30,
+          direction: false,
+          onPressed: () {
+            skip(-30);
+          })
     ];
 
     return Container(
@@ -218,8 +343,11 @@ class _PlayerSliderState extends State<PlayerSlider>
 
 class RecorderBottomSheet extends StatefulWidget {
   final bool showTitle;
+  final bool showSkipper;
 
-  RecorderBottomSheet({this.showTitle = false, Key key}) : super(key: key);
+  RecorderBottomSheet(
+      {this.showTitle = false, this.showSkipper = true, Key key})
+      : super(key: key);
 
   @override
   _RecorderBottomSheetState createState() => _RecorderBottomSheetState();
@@ -369,7 +497,12 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     BottomInfo info = BottomInfo(color);
 
     Widget controls;
-    Skipper skipper; // = Skipper(color);
+
+    Skipper skipper;
+
+    if (widget.showSkipper) {
+      skipper = Skipper(color);
+    }
 
     print("showLooper: $showLooper");
 
@@ -422,6 +555,9 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
                       ))
                   : Container(),
               info,
+              (skipper != null)
+                  ? SizedBox(height: 10, child: Container(color: color))
+                  : Container(),
               (skipper != null) ? skipper : Container()
             ]),
       );
