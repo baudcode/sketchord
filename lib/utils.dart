@@ -42,7 +42,7 @@ List<String> itemsByFrequency(List<String> input) => [
                     ..update(letter, (value) => value + 1, ifAbsent: () => 1))
               .entries
               .toList()
-                ..sort((e1, e2) => e2.value.compareTo(e1.value)))
+            ..sort((e1, e2) => e2.value.compareTo(e1.value)))
           .map((e) => e.key)
     ];
 
@@ -114,8 +114,9 @@ showSnack(ScaffoldState state, String message,
 }
 
 showSnackByContext(BuildContext context, String message,
-    {Duration duration = defaultDuration}) {
+    {Duration duration = defaultDuration, Color backgroundColor}) {
   var snackbar = SnackBar(
+      backgroundColor: backgroundColor,
       content: Text(message,
           style: Theme.of(context).appBarTheme.textTheme.bodyText1),
       duration: duration);
