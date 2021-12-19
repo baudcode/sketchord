@@ -120,20 +120,21 @@ class AudioFileView extends StatelessWidget {
         if (d == DismissDirection.startToEnd) {
           return true;
         } else {
-          showAudioActionDialog(context, [
-            AudioAction(0, Icons.share, "Share"),
-            AudioAction(1, Icons.move_to_inbox, "Move"),
-            AudioAction(2, Icons.copy, "Duplicate"),
-          ], (action) {
-            Navigator.of(context).pop();
+          var id2action = {
+            AudioActionEnum.share.index: onShare,
+            AudioActionEnum.move.index: onMove,
+          };
+          var order = [
+            AudioActionEnum.share,
+            AudioActionEnum.move,
+          ];
 
-            if (action.id == 0) {
-              // shareFile(file.path);
-              onShare();
-            } else if (action.id == 1) {
-              onMove();
-            } else if (action.id == 2) {
-              onDuplicate();
+          showAudioActionDialog(context, order, (action) {
+            Navigator.of(context).pop();
+            if (id2action.containsKey(action.id)) {
+              if (id2action[action.id] != null) {
+                id2action[action.id]();
+              }
             }
           });
           // shareFile(file.path);
