@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flux/flutter_flux.dart';
@@ -8,11 +10,14 @@ import 'package:sound/dialogs/permissions_dialog.dart';
 import 'package:sound/editor_views/audio.dart';
 import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
+import 'package:sound/main.dart';
 import 'package:sound/model.dart';
+import 'package:sound/note_views/seach.dart';
 import 'package:sound/recorder_bottom_sheet.dart';
 import 'package:sound/recorder_store.dart';
 import 'package:sound/share.dart';
 import 'package:sound/utils.dart';
+import 'package:tuple/tuple.dart';
 
 class AudioList extends StatefulWidget {
   final Function onMenuPressed;
@@ -29,14 +34,42 @@ class AudioListState extends State<AudioList>
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   AudioListStore store;
   RecorderBottomSheetStore recorderStore;
+  List<ActionSubscription> subs = [];
+  TextEditingController _searchController;
+  FocusNode searchFocusNode;
 
   @override
   void initState() {
-    super.initState();
-    store = listenToStore(audioListToken);
-    recorderStore = listenToStore(recorderBottomSheetStoreToken);
+    print("INIT STATE");
 
+    super.initState();
+
+    searchFocusNode = new FocusNode();
+    store = listenToStore(audioListToken, handleStoreChange);
+    recorderStore =
+        listenToStore(recorderBottomSheetStoreToken, handleStoreChange);
+
+    _searchController = TextEditingController.fromValue(TextEditingValue.empty);
+
+    initListeners();
+    setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print("CHANGE>>>>>>>");
+  }
+
+  void handleStoreChange(Store store) {
     recordingFinished.clearListeners();
+    audioRecordingPermissionDenied.clearListeners();
+    initListeners();
+    setState(() {}); // TO NOT REMOVE!!!!
+  }
+
+  void initListeners() {
+    // recordingFinished.clearListeners();
     recordingFinished.listen((f) async {
       print("recording finished ${f.path} with duration ${f.duration}");
 
@@ -52,15 +85,32 @@ class AudioListState extends State<AudioList>
       );
     });
 
+    // audioRecordingPermissionDenied.clearListeners();
     audioRecordingPermissionDenied.listen((_) {
       showHasNoPermissionsDialog(context);
+    });
+
+    toggleAudioIdeasSearch.listen((_) {
+      if (store.isSearching) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          print("REQUESTING FOCUS");
+          FocusScope.of(context).requestFocus(searchFocusNode);
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    print("DISPOSE");
     recordingFinished.clearListeners();
     audioRecordingPermissionDenied.clearListeners();
+    // recorderStore.dispose();
+    // store.dispose();
+
+    // for (var sub in subs) {
+    //   sub.cancel();
+    // }
     //store.dispose();
     //recorderStore.dispose();
     super.dispose();
@@ -90,7 +140,7 @@ class AudioListState extends State<AudioList>
 
   _onMove(AudioFile f) {
     showMoveToNoteDialog(context, () {
-      //Navigator.of(context).pop();
+      Navigator.of(context).pop();
     }, f);
   }
 
@@ -100,6 +150,10 @@ class AudioListState extends State<AudioList>
 
   _onToggleStarred(AudioFile f) {
     toggleStarredAudioIdea(f);
+  }
+
+  _onRename(AudioFile f, String name) {
+    renameAudioIdea(Tuple2(f, name));
   }
 
   _makeAudioFile(AudioFile f) {
@@ -112,8 +166,26 @@ class AudioListState extends State<AudioList>
             onDelete: () => _onDelete(f),
             onDuplicate: null,
             onToggleStarred: () => _onToggleStarred(f),
+            onRename: (name) => _onRename(f, name),
             onMove: () => _onMove(f),
             onShare: () => _onShare(f)));
+  }
+
+  _searchView() {
+    return SearchTextView(
+        toggleIsSearching: ({searching}) {
+          if (!store.isSearching) {
+            toggleAudioIdeasSearch();
+          }
+        },
+        onChanged: (s) {
+          setSearchAudioIdeas(s);
+          setState(() {});
+        },
+        text: (store.isSearching) ? "Search..." : "Idea",
+        focusNode: searchFocusNode,
+        enabled: store.isSearching,
+        controller: _searchController);
   }
 
   _makeAudioFileViewList(List<AudioFile> files) {
@@ -131,7 +203,6 @@ class AudioListState extends State<AudioList>
     List<Widget> noteList = [];
 
     if (isAnyAudioFileStarred()) {
-      print("notes are starred");
       List<AudioFile> items = files.where((n) => !n.starred).toList();
       List<AudioFile> starrtedItems = files.where((n) => n.starred).toList();
 
@@ -172,10 +243,27 @@ class AudioListState extends State<AudioList>
   _sliverAppBar() {
     return SliverAppBar(
       titleSpacing: 5.0,
-      leading:
-          IconButton(icon: Icon(Icons.menu), onPressed: widget.onMenuPressed),
-      title: Center(
-          child: Align(child: Text("Ideas"), alignment: Alignment.centerLeft)),
+      title: Padding(
+          child: Center(child: _searchView()),
+          padding: EdgeInsets.only(left: 5)),
+      leading: IconButton(
+          icon: store.isSearching ? Icon(Icons.clear) : Icon(Icons.menu),
+          onPressed: store.isSearching
+              ? () {
+                  setSearchAudioIdeas("");
+                  toggleAudioIdeasSearch();
+                }
+              : _onMenu),
+      actions: store.isSearching
+          ? []
+          : [
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  toggleAudioIdeasSearch();
+                },
+              )
+            ],
       floating: false,
       pinned: true,
     );
@@ -183,115 +271,58 @@ class AudioListState extends State<AudioList>
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldMessenger(
-        child: Scaffold(
-            key: _globalKey,
-            bottomSheet: showRecordingButton()
-                ? null
-                : RecorderBottomSheet(
-                    key: Key("idea-bottom-sheet"), showTitle: true),
-            floatingActionButton: showRecordingButton()
-                ? FloatingActionButton(
-                    child: (recorderStore.state == RecorderState.RECORDING)
-                        ? Icon(Icons.stop)
-                        : Icon(Icons.mic),
-                    backgroundColor:
-                        (recorderStore.state == RecorderState.RECORDING)
-                            ? Theme.of(context).accentColor
-                            : null,
-                    onPressed: () {
-                      if (recorderStore.state == RecorderState.STOP) {
-                        startRecordingAction();
-                      } else if (recorderStore.state ==
-                          RecorderState.RECORDING) {
-                        stopAction();
-                      }
-                    })
-                : null,
-            body: FutureBuilder<List<AudioFile>>(
-                initialData: [],
-                future: LocalStorage().getAudioIdeas(),
-                builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
-                  return _silver(snap.data);
-                })));
-    // body: Container(
-    //     padding: EdgeInsets.all(8),
-    //     child: FutureBuilder<List<AudioFile>>(
-    //         initialData: [],
-    //         future: LocalStorage().getAudioIdeas(),
-    //         builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
-    //           return ListView.builder(
-    //               itemCount: snap.data.length,
-    //               itemBuilder: (context, index) {
-    //                 AudioFile f = snap.data[index];
+    return WillPopScope(
+      onWillPop: () async {
+        print("WILL POP");
+        return true;
+      },
+      child: ScaffoldMessenger(
+          child: Scaffold(
+              key: _globalKey,
+              bottomSheet: showRecordingButton()
+                  ? null
+                  : RecorderBottomSheet(
+                      key: Key("idea-bottom-sheet"),
+                      showTitle: true,
+                      showRepeat: true,
+                    ),
+              floatingActionButton: showRecordingButton()
+                  ? FloatingActionButton(
+                      child: (recorderStore.state == RecorderState.RECORDING)
+                          ? Icon(Icons.stop)
+                          : Icon(Icons.mic),
+                      backgroundColor:
+                          (recorderStore.state == RecorderState.RECORDING)
+                              ? Theme.of(context).accentColor
+                              : null,
+                      onPressed: () {
+                        if (recorderStore.state == RecorderState.STOP) {
+                          startRecordingAction();
+                        } else if (recorderStore.state ==
+                            RecorderState.RECORDING) {
+                          stopAction();
+                        }
+                      })
+                  : null,
+              body: FutureBuilder<List<AudioFile>>(
+                  initialData: [],
+                  future: LocalStorage().getAudioIdeas(),
+                  builder: (context, AsyncSnapshot<List<AudioFile>> snap) {
+                    List<AudioFile> files = snap.data;
 
-    //                 return AudioFileView(
-    //                     index: index,
-    //                     globalKey: _globalKey,
-    //                     file: snap.data[index],
-    //                     onDelete: () => _onDelete(f),
-    //                     onDuplicate: null,
-    //                     onToggleStarred: () => _onToggleStarred(f),
-    //                     onMove: () => _onMove(f),
-    //                     onShare: () => _onShare(f));
-    //               });
-    //         })),
-    // ));
+                    if (store.isSearching && store.search.trim() != "") {
+                      var search = store.search.toLowerCase();
+                      files = files
+                          .where((element) => jsonEncode(element.toJson())
+                              .toLowerCase()
+                              .contains(search))
+                          .toList();
+                    }
+                    setQueue(files);
+
+                    print("RERENDER");
+                    return _silver(files);
+                  }))),
+    );
   }
 }
-
-/* 
-
-    items[TabType.audio].add(AudioFileView(
-          file: f,
-          index: index,
-          onDuplicate: () async {
-            AudioFile copy = await FileManager().copyToNew(f);
-            addAudioFile(copy);
-          },
-          onDelete: () => _onAudioFileDelete(f, index),
-          onMove: () {
-            showImportDialog(context, "Copy audio to", () async {
-              // new audio file
-
-              AudioFile copy = await FileManager().copyToNew(f);
-              Future.delayed(Duration(milliseconds: 200), () {
-                showSnack(_globalKey.currentState,
-                    "The audio file as copiedr to a new note");
-              });
-              Note note = Note.empty();
-              note.audioFiles.add(copy);
-
-              // manual sync
-              LocalStorage().syncNote(note);
-              return note;
-            }, (Note note) async {
-              AudioFile copy = await FileManager().copyToNew(f);
-
-              Future.delayed(Duration(milliseconds: 200), () {
-                showSnack(_globalKey.currentState,
-                    "The audio file as copied to a ${note.title}");
-              });
-
-              if (note.id == widget.note.id) {
-                copy.name += " - copy";
-                addAudioFile(copy);
-              } else {
-                // manual sync
-                note.audioFiles.add(copy);
-                LocalStorage().syncNote(note);
-              }
-
-              return note;
-            },
-                openNote: false,
-                syncNote:
-                    false, // do not sync note, because otherwise this component gets updated twice
-                importButtonText: "Copy",
-                ignoreNoteId: store.note.id,
-                newButtonText: "Copy as NEW");
-          },
-          onShare: () => shareFile(f.path),
-          globalKey: _globalKey));
-    });
-*/

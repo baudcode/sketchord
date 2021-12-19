@@ -319,6 +319,10 @@ class _PlayerSliderState extends State<PlayerSlider>
 
   @override
   Widget build(BuildContext context) {
+    var value = (playerPositionStore.position.inMilliseconds / 1000).toDouble();
+    if (value > (store.currentLength.inMilliseconds / 1000).toDouble()) {
+      value = (store.currentLength.inMilliseconds / 1000).toDouble();
+    }
     return Container(
         height: 50,
         child: Column(children: [
@@ -329,8 +333,7 @@ class _PlayerSliderState extends State<PlayerSlider>
             max: store.currentLength == null
                 ? 0.0
                 : (store.currentLength.inMilliseconds / 1000).toDouble(),
-            value:
-                (playerPositionStore.position.inMilliseconds / 1000).toDouble(),
+            value: value,
             onChanged: (value) {
               print("on changed to $value");
               skipTo(Duration(milliseconds: (value * 1000).floor()));
@@ -344,9 +347,13 @@ class _PlayerSliderState extends State<PlayerSlider>
 class RecorderBottomSheet extends StatefulWidget {
   final bool showTitle;
   final bool showSkipper;
+  final bool showRepeat;
 
   RecorderBottomSheet(
-      {this.showTitle = false, this.showSkipper = true, Key key})
+      {this.showTitle = false,
+      this.showSkipper = true,
+      this.showRepeat = false,
+      Key key})
       : super(key: key);
 
   @override
@@ -369,7 +376,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
   Animation<double> _scaleAnimation, _sheetScaleAnimation;
 
   bool minimized = true;
-  ActionSubscription sub;
+  ActionSubscription sub, reloadSub;
 
   @override
   void initState() {
@@ -404,6 +411,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
     if (sub != null) {
       sub.cancel();
     }
+    if (reloadSub != null) reloadSub.cancel();
 
     if (_controller != null) {
       _controller.dispose();
@@ -483,6 +491,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
 
     double width = MediaQuery.of(context).size.width;
 
+    print("NAME: ${store.currentAudioFile.name}");
     Looper looper = Looper(color, () {
       // on
       if (onMinimize != null) {
@@ -490,6 +499,7 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       }
     },
         enableMinimize: true,
+        enableRepeat: widget.showRepeat,
         title: (widget.showTitle && store.currentAudioFile != null)
             ? store.currentAudioFile.name
             : null);

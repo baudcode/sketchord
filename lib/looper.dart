@@ -10,9 +10,13 @@ class Looper extends StatefulWidget {
   final Function onMinimize;
   final bool enableMinimize;
   final String title;
+  final bool enableRepeat;
 
   Looper(this.color, this.onMinimize,
-      {this.enableMinimize = true, this.title, Key key})
+      {this.enableMinimize = true,
+      this.title,
+      Key key,
+      this.enableRepeat = false})
       : super(key: key);
 
   @override
@@ -89,11 +93,31 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
                   : Container(),
               Padding(
                   padding: EdgeInsets.only(right: 8),
-                  child: TextButton(
-                      child: Text("Reset Loop"),
-                      onPressed: (range != null)
-                          ? () => _changeRangeValues(null)
-                          : null))
+                  child: Row(
+                    children: [
+                      (widget.enableRepeat)
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.repeat,
+                                color: (store.repeat == Repeat.all)
+                                    ? Theme.of(context).accentColor
+                                    : null,
+                              ),
+                              onPressed: () {
+                                if (store.repeat == Repeat.all)
+                                  setRepeat(Repeat.off);
+                                else
+                                  setRepeat(Repeat.all);
+                              },
+                            )
+                          : Container(),
+                      TextButton(
+                          child: Text("Reset"),
+                          onPressed: (range != null)
+                              ? () => _changeRangeValues(null)
+                              : null),
+                    ],
+                  ))
             ]),
         widget.title != null
             ? Padding(

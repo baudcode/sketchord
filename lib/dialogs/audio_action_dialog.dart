@@ -82,11 +82,10 @@ showMoveToNoteDialog(BuildContext context, Function onDone, AudioFile f) {
 
     // manual sync
     await LocalStorage().syncNote(note);
-    // open the note
-    onDone();
 
     Navigator.of(context)
-        .push(new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+        .push(new MaterialPageRoute(builder: (context) => NoteEditor(note)))
+        .then((value) => onDone());
   }
 
   onSearch() {
@@ -96,9 +95,14 @@ showMoveToNoteDialog(BuildContext context, Function onDone, AudioFile f) {
             builder: (context) => NoteSearchViewLoader(
                   single: true,
                   collection: NoteCollection.empty(),
-                  onAddNotes: (List<Note> notes) {
+                  onAddNotes: (List<Note> notes) async {
                     print("selected notes: ${notes.map((e) => e.title)}");
-                    onDone();
+                    assert(notes.length == 1);
+                    Note note = notes[0];
+                    note.audioFiles.add(f);
+                    await LocalStorage().syncNote(note);
+                    Navigator.of(context).push(new MaterialPageRoute(
+                        builder: (context) => NoteEditor(note)));
                   },
                 ))).then((value) {
       onDone();

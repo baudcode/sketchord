@@ -50,14 +50,17 @@ class RecorderPositionStore extends Store {
   }
 }
 
+enum Repeat { all, off }
+
 Action<Duration> changeRecorderPosition = Action();
 StoreToken recorderPositionStoreToken = StoreToken(RecorderPositionStore());
 
 class RecorderBottomSheetStore extends Store {
   //VideoPlayerController _controller;
   RecordingStatus _currentStatus = RecordingStatus.Unset;
-  AudioPlayer _player = AudioPlayer();
+  AudioPlayer _player;
   AudioFormat _audioFormat = AudioFormat.WAV;
+  Repeat _repeat = Repeat.off;
 
   Recording _current;
   FlutterAudioRecorder _recorder;
@@ -76,6 +79,7 @@ class RecorderBottomSheetStore extends Store {
   RangeValues get loopRange => _audioFile == null ? null : _audioFile.loopRange;
 
   // getters
+  Repeat get repeat => _repeat;
   RecorderState get state => _state;
   RecordingStatus get status => _currentStatus;
   Duration get currentLength => _currentLength;
@@ -88,6 +92,15 @@ class RecorderBottomSheetStore extends Store {
   AudioPlayer get player => _player;
 
   bool get isLooping => (loopRange != null);
+
+  // queue helper
+  List<AudioFile> _queue = [];
+  List<AudioFile> get queue => _queue;
+
+  getCurrentQueueIndex() {
+    if (currentAudioFile == null) return -1;
+    return _queue.indexWhere((element) => element.id == currentAudioFile.id);
+  }
 
   getDurationLoopEnd() {
     if (loopRange == null) return null;
@@ -117,6 +130,7 @@ class RecorderBottomSheetStore extends Store {
   Future<int> startPlayer(String path) async {
     print("playing $path");
     // set length not yet available
+    _player = AudioPlayer();
 
     _player.onAudioPositionChanged.listen((pos) async {
       if (loopRange != null && pos >= getDurationLoopEnd()) {
@@ -142,7 +156,24 @@ class RecorderBottomSheetStore extends Store {
 
     _player.onPlayerCompletion.listen((event) async {
       print("player completed");
-      stopAction(false);
+      print("repeat: $_repeat; length: ${_queue.length}");
+
+      if (_repeat == Repeat.all && _queue.length > 0) {
+        int index = getCurrentQueueIndex();
+        if (index == -1) {
+          print("cannot find next file, stopping...");
+          stopAction(false);
+          return;
+        }
+        AudioFile nextAudioFile = _queue[(index + 1) % _queue.length];
+        print(
+            "playing next in queue: ${nextAudioFile.id} ${nextAudioFile.name}");
+        Future.delayed(Duration(milliseconds: 100), () async {
+          await startPlaybackAction(nextAudioFile);
+        });
+      } else {
+        stopAction(false);
+      }
     });
 
     print("play me");
@@ -251,9 +282,9 @@ class RecorderBottomSheetStore extends Store {
         _state = RecorderState.STOP;
       }
       if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
-        changePlayerPosition(Duration(seconds: 0));
         _audioFile = f;
         _currentPath = f.path;
+        changePlayerPosition(Duration(seconds: 0));
         print("Init Audio file with Loop Range: ${f.loopRange}");
 
         startPlayer(f.path).then((t) {
@@ -272,7 +303,7 @@ class RecorderBottomSheetStore extends Store {
           stopPlayer(force).then((r) {
             if (r != -10) {
               _state = RecorderState.STOP;
-              trigger();
+              playbackStoppedAction();
             }
           });
         } else {
@@ -283,6 +314,10 @@ class RecorderBottomSheetStore extends Store {
           });
         }
       }
+    });
+
+    playbackStoppedAction.listen((_) {
+      trigger();
     });
 
     startRecordingAction.listen((_) {
@@ -369,6 +404,15 @@ class RecorderBottomSheetStore extends Store {
       print("ping");
       trigger();
     });
+    setRepeat.listen((r) {
+      _repeat = r;
+      trigger();
+    });
+
+    setQueue.listen((q) {
+      _queue = q;
+      // trigger();
+    });
     print("editor store created");
   }
 }
@@ -381,6 +425,7 @@ Action<String> setPath = Action();
 Action<bool> stopAction = Action();
 Action pauseAction = Action();
 Action resumeAction = Action();
+Action playbackStoppedAction = Action();
 Action<Duration> setElapsed = Action();
 Action<Duration> skipTo = Action();
 Action<AudioFile> recordingFinished = Action();
@@ -389,6 +434,8 @@ Action<RangeValues> setLoopRange = Action();
 Action<AudioFormat> setAudioFormat = Action();
 Action<bool> setMinimized = Action();
 Action audioRecordingPermissionDenied = Action();
+Action<Repeat> setRepeat = Action();
+Action<List<AudioFile>> setQueue = Action();
 
 StoreToken recorderBottomSheetStoreToken =
     StoreToken(RecorderBottomSheetStore());

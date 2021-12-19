@@ -401,6 +401,10 @@ class NoteEditorState extends State<NoteEditorContent>
             addAudioFile(copy);
           },
           onDelete: () => _onAudioFileDelete(f, index),
+          onRename: (name) {
+            f.name = name;
+            changeAudioFile(f);
+          },
           onMove: () {
             showImportDialog(context, "Copy audio to", () async {
               // new audio file

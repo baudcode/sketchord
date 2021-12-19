@@ -43,7 +43,13 @@ class AudioFileView extends StatelessWidget {
   final AudioFile file;
   final int index;
   final GlobalKey globalKey;
-  final Function onDelete, onMove, onShare, onDuplicate, onToggleStarred;
+  final Function onDelete,
+      onMove,
+      onShare,
+      onDuplicate,
+      onToggleStarred,
+      onPlay; // onPlay is just a callback, file will already be played back
+  final ValueChanged<String> onRename;
 
   const AudioFileView(
       {@required this.file,
@@ -52,8 +58,10 @@ class AudioFileView extends StatelessWidget {
       @required this.onDuplicate,
       @required this.onShare,
       @required this.onMove,
+      @required this.onRename,
       @required this.globalKey,
       this.onToggleStarred,
+      this.onPlay,
       Key key})
       : super(key: key);
 
@@ -85,9 +93,7 @@ class AudioFileView extends StatelessWidget {
             new ElevatedButton(
               child: new Text("Apply"),
               onPressed: () {
-                file.name = controller.value.text;
-                changeAudioFile(file);
-                print("Setting name of audio file to ${file.name}");
+                onRename(controller.value.text);
                 Navigator.of(context).pop();
               },
             ),
@@ -104,6 +110,7 @@ class AudioFileView extends StatelessWidget {
         onPressed: () {
           print("trying to play ${file.path}");
           if (File(file.path).existsSync()) {
+            if (onPlay != null) onPlay();
             startPlaybackAction(file);
           } else {
             showSnack(globalKey.currentState, "This files was removed!");
