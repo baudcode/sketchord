@@ -23,7 +23,7 @@ String serializeRangeValues(RangeValues v) {
 }
 
 class AudioFile {
-  String path, id, name;
+  String path, id, name, text;
   DateTime createdAt, lastModified;
   RangeValues loopRange;
 
@@ -40,7 +40,8 @@ class AudioFile {
       this.createdAt,
       this.lastModified,
       this.name,
-      this.loopRange}) {
+      this.loopRange,
+      this.text}) {
     //print("creating audio file with ${this.name} ${this.id}");
     if (id == null) id = Uuid().v4().toString();
     if (createdAt == null) createdAt = DateTime.now();
@@ -57,14 +58,15 @@ class AudioFile {
   }
 
   factory AudioFile.create(
-      {String path, Duration duration, String id, String name}) {
+      {String path, Duration duration, String id, String name, String text}) {
     return AudioFile(
         createdAt: DateTime.now(),
         lastModified: DateTime.now(),
         path: path,
         duration: duration,
         id: id,
-        name: name);
+        name: name,
+        text: text);
   }
 
   factory AudioFile.fromJson(Map<dynamic, dynamic> map) {
@@ -73,6 +75,7 @@ class AudioFile {
         lastModified: deserializeDateTime(map["lastModified"]),
         duration: deserializeDuration(map["duration"]),
         loopRange: deserializeRangeValues(map['loopRange']),
+        text: (map.containsKey("text") ? map['text'] : ""),
         id: map["id"],
         name: map['name'],
         path: map["path"]);
@@ -86,6 +89,7 @@ class AudioFile {
       "id": id,
       "path": path,
       "name": name,
+      "text": text,
       "duration": serializeDuration(duration)
     };
   }

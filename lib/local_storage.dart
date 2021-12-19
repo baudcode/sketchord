@@ -47,6 +47,14 @@ final migrations = {
   4: {
     3: [
       "ALTER TABLE $noteTable DROP COLUMN length",
+    ],
+    5: [
+      "ALTER TABLE $audioFileTable ADD text TEXT",
+    ]
+  },
+  5: {
+    4: [
+      "ALTER TABLE $audioFileTable DROP COLUMN text",
     ]
   }
 };
@@ -117,7 +125,7 @@ class LocalStorage {
     },
         // Set the version. This executes the onCreate function and provides a
         // path to perform database upgrades and downgrades.
-        version: 4);
+        version: 5);
   }
 
   Future<void> createDatabase(Database db) async {
@@ -192,6 +200,14 @@ class LocalStorage {
     return row;
   }
 
+  Future<int> addAudioIdea(AudioFile f) async {
+    Database db = await getDatabase();
+
+    Map<String, dynamic> autdioFileData = f.toJson();
+    return await db.insert(audioFileTable, autdioFileData,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<List<Section>> getSections(String noteId) async {
     List<Map<String, dynamic>> maps = await (await getDatabase())
         .query(sectionTable, where: 'noteId = ?', whereArgs: [noteId]);
@@ -212,6 +228,16 @@ class LocalStorage {
     // copy maps to sort them properly
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
     maps.sort((s1, s2) => s1['idx'] - s2['idx']);
+    return maps.map((s) => AudioFile.fromJson(s)).toList();
+  }
+
+  Future<List<AudioFile>> getAudioIdeas() async {
+    List<Map<String, dynamic>> maps = await (await getDatabase())
+        .query(audioFileTable, where: 'noteId IS NULL', whereArgs: []);
+    if (maps == null) return [];
+
+    // copy maps to sort them properly
+    maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
     return maps.map((s) => AudioFile.fromJson(s)).toList();
   }
 
@@ -366,10 +392,21 @@ class LocalStorage {
   }
 
   Future<bool> _deleteAudioFile(AudioFile audioFile) async {
+    var db = await getDatabase();
+    await db.delete(
+      audioFileTable,
+      where: 'id = ?',
+      whereArgs: [audioFile.id],
+    );
+
     if (audioFile.file.existsSync()) {
       FileSystemEntity e = await audioFile.file.delete();
     }
     return !audioFile.file.existsSync();
+  }
+
+  Future<bool> deleteAudioIdea(AudioFile audioFile) async {
+    return _deleteAudioFile(audioFile);
   }
 
   Future<void> deleteNote(Note note) async {
