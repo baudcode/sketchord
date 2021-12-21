@@ -37,6 +37,7 @@ class AudioListState extends State<AudioList>
   List<ActionSubscription> subs = [];
   TextEditingController _searchController;
   FocusNode searchFocusNode;
+  AudioFile _highlightAudioFile;
 
   @override
   void initState() {
@@ -90,6 +91,14 @@ class AudioListState extends State<AudioList>
       showHasNoPermissionsDialog(context);
     });
 
+    startPlaybackAction.listen((event) {
+      // find the index
+
+      setState(() {
+        _highlightAudioFile = recorderStore.currentAudioFile;
+      });
+    });
+
     toggleAudioIdeasSearch.listen((_) {
       if (store.isSearching) {
         Future.delayed(Duration(milliseconds: 100), () {
@@ -105,6 +114,7 @@ class AudioListState extends State<AudioList>
     print("DISPOSE");
     recordingFinished.clearListeners();
     audioRecordingPermissionDenied.clearListeners();
+    stopAction.clearListeners();
     // recorderStore.dispose();
     // store.dispose();
 
@@ -156,11 +166,12 @@ class AudioListState extends State<AudioList>
     renameAudioIdea(Tuple2(f, name));
   }
 
-  _makeAudioFile(AudioFile f) {
+  _makeAudioFile(AudioFile f, Color color) {
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 8),
         child: AudioFileView(
             index: -1,
+            backgroundColor: color,
             globalKey: _globalKey,
             file: f,
             onDelete: () => _onDelete(f),
@@ -191,7 +202,12 @@ class AudioListState extends State<AudioList>
   _makeAudioFileViewList(List<AudioFile> files) {
     return SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-      return _makeAudioFile(files[index]);
+      Color color = (_highlightAudioFile != null &&
+              _highlightAudioFile.id == files[index].id)
+          ? Theme.of(context).accentColor
+          : null;
+
+      return _makeAudioFile(files[index], color);
     }, childCount: files.length));
   }
 

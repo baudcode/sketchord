@@ -12,8 +12,10 @@ import 'package:sound/utils.dart';
 class AudioFileListItem extends StatelessWidget {
   final Function onLongPress, onPressed;
   final AudioFile file;
+  final backgroundColor;
 
-  AudioFileListItem(this.file, {this.onLongPress, this.onPressed});
+  AudioFileListItem(this.file,
+      {this.onLongPress, this.onPressed, this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +30,7 @@ class AudioFileListItem extends StatelessWidget {
       trailing: trailing,
       subtitle: subTitle,
       dense: true,
+      tileColor: backgroundColor,
       visualDensity: VisualDensity.comfortable,
       contentPadding: EdgeInsets.all(2),
       leading: IconButton(
@@ -43,6 +46,7 @@ class AudioFileView extends StatelessWidget {
   final AudioFile file;
   final int index;
   final GlobalKey globalKey;
+  final Color backgroundColor;
   final Function onDelete,
       onMove,
       onShare,
@@ -60,6 +64,7 @@ class AudioFileView extends StatelessWidget {
       @required this.onMove,
       @required this.onRename,
       @required this.globalKey,
+      this.backgroundColor,
       this.onToggleStarred,
       this.onPlay,
       Key key})
@@ -107,6 +112,7 @@ class AudioFileView extends StatelessWidget {
   Widget build(BuildContext context) {
     var view = AudioFileListItem(file,
         onLongPress: () => _onAudioFileLongPress(context, file),
+        backgroundColor: backgroundColor,
         onPressed: () {
           print("trying to play ${file.path}");
           if (File(file.path).existsSync()) {
