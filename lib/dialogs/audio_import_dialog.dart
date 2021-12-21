@@ -80,6 +80,11 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
     return note;
   }
 
+  Future<List<AudioFile>> onImportAudioIdeas() async {
+    return await _prepareFiles();
+  }
+
   showImportDialog(
-      context, "Import ${files.length} Audio Files", onNew, onImport);
+      context, "Import ${files.length} Audio Files", onNew, onImport,
+      onImportAudioIdeas: onImportAudioIdeas);
 }

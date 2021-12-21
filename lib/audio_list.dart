@@ -11,6 +11,7 @@ import 'package:sound/editor_views/audio.dart';
 import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/main.dart';
+import 'package:sound/menu_store.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_views/seach.dart';
 import 'package:sound/recorder_bottom_sheet.dart';
@@ -21,7 +22,7 @@ import 'package:tuple/tuple.dart';
 
 class AudioList extends StatefulWidget {
   final Function onMenuPressed;
-  AudioList(this.onMenuPressed);
+  AudioList({this.onMenuPressed});
 
   @override
   State<StatefulWidget> createState() {
@@ -33,6 +34,7 @@ class AudioListState extends State<AudioList>
     with StoreWatcherMixin<AudioList> {
   GlobalKey<ScaffoldState> _globalKey = GlobalKey();
   AudioListStore store;
+  MenuStore menuStore;
   RecorderBottomSheetStore recorderStore;
   List<ActionSubscription> subs = [];
   TextEditingController _searchController;
@@ -44,6 +46,8 @@ class AudioListState extends State<AudioList>
     print("INIT STATE");
 
     super.initState();
+
+    menuStore = listenToStore(menuStoreToken);
 
     searchFocusNode = new FocusNode();
     store = listenToStore(audioListToken, handleStoreChange);
@@ -59,7 +63,6 @@ class AudioListState extends State<AudioList>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print("CHANGE>>>>>>>");
   }
 
   void handleStoreChange(Store store) {
@@ -114,7 +117,6 @@ class AudioListState extends State<AudioList>
     print("DISPOSE");
     recordingFinished.clearListeners();
     audioRecordingPermissionDenied.clearListeners();
-    stopAction.clearListeners();
     // recorderStore.dispose();
     // store.dispose();
 
@@ -136,7 +138,11 @@ class AudioListState extends State<AudioList>
       stopAction();
     }
 
-    widget.onMenuPressed();
+    if (widget.onMenuPressed != null) {
+      widget.onMenuPressed();
+    } else {
+      toggleMenu();
+    }
   }
 
   showRecordingButton() {
@@ -193,7 +199,7 @@ class AudioListState extends State<AudioList>
           setSearchAudioIdeas(s);
           setState(() {});
         },
-        text: (store.isSearching) ? "Search..." : "Idea",
+        text: (store.isSearching) ? "Search..." : "Ideas",
         focusNode: searchFocusNode,
         enabled: store.isSearching,
         controller: _searchController);

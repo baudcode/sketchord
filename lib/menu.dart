@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_flux/flutter_flux.dart';
 import 'package:sound/audio_list.dart';
 import 'package:sound/home.dart';
 import 'package:sound/intent_receive.dart';
 import 'package:sound/collections.dart';
+import 'package:sound/menu_store.dart';
 import 'package:sound/settings.dart';
 import 'package:sound/trash.dart';
 
@@ -15,17 +17,8 @@ class Menu extends StatefulWidget {
   }
 }
 
-enum MenuItem { HOME, SETTINGS, TRASH, SETS, AUDIO }
-
-class MenuOption {
-  MenuItem item;
-  String name;
-  IconData icon;
-  MenuOption({this.item, this.name, this.icon});
-}
-
-class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
-  bool isCollapsed = true;
+class _MenuState extends State<Menu>
+    with SingleTickerProviderStateMixin, StoreWatcherMixin<Menu> {
   final animateMenuDuration = const Duration(milliseconds: 300);
 
   AnimationController _controller;
@@ -33,20 +26,12 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
   Animation<double> _scaleAnimation,
       _menuScaleAnimation; // scale home content from 1.0 to 0.8
 
-  MenuItem current = MenuItem.HOME;
-
-  var options = [
-    MenuOption(icon: Icons.dashboard, name: "Home", item: MenuItem.HOME),
-    MenuOption(icon: Icons.music_note, name: "Ideas", item: MenuItem.AUDIO),
-    MenuOption(
-        icon: Icons.list_alt_outlined, name: "Sets", item: MenuItem.SETS),
-    MenuOption(icon: Icons.delete_sweep, name: "Trash", item: MenuItem.TRASH),
-    MenuOption(icon: Icons.settings, name: "Settings", item: MenuItem.SETTINGS),
-  ];
+  MenuStore store;
 
   @override
   void initState() {
     super.initState();
+    store = listenToStore(menuStoreToken);
     _controller =
         AnimationController(vsync: this, duration: animateMenuDuration);
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.8).animate(_controller);
@@ -66,9 +51,7 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
 
   _switch(MenuItem item) {
     _onMenuPressed();
-    setState(() {
-      current = item;
-    });
+    setMenuItem(item);
     //Navigator.push(
     //    context, new MaterialPageRoute(builder: (context) => Settings()));
   }
@@ -109,7 +92,7 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
   }
 
   _getView() {
-    switch (current) {
+    switch (store.item) {
       case MenuItem.HOME:
         return Home(this._onMenuPressed);
       case MenuItem.SETTINGS:
@@ -119,7 +102,7 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
       case MenuItem.SETS:
         return Collections(this._onMenuPressed);
       case MenuItem.AUDIO:
-        return AudioList(this._onMenuPressed);
+        return AudioList(onMenuPressed: this._onMenuPressed);
       default:
         return Container();
     }
@@ -133,22 +116,22 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
         duration: animateMenuDuration,
         top: 0,
         bottom: 0,
-        left: isCollapsed ? 0 : 0.6 * screenWidth,
-        right: isCollapsed ? 0 : -0.4 * screenWidth,
+        left: store.collapsed ? 0 : 0.6 * screenWidth,
+        right: store.collapsed ? 0 : -0.4 * screenWidth,
         child: ScaleTransition(
             scale: _scaleAnimation,
             child: MediaQuery.removePadding(
                 context: context,
-                removeTop: isCollapsed ? false : true,
+                removeTop: store.collapsed ? false : true,
                 child: Material(
                   animationDuration: animateMenuDuration,
-                  child: !isCollapsed
+                  child: !store.collapsed
                       ? GestureDetector(
                           onTap: _onMenuPressed,
                           child: AbsorbPointer(child: _getView()))
                       : _getView(),
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(isCollapsed ? 0 : 10)),
+                  borderRadius: BorderRadius.all(
+                      Radius.circular(store.collapsed ? 0 : 10)),
                   color: Theme.of(context).appBarTheme.color,
                   clipBehavior: Clip.antiAlias,
                   elevation: 5,
@@ -156,14 +139,12 @@ class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
   }
 
   _onMenuPressed() {
-    setState(() {
-      if (isCollapsed) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-      isCollapsed = !isCollapsed;
-    });
+    if (store.collapsed) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+    toggleMenu();
   }
 
   _menuWithScaffold(BuildContext context) {

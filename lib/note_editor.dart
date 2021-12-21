@@ -406,35 +406,45 @@ class NoteEditorState extends State<NoteEditorContent>
             changeAudioFile(f);
           },
           onMove: () {
-            showImportDialog(context, "Copy audio to", () async {
+            showImportDialog(context, "Move audio to", () async {
               // new audio file
 
-              AudioFile copy = await FileManager().copyToNew(f);
               Future.delayed(Duration(milliseconds: 200), () {
                 showSnack(_globalKey.currentState,
-                    "The audio file as copiedr to a new note");
+                    "The audio file as moved to a new note");
               });
-              Note note = Note.empty();
-              note.audioFiles.add(copy);
 
-              // manual sync
+              store.note.audioFiles.removeWhere((a) => a.id == f.id);
+              LocalStorage().syncNote(store.note);
+
+              Note note = Note.empty();
+              note.audioFiles.add(f);
               LocalStorage().syncNote(note);
+
+              setState(() {});
+              // manual sync
               return note;
             }, (Note note) async {
-              AudioFile copy = await FileManager().copyToNew(f);
-
+              print("Testing");
+              print("Moving to note ${note.title}");
               Future.delayed(Duration(milliseconds: 200), () {
                 showSnack(_globalKey.currentState,
-                    "The audio file as copied to a ${note.title}");
+                    "The audio file was moved to a ${note.title}");
               });
 
               if (note.id == widget.note.id) {
+                AudioFile copy = await FileManager().copyToNew(f);
                 copy.name += " - copy";
                 addAudioFile(copy);
               } else {
                 // manual sync
-                note.audioFiles.add(copy);
+
+                store.note.audioFiles.removeWhere((a) => a.id == f.id);
+                LocalStorage().syncNote(store.note);
+
+                note.audioFiles.add(f);
                 LocalStorage().syncNote(note);
+                setState(() {});
               }
 
               return note;
@@ -442,7 +452,7 @@ class NoteEditorState extends State<NoteEditorContent>
                 openNote: false,
                 syncNote:
                     false, // do not sync note, because otherwise this component gets updated twice
-                importButtonText: "Copy",
+                importButtonText: "Move",
                 ignoreNoteId: store.note.id,
                 newButtonText: "Copy as NEW");
           },
