@@ -61,9 +61,10 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
       _importAsIdea() async {
         List<AudioFile> ideas = await onImportAudioIdeas();
         for (AudioFile f in ideas) {
-          await LocalStorage().syncAudioFile(f);
+          await LocalStorage().addAudioIdea(f);
         }
         setMenuItem(MenuItem.AUDIO);
+
         Navigator.pop(context);
       }
 
@@ -71,6 +72,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
         if (mode == ImportMode.asNew) {
           await _importAsNew();
         } else if (mode == ImportMode.search && selected != null) {
+          print("import selected...");
           await _importSelected();
         } else if (mode == ImportMode.idea) {
           _importAsIdea();

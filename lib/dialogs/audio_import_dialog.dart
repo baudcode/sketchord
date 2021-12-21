@@ -63,6 +63,7 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
       String newBase = Uuid().v4() + ext;
       String newPath = p.join(filesDir.path, newBase);
       AudioFile move = await FileManager().copy(f, newPath, id: f.id);
+      move.createdAt = f.file.lastModifiedSync();
       move.name = p.basename(f.path);
       copied.add(move);
     }
