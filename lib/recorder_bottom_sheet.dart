@@ -403,9 +403,6 @@ class _RecorderBottomSheetState extends State<RecorderBottomSheet>
       if (!minimized && (!store.isLooping || force)) {
         animateForward();
       }
-    });
-
-    sub2 = stopAction.listen((event) {
       setState(() {});
     });
   }

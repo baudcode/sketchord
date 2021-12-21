@@ -75,11 +75,9 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
     print("lowerValue: $lowerValue");
     print('max: $rangeMax');
     print("currentLength: ${store.currentLength}");
-    var title = null;
-    //  (store.currentAudioFile != null &&
-    //         widget.showTitle)
-    //     ? store.currentAudioFile.name
-    //     : null;
+    var title = (store.currentAudioFile != null && widget.showTitle)
+        ? store.currentAudioFile.name
+        : null;
 
     return Container(
       color: widget.color,
@@ -104,16 +102,22 @@ class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
                       (widget.enableRepeat)
                           ? IconButton(
                               icon: Icon(
-                                Icons.repeat,
-                                color: (store.repeat == Repeat.all)
+                                (store.repeat == Repeat.one)
+                                    ? Icons.repeat_one
+                                    : Icons.repeat,
+                                color: (store.repeat == Repeat.all ||
+                                        store.repeat == Repeat.one)
                                     ? Theme.of(context).accentColor
                                     : null,
                               ),
                               onPressed: () {
                                 if (store.repeat == Repeat.all)
+                                  setRepeat(Repeat.one);
+                                else if (store.repeat == Repeat.one) {
                                   setRepeat(Repeat.off);
-                                else
+                                } else {
                                   setRepeat(Repeat.all);
+                                }
                               },
                             )
                           : Container(),

@@ -50,7 +50,7 @@ class RecorderPositionStore extends Store {
   }
 }
 
-enum Repeat { all, off }
+enum Repeat { all, off, one }
 
 Action<Duration> changeRecorderPosition = Action();
 StoreToken recorderPositionStoreToken = StoreToken(RecorderPositionStore());
@@ -162,14 +162,17 @@ class RecorderBottomSheetStore extends Store {
       print("player completed");
       print("repeat: $_repeat; length: ${_queue.length}");
 
-      if (_repeat == Repeat.all && _queue.length > 0 && !_forcedStopped) {
+      if ((_repeat == Repeat.all) ||
+          (_repeat == Repeat.one) && _queue.length > 0 && !_forcedStopped) {
         int index = getCurrentQueueIndex();
         if (index == -1) {
           print("cannot find next file, stopping...");
           stopAction(false);
           return;
         }
-        AudioFile nextAudioFile = _queue[(index + 1) % _queue.length];
+        int nextIndex =
+            (_repeat == Repeat.all) ? (index + 1) % _queue.length : index;
+        AudioFile nextAudioFile = _queue[nextIndex];
         print(
             "playing next in queue: ${nextAudioFile.id} ${nextAudioFile.name}");
         Future.delayed(Duration(milliseconds: 100), () async {
