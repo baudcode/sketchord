@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_editor.dart';
+import 'package:sound/note_search_view.dart';
 
 typedef FutureNoteCallback = Future<Note> Function();
 typedef FutureNoteImportCallback = Future<Note> Function(Note);
+
+enum ImportMode { asNew, search }
 
 showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     FutureNoteImportCallback onImport,
@@ -22,6 +25,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     builder: (BuildContext context) {
       // if selected is null (use empty new note)
       Note selected;
+      ImportMode mode;
 
       _open(Note note) async {
         if (openNote) {
@@ -40,7 +44,7 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
         _open(note);
       }
 
-      _onNew() async {
+      _importAsNew() async {
         Note newNote = await onNew();
         if (syncNote) {
           LocalStorage().syncNote(newNote);
@@ -50,39 +54,79 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
         _open(newNote);
       }
 
+      _onNew(setState) {
+        setState(() {
+          selected = null;
+          mode = ImportMode.asNew;
+        });
+      }
+
+      _onSearch(setState) {
+        Navigator.push(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => NoteSearchViewLoader(
+                      single: true,
+                      collection: NoteCollection.empty(),
+                      onAddNotes: (List<Note> notes) async {
+                        setState(() {
+                          selected = notes[0];
+                          mode = ImportMode.search;
+                        });
+                      },
+                    )));
+      }
+
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
           title: new Text(title),
           content: Builder(builder: (context) {
-            double width = MediaQuery.of(context).size.width;
             return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Flexible(
-                      child: ElevatedButton(
-                          child: Text(newButtonText), onPressed: _onNew)),
-                  SizedBox(height: 10),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Container(child: Text("-- or select a note --"))
-                  ]),
-                  SizedBox(height: 15),
-                  Row(mainAxisSize: MainAxisSize.max, children: [
-                    new DropdownButton<Note>(
-                        value: selected,
-                        isDense: true,
-                        items: notes
-                            .map((e) => DropdownMenuItem<Note>(
-                                child: SizedBox(
-                                    width: width - 152,
-                                    child: Text(
-                                        "${notes.indexOf(e)}: ${e.title}",
-                                        overflow: TextOverflow.ellipsis)),
-                                value: e))
-                            .toList(),
-                        onChanged: (v) => setState(() => selected = v)),
-                  ])
-                ]);
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                              icon: Icon(
+                                Icons.new_label,
+                                size: 30,
+                                color: (mode == ImportMode.asNew)
+                                    ? Theme.of(context).accentColor
+                                    : null,
+                              ),
+                              onPressed: () => _onNew(setState)),
+                          Text("As New", textScaleFactor: 0.7)
+                        ],
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                              icon: Icon(
+                                Icons.search,
+                                size: 30,
+                                color: (mode == ImportMode.search)
+                                    ? Theme.of(context).accentColor
+                                    : null,
+                              ),
+                              onPressed: () => _onSearch(setState)),
+                          Text("Search", textScaleFactor: 0.7)
+                        ],
+                      ),
+                    ]),
+                (selected != null)
+                    ? Padding(
+                        padding: EdgeInsets.only(top: 32),
+                        child: Text(selected.title.trim() == ""
+                            ? EMPTY_TEXT
+                            : selected.title))
+                    : Container()
+              ],
+            );
           }),
           actions: <Widget>[
             new TextButton(
