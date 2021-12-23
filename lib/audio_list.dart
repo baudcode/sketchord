@@ -90,33 +90,40 @@ class AudioListState extends State<AudioList>
     });
 
     // audioRecordingPermissionDenied.clearListeners();
-    audioRecordingPermissionDenied.listen((_) {
+    subs.add(audioRecordingPermissionDenied.listen((_) {
       showHasNoPermissionsDialog(context);
-    });
+    }));
 
-    startPlaybackAction.listen((event) {
+    subs.add(startPlaybackAction.listen((event) {
       // find the index
 
       setState(() {
         _highlightAudioFile = recorderStore.currentAudioFile;
       });
-    });
+    }));
 
-    toggleAudioIdeasSearch.listen((_) {
+    subs.add(toggleAudioIdeasSearch.listen((_) {
       if (store.isSearching) {
         Future.delayed(Duration(milliseconds: 100), () {
           print("REQUESTING FOCUS");
           FocusScope.of(context).requestFocus(searchFocusNode);
         });
       }
-    });
+    }));
+
+    subs.add(stopAction.listen((event) {
+      setState(() {});
+    }));
   }
 
   @override
   void dispose() {
     print("DISPOSE");
-    recordingFinished.clearListeners();
-    audioRecordingPermissionDenied.clearListeners();
+    for (ActionSubscription sub in subs) {
+      if (sub != null) {
+        sub.cancel();
+      }
+    }
     // recorderStore.dispose();
     // store.dispose();
 
