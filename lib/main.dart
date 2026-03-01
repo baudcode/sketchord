@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sound/editor_store.dart';
@@ -7,6 +6,9 @@ import 'package:sound/menu.dart';
 import 'package:sound/model.dart';
 import 'package:sound/recorder_store.dart';
 import 'package:sound/storage.dart';
+import 'package:sound/sync_debug_store.dart';
+import 'package:sound/sync_engine.dart';
+import 'package:sound/sync_status_store.dart';
 import 'settings_store.dart';
 
 void main() {
@@ -22,20 +24,21 @@ class App extends StatefulWidget {
 
   // This widget is the root of your application.
   final ThemeData dark = ThemeData.dark().copyWith(
-      primaryColor: mainColor,
-      textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
+    primaryColor: mainColor,
+    textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
           selectionColor: mainColor,
           cursorColor: mainColor,
-          selectionHandleColor: mainColor),
-      highlightColor: Colors.black54,
-      cardColor: Colors.grey.shade800,
-      appBarTheme: ThemeData.dark()
-          .appBarTheme
-          .copyWith(backgroundColor: appBarColor, titleTextStyle: ThemeData.dark().textTheme.titleLarge),
-      buttonTheme:
-          ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
-      chipTheme: ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
-      sliderTheme: ThemeData.dark().sliderTheme.copyWith(
+          selectionHandleColor: mainColor,
+        ),
+    highlightColor: Colors.black54,
+    cardColor: Colors.grey.shade800,
+    appBarTheme: ThemeData.dark().appBarTheme.copyWith(
+          backgroundColor: appBarColor,
+          titleTextStyle: ThemeData.dark().textTheme.titleLarge,
+        ),
+    buttonTheme: ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
+    chipTheme: ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
+    sliderTheme: ThemeData.dark().sliderTheme.copyWith(
           trackHeight: 5,
           showValueIndicator: ShowValueIndicator.onDrag,
           activeTrackColor: mainColor,
@@ -45,24 +48,30 @@ class App extends StatefulWidget {
           valueIndicatorTextStyle: ThemeData.dark().textTheme.bodyMedium,
 
           //overlayColor: mainColor
-          inactiveTrackColor: Colors.white),
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      floatingActionButtonTheme:
-          FloatingActionButtonThemeData(backgroundColor: mainColor), tabBarTheme: TabBarThemeData(indicatorColor: mainColor));
+          inactiveTrackColor: Colors.white,
+        ),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: mainColor,
+    ),
+    tabBarTheme: TabBarThemeData(indicatorColor: mainColor),
+  );
 
   final ThemeData light = ThemeData.light().copyWith(
-      primaryColor: mainColor,
-      textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
+    primaryColor: mainColor,
+    textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
           selectionColor: mainColor,
           cursorColor: mainColor,
-          selectionHandleColor: mainColor),
-      cardColor: Colors.grey.shade200,
-      appBarTheme: ThemeData.light().appBarTheme.copyWith(
+          selectionHandleColor: mainColor,
+        ),
+    cardColor: Colors.grey.shade200,
+    appBarTheme: ThemeData.light().appBarTheme.copyWith(
           backgroundColor: appBarColor,
-          titleTextStyle: ThemeData.light().textTheme.titleLarge),
-      chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
-      highlightColor: mainColor,
-      sliderTheme: ThemeData.light().sliderTheme.copyWith(
+          titleTextStyle: ThemeData.light().textTheme.titleLarge,
+        ),
+    chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
+    highlightColor: mainColor,
+    sliderTheme: ThemeData.light().sliderTheme.copyWith(
           trackHeight: 4,
           thumbColor: mainColor,
           showValueIndicator: ShowValueIndicator.onDrag,
@@ -71,17 +80,20 @@ class App extends StatefulWidget {
           valueIndicatorColor: mainColor,
           activeTickMarkColor: mainColor,
           activeTrackColor: mainColor, // inactive loop area
-          inactiveTrackColor: appBarColor),
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      floatingActionButtonTheme:
-          FloatingActionButtonThemeData(backgroundColor: mainColor), tabBarTheme: TabBarThemeData(indicatorColor: mainColor));
+          inactiveTrackColor: appBarColor,
+        ),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: mainColor,
+    ),
+    tabBarTheme: TabBarThemeData(indicatorColor: mainColor),
+  );
 
   @override
   State<StatefulWidget> createState() => AppState();
 }
 
 class AppState extends State<App> {
-
   @override
   void initState() {
     super.initState();
@@ -89,6 +101,8 @@ class AppState extends State<App> {
     LocalStorage().getSettings().then((s) {
       updateSettings(s);
     });
+    syncStatusStore.start();
+    syncEngine.start();
 
     // _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
     //     .listen((List<SharedMediaFile> value) {
@@ -113,6 +127,12 @@ class AppState extends State<App> {
   }
 
   @override
+  void dispose() {
+    syncEngine.stop();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
@@ -120,17 +140,21 @@ class AppState extends State<App> {
         ChangeNotifierProvider<StaticStorage>.value(value: storageStore),
         ChangeNotifierProvider<NoteEditorStore>.value(value: noteEditorStore),
         ChangeNotifierProvider<RecorderBottomSheetStore>.value(
-            value: recorderBottomSheetStore),
+          value: recorderBottomSheetStore,
+        ),
         ChangeNotifierProvider<PlayerPositionStore>.value(
-            value: playerPositionStore),
+          value: playerPositionStore,
+        ),
         ChangeNotifierProvider<RecorderPositionStore>.value(
-            value: recorderPositionStore),
+          value: recorderPositionStore,
+        ),
+        ChangeNotifierProvider<SyncStatusStore>.value(value: syncStatusStore),
+        ChangeNotifierProvider<SyncDebugStore>.value(value: syncDebugStore),
       ],
       child: Consumer<SettingsStore>(
         builder: (context, store, _) => MaterialApp(
           title: 'SketChord',
-          theme:
-              store.theme == SettingsTheme.dark ? widget.dark : widget.light,
+          theme: store.theme == SettingsTheme.dark ? widget.dark : widget.light,
           home: Menu(),
         ),
       ),

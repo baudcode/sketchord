@@ -1,5 +1,4 @@
-fastapi
-rethinkdb
-uvicorn
-bs4
-requests
+fastapi>=0.116.0
+uvicorn>=0.35.0
+pydantic>=2.11.0
+rethinkdb>=2.4.10

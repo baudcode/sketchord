@@ -10,6 +10,8 @@ import 'local_storage.dart';
 import 'model.dart';
 import 'recorder_store.dart';
 import 'settings_store.dart';
+import 'sync_debug_panel.dart';
+import 'sync_network.dart';
 import 'utils.dart';
 
 class Settings extends StatefulWidget {
@@ -22,6 +24,24 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> {
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
+  bool _syncEnabled = true;
+  String _syncBackendUrl = 'http://192.168.178.52:8009';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSyncConfig();
+  }
+
+  Future<void> _loadSyncConfig() async {
+    final enabled = await LocalStorage().getSyncEnabled();
+    final backendUrl = await LocalStorage().getSyncBackendUrl();
+    if (!mounted) return;
+    setState(() {
+      _syncEnabled = enabled;
+      _syncBackendUrl = backendUrl;
+    });
+  }
 
   String _themeAsString(SettingsStore store) =>
       store.theme == SettingsTheme.dark ? 'Dark' : 'Light';
@@ -37,8 +57,9 @@ class SettingsState extends State<Settings> {
       store.audioFormat == AudioFormat.aac ? 'AAC' : 'WAV';
 
   Future<void> _toggleAudioFormat(SettingsStore store) async {
-    final newAudioFormat =
-        store.audioFormat == AudioFormat.aac ? AudioFormat.wav : AudioFormat.aac;
+    final newAudioFormat = store.audioFormat == AudioFormat.aac
+        ? AudioFormat.wav
+        : AudioFormat.aac;
     await setDefaultAudioFormat(newAudioFormat);
     setAudioFormat(newAudioFormat);
   }
@@ -107,6 +128,63 @@ class SettingsState extends State<Settings> {
     }
   }
 
+  Future<void> _showBackendUrlDialog() async {
+    final controller = TextEditingController(text: _syncBackendUrl);
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sync Backend URL'),
+          content: TextField(
+            autofocus: true,
+            maxLines: 1,
+            minLines: 1,
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'http://127.0.0.1:8009',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Apply'),
+              onPressed: () async {
+                final next = controller.text.trim();
+                if (next.isNotEmpty) {
+                  await LocalStorage().setSyncBackendUrl(next);
+                  if (mounted) {
+                    setState(() {
+                      _syncBackendUrl = next;
+                    });
+                  }
+                }
+                if (mounted) Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _setLanBackendUrl() async {
+    final ip = await SyncNetwork.firstPrivateIpv4();
+    if (ip == null) {
+      showSnack(_globalKey.currentState, 'No private IPv4 interface found');
+      return;
+    }
+    final url = 'http://$ip:8009';
+    await LocalStorage().setSyncBackendUrl(url);
+    if (!mounted) return;
+    setState(() {
+      _syncBackendUrl = url;
+    });
+    showSnack(_globalKey.currentState, 'Sync backend set to $url');
+  }
+
   Widget _list(SettingsStore store) {
     final items = <Widget>[
       _wrapItem(Row(
@@ -138,6 +216,69 @@ class SettingsState extends State<Settings> {
           ),
         ],
       )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Sync Enabled:')),
+          Switch(
+            value: _syncEnabled,
+            onChanged: (v) async {
+              await LocalStorage().setSyncEnabled(v);
+              if (!mounted) return;
+              setState(() {
+                _syncEnabled = v;
+              });
+            },
+          ),
+        ],
+      )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Sync Backend:')),
+          Flexible(
+            child: ElevatedButton(
+              onPressed: _showBackendUrlDialog,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _syncBackendUrl,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ),
+          ),
+        ],
+      )),
+      _wrapItem(
+        Row(
+          children: [
+            const Expanded(child: Text('Use LAN URL:')),
+            ElevatedButton(
+              onPressed: _setLanBackendUrl,
+              child: const Text('Auto-detect'),
+            ),
+          ],
+        ),
+      ),
+      _wrapItem(
+        Row(
+          children: [
+            const Expanded(child: Text('Sync Debug:')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SyncDebugPanel(),
+                  ),
+                );
+              },
+              child: const Text('Open Panel'),
+            ),
+          ],
+        ),
+      ),
       const SizedBox(height: 10),
       ElevatedButton(onPressed: _onExport, child: const Text('Backup')),
       const SizedBox(height: 10),

@@ -46,19 +46,20 @@ class AudioFile {
     String? text,
     bool? starred,
     this.loopRange,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now(),
-        lastModified = lastModified ?? DateTime.now(),
-        text = text ?? '',
-        starred = starred ?? false,
-        name = name ??
-            path
-                .split('/')
-                .last
-                .replaceAll('.mp4', '')
-                .replaceAll('.m4a', '')
-                .replaceAll('.mp3', '')
-                .replaceAll('.wav', '');
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       lastModified = lastModified ?? DateTime.now(),
+       text = text ?? '',
+       starred = starred ?? false,
+       name =
+           name ??
+           path
+               .split('/')
+               .last
+               .replaceAll('.mp4', '')
+               .replaceAll('.m4a', '')
+               .replaceAll('.mp3', '')
+               .replaceAll('.wav', '');
 
   factory AudioFile.create({
     required String path,
@@ -83,7 +84,9 @@ class AudioFile {
   factory AudioFile.fromJson(Map<dynamic, dynamic> map) {
     return AudioFile(
       createdAt: deserializeDateTime(map['createdAt']),
-      lastModified: deserializeDateTime(map['lastModified'] ?? map['createdAt']),
+      lastModified: deserializeDateTime(
+        map['lastModified'] ?? map['createdAt'],
+      ),
       duration: deserializeDuration(map['duration']),
       loopRange: deserializeRangeValues(map['loopRange']),
       id: map['id'],
@@ -124,25 +127,22 @@ class Section {
   DateTime lastModified;
   DateTime createdAt;
 
-  Section({
-    String? title,
-    String? content,
-    String? id,
-  })  : title = title ?? '',
-        content = content ?? '',
-        id = id ?? const Uuid().v4(),
-        lastModified = DateTime.now(),
-        createdAt = DateTime.now();
+  Section({String? title, String? content, String? id})
+    : title = title ?? '',
+      content = content ?? '',
+      id = id ?? const Uuid().v4(),
+      lastModified = DateTime.now(),
+      createdAt = DateTime.now();
 
   factory Section.fromJson(Map<dynamic, dynamic> map) {
-    return Section(
-      content: map['content'],
-      title: map['title'],
-      id: map['id'],
-    );
+    return Section(content: map['content'], title: map['title'], id: map['id']);
   }
 
-  Map<String, dynamic> toJson() => {'title': title, 'content': content, 'id': id};
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'content': content,
+    'id': id,
+  };
 
   bool get hasEmptyTitle => title.trim().isEmpty;
 
@@ -237,12 +237,12 @@ class Note {
     this.scrollOffset = 1.0,
     this.starred = false,
     this.discarded = false,
-  })  : id = id ?? const Uuid().v4(),
-        title = title ?? '',
-        createdAt = createdAt ?? DateTime.now(),
-        lastModified = lastModified ?? DateTime.now(),
-        sections = sections ?? [],
-        audioFiles = audioFiles ?? [];
+  }) : id = id ?? const Uuid().v4(),
+       title = title ?? '',
+       createdAt = createdAt ?? DateTime.now(),
+       lastModified = lastModified ?? DateTime.now(),
+       sections = sections ?? [],
+       audioFiles = audioFiles ?? [];
 
   Map<String, dynamic> toJson() {
     return {
@@ -292,8 +292,9 @@ class Note {
       sections: sectionsRaw == null
           ? []
           : sectionsRaw.map((s) => Section.fromJson(s)).toList(),
-      audioFiles:
-          audioRaw == null ? [] : audioRaw.map((s) => AudioFile.fromJson(s)).toList(),
+      audioFiles: audioRaw == null
+          ? []
+          : audioRaw.map((s) => AudioFile.fromJson(s)).toList(),
     );
   }
 
@@ -338,13 +339,13 @@ class NoteCollection {
     bool? starred,
     DateTime? createdAt,
     DateTime? lastModified,
-  })  : id = id ?? const Uuid().v4(),
-        notes = notes ?? [],
-        title = title ?? '',
-        description = description ?? '',
-        starred = starred ?? false,
-        createdAt = createdAt ?? DateTime.now(),
-        lastModified = lastModified ?? DateTime.now();
+  }) : id = id ?? const Uuid().v4(),
+       notes = notes ?? [],
+       title = title ?? '',
+       description = description ?? '',
+       starred = starred ?? false,
+       createdAt = createdAt ?? DateTime.now(),
+       lastModified = lastModified ?? DateTime.now();
 
   factory NoteCollection.empty() => NoteCollection();
 
@@ -355,9 +356,13 @@ class NoteCollection {
       notes: rawNotes == null
           ? []
           : rawNotes
-              .map((n) => Note.fromJson(
-                  Map<String, dynamic>.from(n), (n['id'] ?? '') as String))
-              .toList(),
+                .map(
+                  (n) => Note.fromJson(
+                    Map<String, dynamic>.from(n),
+                    (n['id'] ?? '') as String,
+                  ),
+                )
+                .toList(),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       starred: (json['starred'] ?? 0) == 1 || json['starred'] == true,
@@ -378,7 +383,8 @@ class NoteCollection {
     };
   }
 
-  List<Note> get activeNotes => notes.where((element) => !element.discarded).toList();
+  List<Note> get activeNotes =>
+      notes.where((element) => !element.discarded).toList();
 
   int get length => notes.fold<int>(0, (p, e) => p + (e.length ?? 0));
 
@@ -390,11 +396,145 @@ class NoteCollection {
     return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  bool get empty => title.trim().isEmpty && description.trim().isEmpty && notes.isEmpty;
+  bool get empty =>
+      title.trim().isEmpty && description.trim().isEmpty && notes.isEmpty;
+}
+
+enum SyncEntityType { note, audioIdea, audioFile, collection, settings }
+
+enum SyncOperationType { upsert, delete, tombstone }
+
+enum SyncQueueStatus { queued, syncing, rejected, synced }
+
+SyncEntityType deserializeSyncEntityType(String raw) {
+  return SyncEntityType.values.firstWhere(
+    (e) => e.name == raw,
+    orElse: () => SyncEntityType.note,
+  );
+}
+
+SyncOperationType deserializeSyncOperationType(String raw) {
+  return SyncOperationType.values.firstWhere(
+    (e) => e.name == raw,
+    orElse: () => SyncOperationType.upsert,
+  );
+}
+
+SyncQueueStatus deserializeSyncQueueStatus(String raw) {
+  return SyncQueueStatus.values.firstWhere(
+    (e) => e.name == raw,
+    orElse: () => SyncQueueStatus.queued,
+  );
+}
+
+class SyncQueueItem {
+  String id;
+  SyncEntityType entityType;
+  String entityId;
+  SyncOperationType operation;
+  String payload;
+  int baseVersion;
+  DateTime createdAt;
+  SyncQueueStatus status;
+  int retryCount;
+  String? lastError;
+
+  SyncQueueItem({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.operation,
+    required this.payload,
+    required this.baseVersion,
+    required this.createdAt,
+    required this.status,
+    required this.retryCount,
+    this.lastError,
+  });
+
+  factory SyncQueueItem.fromJson(Map<String, dynamic> json) {
+    return SyncQueueItem(
+      id: json['id'] as String,
+      entityType: deserializeSyncEntityType(
+        (json['entityType'] ?? '').toString(),
+      ),
+      entityId: (json['entityId'] ?? '') as String,
+      operation: deserializeSyncOperationType(
+        (json['operation'] ?? '').toString(),
+      ),
+      payload: (json['payload'] ?? '{}') as String,
+      baseVersion: (json['baseVersion'] as num?)?.toInt() ?? 0,
+      createdAt: deserializeDateTime(json['createdAt'] as String?),
+      status: deserializeSyncQueueStatus((json['status'] ?? '').toString()),
+      retryCount: (json['retryCount'] as num?)?.toInt() ?? 0,
+      lastError: json['lastError'] as String?,
+    );
+  }
+}
+
+class SyncConflict {
+  String id;
+  SyncEntityType entityType;
+  String entityId;
+  SyncOperationType operation;
+  String reason;
+  String localPayload;
+  String? remotePayload;
+  DateTime createdAt;
+  DateTime? resolvedAt;
+
+  SyncConflict({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.operation,
+    required this.reason,
+    required this.localPayload,
+    required this.remotePayload,
+    required this.createdAt,
+    this.resolvedAt,
+  });
+
+  bool get isResolved => resolvedAt != null;
+
+  factory SyncConflict.fromJson(Map<String, dynamic> json) {
+    final resolvedAt = json['resolvedAt'] as String?;
+    return SyncConflict(
+      id: json['id'] as String,
+      entityType: deserializeSyncEntityType(
+        (json['entityType'] ?? '').toString(),
+      ),
+      entityId: (json['entityId'] ?? '') as String,
+      operation: deserializeSyncOperationType(
+        (json['operation'] ?? '').toString(),
+      ),
+      reason: (json['reason'] ?? 'Conflict rejected by backend') as String,
+      localPayload: (json['localPayload'] ?? '{}') as String,
+      remotePayload: json['remotePayload'] as String?,
+      createdAt: deserializeDateTime(json['createdAt'] as String?),
+      resolvedAt: (resolvedAt == null || resolvedAt.isEmpty)
+          ? null
+          : deserializeDateTime(resolvedAt),
+    );
+  }
+}
+
+class SyncStatusSummary {
+  final int queuedChanges;
+  final int unresolvedConflicts;
+
+  const SyncStatusSummary({
+    required this.queuedChanges,
+    required this.unresolvedConflicts,
+  });
+
+  bool get isFullySynced => queuedChanges == 0 && unresolvedConflicts == 0;
 }
 
 enum SettingsTheme { dark, light }
+
 enum EditorView { single, double }
+
 enum AudioFormat { aac, wav }
 
 class Settings {
@@ -428,7 +568,9 @@ class Settings {
       view: json['view'] == 'single' ? EditorView.single : EditorView.double,
       name: json['name'],
       isInitialStart: json['isInitialStart'] ?? false,
-      audioFormat: json['audioFormat'] == 'aac' ? AudioFormat.aac : AudioFormat.wav,
+      audioFormat: json['audioFormat'] == 'aac'
+          ? AudioFormat.aac
+          : AudioFormat.wav,
     );
   }
 }
