@@ -1,14 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports = []
 hiddenimports += collect_submodules("uvicorn")
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = PROJECT_ROOT / "src"
+ENTRYPOINT = SRC_ROOT / "sketchord_sync_backend" / "__main__.py"
 
 a = Analysis(
-    ["src/sketchord_sync_backend/__main__.py"],
-    pathex=["src"],
+    [str(ENTRYPOINT)],
+    pathex=[str(SRC_ROOT)],
     binaries=[],
     datas=[],
     hiddenimports=hiddenimports,
