@@ -1,7 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:sound/backup.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/note_editor.dart';
+import 'package:sound/note_viewer.dart';
+import 'package:sound/share.dart';
+
+Future<void> showAddNoteToSetDialog(BuildContext context, Note note) async {
+  final collections = await LocalStorage().getCollections();
+  if (!context.mounted) return;
+
+  final selected = <String>{};
+  for (final c in collections) {
+    if (c.notes.any((n) => n.id == note.id)) {
+      selected.add(c.id);
+    }
+  }
+
+  await showDialog<void>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Add to Set'),
+        content: SizedBox(
+          width: 460,
+          height: 420,
+          child: collections.isEmpty
+              ? const Center(child: Text('No sets yet'))
+              : ListView.builder(
+                  itemCount: collections.length,
+                  itemBuilder: (context, index) {
+                    final collection = collections[index];
+                    return CheckboxListTile(
+                      value: selected.contains(collection.id),
+                      title: Text(
+                        collection.title.isEmpty ? 'Untitled Set' : collection.title,
+                      ),
+                      subtitle: Text('${collection.notes.length} notes'),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value ?? false) {
+                            selected.add(collection.id);
+                          } else {
+                            selected.remove(collection.id);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              for (final c in collections) {
+                final has = c.notes.any((n) => n.id == note.id);
+                final selectedNow = selected.contains(c.id);
+                if (selectedNow && !has) {
+                  c.notes.add(note);
+                  await LocalStorage().syncCollection(c);
+                }
+                if (!selectedNow && has) {
+                  c.notes.removeWhere((n) => n.id == note.id);
+                  await LocalStorage().syncCollection(c);
+                }
+              }
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 class CollectionsPage extends StatefulWidget {
   final VoidCallback onMenuPressed;
@@ -14,12 +90,24 @@ class CollectionsPage extends StatefulWidget {
 
 class _CollectionsPageState extends State<CollectionsPage> {
   List<NoteCollection> _collections = [];
+  final Set<String> _selectedIds = <String>{};
   bool _loading = true;
+  bool _searching = false;
+  String _search = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  bool get _selectionMode => _selectedIds.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _loadCollections();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCollections() async {
@@ -47,36 +135,159 @@ class _CollectionsPageState extends State<CollectionsPage> {
     await _loadCollections();
   }
 
+  void _toggleSelection(NoteCollection c) {
+    setState(() {
+      if (_selectedIds.contains(c.id)) {
+        _selectedIds.remove(c.id);
+      } else {
+        _selectedIds.add(c.id);
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    final selected =
+        _collections.where((c) => _selectedIds.contains(c.id)).toList();
+    for (final c in selected) {
+      await LocalStorage().deleteCollection(c);
+    }
+    _selectedIds.clear();
+    await _loadCollections();
+  }
+
+  Future<void> _setStarSelected(bool starred) async {
+    for (final c in _collections.where((c) => _selectedIds.contains(c.id))) {
+      c.starred = starred;
+      await LocalStorage().syncCollection(c);
+    }
+    _selectedIds.clear();
+    await _loadCollections();
+  }
+
+  List<NoteCollection> _filteredCollections() {
+    final q = _search.trim().toLowerCase();
+    if (q.isEmpty) return _collections;
+    return _collections.where((c) {
+      return c.title.toLowerCase().contains(q) ||
+          c.description.toLowerCase().contains(q);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    final collections = _filteredCollections();
+    final starred = collections.where((c) => c.starred).toList();
+    final unstarred = collections.where((c) => !c.starred).toList();
+
+    PreferredSizeWidget appBar;
+    if (_selectionMode) {
+      appBar = AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => setState(() => _selectedIds.clear()),
+        ),
+        title: Text('${_selectedIds.length}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.star),
+            onPressed: () => _setStarSelected(true),
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_border),
+            onPressed: () => _setStarSelected(false),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _deleteSelected,
+          ),
+        ],
+      );
+    } else {
+      appBar = AppBar(
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: widget.onMenuPressed,
         ),
-        title: const Text('Sets'),
+        title: _searching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Search sets...',
+                ),
+                onChanged: (v) => setState(() => _search = v),
+              )
+            : const Text('Sets'),
         actions: [
+          IconButton(
+            icon: Icon(_searching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_searching) {
+                  _searchController.clear();
+                  _search = '';
+                }
+                _searching = !_searching;
+              });
+            },
+          ),
           IconButton(icon: const Icon(Icons.add), onPressed: _createCollection),
         ],
-      ),
+      );
+    }
+
+    Widget list(List<NoteCollection> data, {String? title}) {
+      if (data.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text(title, style: Theme.of(context).textTheme.bodySmall),
+            ),
+          ...data.map((c) {
+            final selected = _selectedIds.contains(c.id);
+            return ListTile(
+              tileColor: selected
+                  ? Theme.of(context).colorScheme.surfaceContainerHighest
+                  : null,
+              title: Text(c.title.isEmpty ? 'Untitled Set' : c.title),
+              subtitle: Text(
+                c.description.isEmpty
+                    ? '${c.activeNotes.length} notes'
+                    : '${c.description} • ${c.activeNotes.length} notes',
+              ),
+              leading: c.starred ? const Icon(Icons.star, size: 18) : null,
+              trailing: const Icon(Icons.chevron_right),
+              onLongPress: () => _toggleSelection(c),
+              onTap: () {
+                if (_selectionMode) {
+                  _toggleSelection(c);
+                } else {
+                  _openCollection(c);
+                }
+              },
+            );
+          }),
+        ],
+      );
+    }
+
+    return Scaffold(
+      appBar: appBar,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _collections.isEmpty
+          : collections.isEmpty
               ? const Center(child: Text('No sets yet'))
               : RefreshIndicator(
                   onRefresh: _loadCollections,
-                  child: ListView.builder(
-                    itemCount: _collections.length,
-                    itemBuilder: (context, index) {
-                      final c = _collections[index];
-                      return ListTile(
-                        title: Text(c.title.isEmpty ? 'Untitled Set' : c.title),
-                        subtitle: Text('${c.activeNotes.length} notes'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => _openCollection(c),
-                      );
-                    },
+                  child: ListView(
+                    children: [
+                      if (starred.isNotEmpty) list(starred, title: 'Starred'),
+                      list(unstarred, title: starred.isNotEmpty ? 'Other' : null),
+                    ],
                   ),
                 ),
     );
@@ -123,6 +334,22 @@ class _CollectionEditorPageState extends State<CollectionEditorPage> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _toggleStar() async {
+    _collection.starred = !_collection.starred;
+    await _save();
+    setState(() {});
+  }
+
+  Future<void> _exportCollectionZip() async {
+    final notes = _collection.activeNotes;
+    if (notes.isEmpty) return;
+    final path = await Backup().exportZip(notes);
+    if (path.isNotEmpty) {
+      await shareFile(path,
+          filename: '${_collection.title.isEmpty ? "set" : _collection.title}.zip');
+    }
+  }
+
   Future<void> _addNotes() async {
     final notes = await LocalStorage().getActiveNotes();
     if (!mounted) return;
@@ -166,7 +393,8 @@ class _CollectionEditorPageState extends State<CollectionEditorPage> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    _collection.notes = notes.where((n) => selected.contains(n.id)).toList();
+                    _collection.notes =
+                        notes.where((n) => selected.contains(n.id)).toList();
                     await _save();
                     if (mounted) Navigator.pop(context);
                     setState(() {});
@@ -187,6 +415,11 @@ class _CollectionEditorPageState extends State<CollectionEditorPage> {
       appBar: AppBar(
         title: const Text('Edit Set'),
         actions: [
+          IconButton(
+            icon: Icon(_collection.starred ? Icons.star : Icons.star_border),
+            onPressed: _toggleStar,
+          ),
+          IconButton(icon: const Icon(Icons.upload_file), onPressed: _exportCollectionZip),
           IconButton(icon: const Icon(Icons.playlist_add), onPressed: _addNotes),
           IconButton(icon: const Icon(Icons.delete), onPressed: _deleteCollection),
         ],
@@ -209,27 +442,61 @@ class _CollectionEditorPageState extends State<CollectionEditorPage> {
               onChanged: (_) => _save(),
             ),
           ),
+          if (_collection.lengthStr.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text('Length: ${_collection.lengthStr}'),
+            ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               itemCount: _collection.notes.length,
+              onReorder: (oldIndex, newIndex) async {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex -= 1;
+                  final note = _collection.notes.removeAt(oldIndex);
+                  _collection.notes.insert(newIndex, note);
+                });
+                await _save();
+              },
               itemBuilder: (context, index) {
                 final note = _collection.notes[index];
                 return ListTile(
+                  key: ValueKey('${note.id}-$index'),
                   title: Text(note.title.isEmpty ? 'Untitled Note' : note.title),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () async {
-                      setState(() {
-                        _collection.notes.removeAt(index);
-                      });
-                      await _save();
-                    },
+                  subtitle: Text(note.lengthStr.isEmpty ? '' : note.lengthStr),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () async {
+                          setState(() {
+                            _collection.notes.removeAt(index);
+                          });
+                          await _save();
+                        },
+                      ),
+                      const Icon(Icons.drag_handle),
+                    ],
                   ),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => NoteEditor(note)),
+                    );
+                  },
+                  onLongPress: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NoteViewer(
+                          note,
+                          showAdditionalInformation: false,
+                          showTitle: true,
+                          showAudioFiles: true,
+                        ),
+                      ),
                     );
                   },
                 );

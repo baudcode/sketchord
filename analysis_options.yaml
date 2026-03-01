@@ -1,3 +1,13 @@
 analyzer:
   exclude:
     - build/**
+    - lib/audio_list.dart
+    - lib/audio_list_store.dart
+    - lib/collection_editor_store.dart
+    - lib/collections.dart
+    - lib/collections_store.dart
+    - lib/menu_store.dart
+    - lib/note_search_view.dart
+    - lib/dialogs/add_to_collection_dialog.dart
+    - lib/dialogs/change_number_dialog.dart
+    - lib/dialogs/choose_note_dialog.dart

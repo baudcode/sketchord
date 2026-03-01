@@ -9,6 +9,7 @@ import 'package:tuple/tuple.dart';
 import 'dialogs/color_picker_dialog.dart';
 import 'dialogs/export_dialog.dart';
 import 'dialogs/import_dialog.dart';
+import 'collections_page.dart';
 import 'editor_store.dart';
 import 'editor_views/additional_info.dart';
 import 'editor_views/audio.dart';
@@ -33,7 +34,12 @@ class NoteEditor extends StatefulWidget {
 
 class NoteEditorState extends State<NoteEditor> {
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
-  final List<String> popupMenuActions = ['share', 'copy'];
+  final List<String> popupMenuActions = ['share', 'copy', 'add_to_set'];
+  final Map<String, String> popupMenuActionTitles = const {
+    'share': 'Share',
+    'copy': 'Copy to Clipboard',
+    'add_to_set': 'Add to Set',
+  };
   final Map<Section, GlobalKey> dismissables = {};
   StreamSubscription<AudioFile>? _recordingSub;
 
@@ -104,6 +110,11 @@ class NoteEditorState extends State<NoteEditor> {
         break;
       case 'copy':
         _copyToClipboard(store);
+        break;
+      case 'add_to_set':
+        if (store.note != null) {
+          showAddNoteToSetDialog(context, store.note!);
+        }
         break;
       default:
         break;
@@ -251,7 +262,10 @@ class NoteEditorState extends State<NoteEditor> {
         onSelected: (action) => _runPopupAction(store, action),
         itemBuilder: (context) {
           return popupMenuActions
-              .map((action) => PopupMenuItem(value: action, child: Text(action)))
+              .map((action) => PopupMenuItem(
+                    value: action,
+                    child: Text(popupMenuActionTitles[action] ?? action),
+                  ))
               .toList();
         },
       ),
