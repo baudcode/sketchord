@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/import_dialog.dart';
-import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:sound/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -13,10 +12,10 @@ class ParsedNote {
   final String title;
   final List<Section> sections;
 
-  ParsedNote({this.title, this.sections});
+  ParsedNote({required this.title, required this.sections});
 }
 
-ParsedNote parseText(String text) {
+ParsedNote? parseText(String text) {
   List<String> splits = text.split('\n');
   print("splits: ${splits.length}");
   List<List<String>> parts = [];
@@ -24,8 +23,6 @@ ParsedNote parseText(String text) {
   List<String> part = [];
 
   for (String s in splits) {
-    if (s == null) continue;
-
     s = s.trim();
 
     bool isEmpty = s == "";
@@ -57,11 +54,11 @@ ParsedNote parseText(String text) {
   if (part.length > 0) parts.add(part);
 
   // return empty if no part was found
-  if (parts.length == 0) return null;
+  if (parts.isEmpty) return null;
 
   int start = 0;
   List<Section> sections = [];
-  String title;
+  String title = "";
 
   // skip the start, cause it was the title
   if (parts[0].length == 1 && !parts[0][0].startsWith("[")) {
@@ -91,8 +88,8 @@ ParsedNote parseText(String text) {
 showInvalidTextSnack(BuildContext context) {
   var snackbar = SnackBar(
       content: Text("The text the app received has no valid format!"),
-      backgroundColor: Theme.of(context).errorColor);
-  Scaffold.of(context).showSnackBar(snackbar);
+      backgroundColor: Theme.of(context).colorScheme.error);
+  ScaffoldMessenger.of(context).showSnackBar(snackbar);
 }
 
 Future<String> readResponse(HttpClientResponse response) {
@@ -130,11 +127,10 @@ showTextImportDialog(BuildContext context, String text) async {
       showImportDialog(
           context, "Import ${ultimateNote.title}", onNew, onImport);
     } else {
-      showSnack(Scaffold.of(context), "Cannot retrieve note from $text");
+      showSnack(context, "Cannot retrieve note from $text");
     }
   } else {
-    ParsedNote parsed = parseText(text);
-
+    ParsedNote? parsed = parseText(text);
     if (parsed == null) {
       showInvalidTextSnack(context);
       return;
@@ -143,7 +139,7 @@ showTextImportDialog(BuildContext context, String text) async {
     Future<Note> onNew() async {
       Note empty = Note.empty();
       empty.sections = parsed.sections;
-      if (parsed.title != null) empty.title = parsed.title;
+      empty.title = parsed.title;
       return empty;
     }
 

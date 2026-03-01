@@ -7,14 +7,13 @@ class NoteEditorTitle extends StatelessWidget {
   final bool allowEdit;
   final ValueChanged<String> onChange;
 
-  NoteEditorTitle(
-      {@required this.title,
-      @required this.onChange,
+  const NoteEditorTitle(
+      {required this.title,
+      required this.onChange,
       this.allowEdit = true,
       this.hintText = 'Enter Title',
       this.labelText = 'Title',
-      Key key})
-      : super(key: key);
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,12 +35,16 @@ class NoteEditorAdditionalInfo extends StatelessWidget {
   final Note note;
   final bool allowEdit;
 
-  const NoteEditorAdditionalInfo(this.note, {this.allowEdit = true, Key key})
-      : super(key: key);
+  const NoteEditorAdditionalInfo(this.note, {this.allowEdit = true, super.key});
 
-  _edit({initial, title, hint, onChanged}) {
+  Widget _edit({
+    required String? initial,
+    required String title,
+    required String hint,
+    required ValueChanged<String> onChanged,
+  }) {
     return TextFormField(
-        initialValue: initial,
+        initialValue: initial ?? '',
         decoration: InputDecoration(
             labelText: title, border: InputBorder.none, hintText: hint),
         enabled: allowEdit,
@@ -55,27 +58,27 @@ class NoteEditorAdditionalInfo extends StatelessWidget {
         padding: EdgeInsets.only(left: 10, top: 10),
         child: Wrap(runSpacing: 1, children: [
           _edit(
-              initial: note.tuning == null ? "" : note.tuning,
+              initial: note.tuning,
               title: "Tuning",
               hint: "f.e. Standard, Dadgad",
               onChanged: changeTuning),
           _edit(
-              initial: note.capo == null ? "" : note.capo.toString(),
+              initial: note.capo,
               title: "Capo",
               hint: "f.e. 7, 5",
               onChanged: changeCapo),
           _edit(
-              initial: note.key == null ? "" : note.key.toString(),
+              initial: note.key,
               title: "Key",
               hint: "f.e. C Major, A Minor",
               onChanged: changeKey),
           _edit(
-              initial: note.label == null ? "" : note.label.toString(),
+              initial: note.label,
               title: "Label",
               hint: "f.e. Rock, Pop...",
               onChanged: changeLabel),
           _edit(
-              initial: note.artist == null ? "" : note.artist.toString(),
+              initial: note.artist,
               title: "Artist",
               hint: "leave empty if you are the artist",
               onChanged: changeArtist),

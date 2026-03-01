@@ -27,24 +27,28 @@ class DB {
   DB._internal();
 
   List<String> get uniqueLabels => _notes
-      .where((n) => n.label != null && n.label != "")
-      .map<String>((n) => n.label)
+      .map((n) => n.label)
+      .whereType<String>()
+      .where((v) => v.isNotEmpty)
       .toSet()
       .toList();
   List<String> get uniqueCapos => _notes
-      .where((n) => n.capo != null && n.capo != "")
-      .map<String>((n) => n.capo.toString())
+      .map((n) => n.capo)
+      .whereType<String>()
+      .where((v) => v.isNotEmpty)
       .toSet()
       .toList();
 
   List<String> get uniqueKeys => _notes
-      .where((n) => n.key != null && n.key != "")
-      .map<String>((n) => n.key)
+      .map((n) => n.key)
+      .whereType<String>()
+      .where((v) => v.isNotEmpty)
       .toSet()
       .toList();
   List<String> get uniqueTunings => _notes
-      .where((n) => n.tuning != null && n.tuning != "")
-      .map<String>((n) => n.tuning)
+      .map((n) => n.tuning)
+      .whereType<String>()
+      .where((v) => v.isNotEmpty)
       .toSet()
       .toList();
 }

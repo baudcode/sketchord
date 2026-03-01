@@ -1,121 +1,90 @@
-import 'package:flushbar/flushbar.dart';
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_flux/flutter_flux.dart';
-import 'package:sound/editor_store.dart';
-import 'package:sound/model.dart';
-import 'package:sound/recorder_store.dart';
-import 'package:sound/utils.dart';
+import 'package:provider/provider.dart';
+
+import 'editor_store.dart';
 import 'range_slider.dart' as frs;
+import 'recorder_store.dart';
 
 class Looper extends StatefulWidget {
   final Color color;
-  Looper(this.color, {Key key}) : super(key: key);
+  const Looper(this.color, {super.key});
 
   @override
-  _LooperState createState() => _LooperState();
+  State<Looper> createState() => _LooperState();
 }
 
-class _LooperState extends State<Looper> with StoreWatcherMixin<Looper> {
-  RangeValues range;
-  RecorderBottomSheetStore store;
-  ActionSubscription stopSubscription;
+class _LooperState extends State<Looper> {
+  RangeValues? range;
 
-  @override
-  void initState() {
-    super.initState();
-    store = listenToStore(recorderBottomSheetStoreToken);
-    range = store.loopRange;
+  void _onSaveLoop(RecorderBottomSheetStore store) {
+    if (range == null) return;
+    Flushbar<void>(
+      message: 'Saved ${range!.start} to ${range!.end}',
+      duration: const Duration(seconds: 2),
+    ).show(context);
 
-    stopSubscription = stopAction.listen((event) {
-      setState(() {
-        range = null;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    stopSubscription.cancel();
-    super.dispose();
-  }
-
-  _onSaveLoop() {
-    Flushbar(
-      //title: "Hey Ninja",
-      message: "Saved ${range.start} to ${range.end}",
-      duration: Duration(seconds: 2),
-    )..show(context);
-
-    AudioFile newFile = store.currentAudioFile;
-    newFile.loopRange = range;
-    changeAudioFile(newFile);
-  }
-
-  _view() {
-    var defaultRange =
-        RangeValues(0.0, store.currentLength.inSeconds.toDouble());
-
-    var lowerValue = range == null ? defaultRange.start : range.start;
-    var upperValue = range == null ? defaultRange.end : range.end;
-    return Container(
-      color: widget.color,
-      height: 100,
-      child: Column(children: [
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: FlatButton(
-                  visualDensity: VisualDensity.compact,
-                  child: Text("Save Loop"),
-                  onPressed: (range == null) ? null : _onSaveLoop))
-        ]),
-        Text(
-          "Looper:",
-        ),
-        SizedBox(height: 20),
-        Expanded(
-            child: frs.RangeSlider(
-          min: 0,
-          onChangeEnd: (double endLowerValue, double endUpperValue) {
-            setLoopRange(RangeValues(endLowerValue, endUpperValue));
-          },
-          max: (store.currentLength.inMilliseconds / 1000.0).toDouble(),
-          showValueIndicator: true,
-          lowerValue: lowerValue,
-          upperValue: upperValue,
-          onChanged: (double newLowerValue, double newUpperValue) {
-            setState(() {
-              print("change looper.....");
-              range = RangeValues(newLowerValue, newUpperValue);
-            });
-          },
-        ))
-      ]),
-    );
+    final current = store.currentAudioFile;
+    if (current != null) {
+      current.loopRange = range;
+      changeAudioFile(current);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if ((store.state == RecorderState.PLAYING ||
-            store.state == RecorderState.PAUSING) &&
-        store.currentLength != null) {
-      return _view();
-    } else {
-      return Container();
+    final store = context.watch<RecorderBottomSheetStore>();
+    if (store.state == RecorderState.stop && range != null) {
+      range = null;
     }
+    if (!((store.state == RecorderState.playing ||
+            store.state == RecorderState.pausing) &&
+        store.currentLength != null)) {
+      return const SizedBox.shrink();
+    }
+
+    final defaultRange = RangeValues(0.0, store.currentLength!.inSeconds.toDouble());
+    final lowerValue = range?.start ?? defaultRange.start;
+    final upperValue = range?.end ?? defaultRange.end;
+
+    return Container(
+      color: widget.color,
+      height: 100,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: TextButton(
+                  child: const Text('Save Loop'),
+                  onPressed: range == null ? null : () => _onSaveLoop(store),
+                ),
+              ),
+            ],
+          ),
+          const Text('Looper:'),
+          const SizedBox(height: 20),
+          Expanded(
+            child: frs.RangeSlider(
+              min: 0,
+              onChangeEnd: (endLowerValue, endUpperValue) {
+                setLoopRange(RangeValues(endLowerValue, endUpperValue));
+              },
+              max: (store.currentLength!.inMilliseconds / 1000.0).toDouble(),
+              showValueIndicator: true,
+              lowerValue: lowerValue,
+              upperValue: upperValue,
+              onChanged: (newLowerValue, newUpperValue) {
+                setState(() {
+                  range = RangeValues(newLowerValue, newUpperValue);
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
-
-/** 
-frs.RangeSlider(
-          key: GlobalKey(),
-          onChanged: (RangeValues newRange) {
-            print("changed to $newRange");
-            setState(() => range = newRange);
-          },
-          min: 0,
-          divisions: 100,
-          max: store.currentLength.inSeconds.toDouble(),
-          values: range == null ? defaultRange : range,
-        )
- **/

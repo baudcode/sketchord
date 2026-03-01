@@ -1,12 +1,15 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ColorPicker extends StatelessWidget {
-  final Color pickerColor;
+  final Color? pickerColor;
   final List<Color> availableColors;
   final ValueChanged<Color> onColorChanged;
 
-  ColorPicker({this.availableColors, this.onColorChanged, this.pickerColor});
+  const ColorPicker(
+      {required this.availableColors,
+      required this.onColorChanged,
+      this.pickerColor,
+      super.key});
 
   _getItem(Color color) {
     return Padding(
@@ -80,7 +83,7 @@ List<Color> getCardColors(BuildContext context) {
   return colors;
 }
 
-showColorPickerDialog(BuildContext context, Color currentColor,
+showColorPickerDialog(BuildContext context, Color? currentColor,
     ValueChanged<Color> onColorChanged) {
   List<Color> colors = getCardColors(context);
 
@@ -91,7 +94,7 @@ showColorPickerDialog(BuildContext context, Color currentColor,
   showDialog(
       context: context,
       builder: (context) {
-        Color selected = currentColor;
+        Color selected = currentColor ?? colors.first;
 
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
@@ -99,8 +102,8 @@ showColorPickerDialog(BuildContext context, Color currentColor,
             contentPadding: const EdgeInsets.all(8),
             title: Text("Choose a Color"),
             actions: [
-              FlatButton(child: Text("Cancel"), onPressed: _onCancel),
-              FlatButton(
+              TextButton(child: Text("Cancel"), onPressed: _onCancel),
+              TextButton(
                   child: Text("Apply"),
                   onPressed: () {
                     onColorChanged(selected);
@@ -111,7 +114,7 @@ showColorPickerDialog(BuildContext context, Color currentColor,
               child: ColorPicker(
                 availableColors: colors,
                 pickerColor:
-                    selected == null ? Theme.of(context).cardColor : selected,
+                    selected,
                 onColorChanged: (color) => setState(() => selected = color),
               ),
             ),

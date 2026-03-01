@@ -5,11 +5,14 @@ import 'package:sound/note_editor.dart';
 
 typedef FutureNoteCallback = Future<Note> Function();
 typedef FutureNoteImportCallback = Future<Note> Function(Note);
+typedef FutureAudioIdeaImportCallback = Future<void> Function();
 
 showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     FutureNoteImportCallback onImport,
     {String newButtonText = 'Import as NEW',
     String importButtonText = "Import",
+    String importIdeasButtonText = 'Import as Idea',
+    FutureAudioIdeaImportCallback? onImportAudioIdeas,
     bool openNote = true,
     bool syncNote = true}) async {
   List<Note> notes = await LocalStorage().getActiveNotes();
@@ -18,18 +21,19 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
     context: context,
     builder: (BuildContext context) {
       // if selected is null (use empty new note)
-      Note selected;
+      Note? selected;
 
       _open(Note note) {
         if (openNote) {
           Navigator.push(context,
-              new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+              MaterialPageRoute(builder: (context) => NoteEditor(note)));
         }
       }
 
       _import() async {
         // sync and pop current dialog
-        Note note = await onImport(selected);
+        if (selected == null) return;
+        Note note = await onImport(selected!);
         if (syncNote) {
           LocalStorage().syncNote(note);
         }
@@ -47,9 +51,17 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
         _open(newNote);
       }
 
+      _onImportIdeas() async {
+        if (onImportAudioIdeas == null) return;
+        await onImportAudioIdeas();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
-          title: new Text(title),
+          title: Text(title),
           content: Builder(builder: (context) {
             double width = MediaQuery.of(context).size.width;
             return Column(
@@ -57,15 +69,22 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Flexible(
-                      child: RaisedButton(
+                      child: ElevatedButton(
                           child: Text(newButtonText), onPressed: _onNew)),
+                  if (onImportAudioIdeas != null) ...[
+                    const SizedBox(height: 10),
+                    Flexible(
+                        child: ElevatedButton(
+                            onPressed: _onImportIdeas,
+                            child: Text(importIdeasButtonText))),
+                  ],
                   SizedBox(height: 10),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Container(child: Text("-- or select a note --"))
                   ]),
                   SizedBox(height: 15),
                   Row(mainAxisSize: MainAxisSize.max, children: [
-                    new DropdownButton<Note>(
+                    DropdownButton<Note>(
                         value: selected,
                         isDense: true,
                         items: notes
@@ -82,15 +101,15 @@ showImportDialog(BuildContext context, String title, FutureNoteCallback onNew,
                 ]);
           }),
           actions: <Widget>[
-            new FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text(importButtonText),
+            TextButton(
+              child: Text(importButtonText),
               onPressed: (selected != null) ? _import : null,
             ),
           ],

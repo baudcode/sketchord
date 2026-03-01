@@ -1,14 +1,5 @@
-version: '2'
+version: '3.9'
 services:
-  rethinkdb:
-    image: rethinkdb:latest
-    ports:
-      - "8084:8080"
-      - "29015:29015"
-      - "28015:28015"
-    volumes:
-      - ./data:/data
-    command: rethinkdb --bind all # --data /data
   backend:
     build:
       context: ./
@@ -20,6 +11,15 @@ services:
     ports:
       - "8009:8000"
     environment:
-      - DATABASE_URI=user:1234@rethinkdb:28015/iot
-    depends_on:
-      - "rethinkdb"
+      - SYNC_DB_BACKEND=sqlite
+      - SYNC_SQLITE_PATH=/app/data/sync.db
+  rethinkdb:
+    image: rethinkdb:latest
+    profiles: ["rethinkdb"]
+    ports:
+      - "8084:8080"
+      - "29015:29015"
+      - "28015:28015"
+    volumes:
+      - ./data:/data
+    command: rethinkdb --bind all

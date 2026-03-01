@@ -1,353 +1,293 @@
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart' show RangeValues;
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:flutter_flux/flutter_flux.dart' show Store, Action, StoreToken;
-// import 'package:video_player/video_player.dart';
-// import 'package:flutter_sound/flutter_sound.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:sound/editor_store.dart';
-import 'package:sound/settings_store.dart';
-import 'package:tuple/tuple.dart';
 import 'dart:async';
-import 'model.dart';
 import 'dart:io';
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show RangeValues;
 import 'package:path/path.dart' as p;
-//import 'package:audio_recorder/audio_recorder.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:tuple/tuple.dart';
 
-// https://github.com/ZaraclaJ/audio_recorder
+import 'editor_store.dart';
+import 'model.dart';
 
-enum RecorderState { STOP, RECORDING, PLAYING, PAUSING }
+enum RecorderState { stop, recording, playing, pausing }
 
-class PlayerPositionStore extends Store {
-  Duration _position = Duration(seconds: 0);
-
+class PlayerPositionStore extends ChangeNotifier {
+  Duration _position = Duration.zero;
   Duration get position => _position;
 
-  PlayerPositionStore() {
-    changePlayerPosition.listen((event) {
-      _position = event;
-      trigger();
-    });
+  void changePlayerPosition(Duration value) {
+    _position = value;
+    notifyListeners();
   }
 }
 
-Action<Duration> changePlayerPosition = Action();
-StoreToken playerPositionStoreToken = StoreToken(PlayerPositionStore());
-
-class RecorderPositionStore extends Store {
-  Duration _position = Duration(seconds: 0);
-
+class RecorderPositionStore extends ChangeNotifier {
+  Duration _position = Duration.zero;
   Duration get position => _position;
 
-  RecorderPositionStore() {
-    changeRecorderPosition.listen((event) {
-      _position = event;
-      trigger();
-    });
+  void changeRecorderPosition(Duration value) {
+    _position = value;
+    notifyListeners();
   }
 }
 
-Action<Duration> changeRecorderPosition = Action();
-StoreToken recorderPositionStoreToken = StoreToken(RecorderPositionStore());
+class RecorderBottomSheetStore extends ChangeNotifier {
+  final AudioPlayer _player = AudioPlayer();
+  final AudioRecorder _recorder = AudioRecorder();
+  final StreamController<AudioFile> _recordingFinishedController =
+      StreamController<AudioFile>.broadcast();
 
-class RecorderBottomSheetStore extends Store {
-  //VideoPlayerController _controller;
-  RecordingStatus _currentStatus = RecordingStatus.Unset;
-  AudioPlayer _player = AudioPlayer();
-  AudioFormat _audioFormat = AudioFormat.WAV;
+  Timer? _recordTicker;
+  DateTime? _recordStartedAt;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration>? _durationSub;
+  StreamSubscription<void>? _completeSub;
 
-  Recording _current;
-  FlutterAudioRecorder _recorder;
-  Duration _currentLength; // length of the current audio file
-
-  // recorder
-  RecorderState _state = RecorderState.STOP;
-  String _currentPath;
-
-  Duration _recordTime;
-  Duration get recordTime => _recordTime;
-
-  RangeValues _loopRange;
-  RangeValues get loopRange => _loopRange;
-
-  // getters
-  RecorderState get state => _state;
-  RecordingStatus get status => _currentStatus;
-  Duration get currentLength => _currentLength;
-  String get stateString => _state.toString();
-  String get currentPath => _currentPath;
-
-  AudioFile _audioFile;
-  AudioFile get currentAudioFile => _audioFile;
+  AudioFormat _audioFormat = AudioFormat.wav;
   AudioFormat get audioFormat => _audioFormat;
-  AudioPlayer get player => _player;
 
-  getDurationLoopEnd() {
+  RecorderState _state = RecorderState.stop;
+  RecorderState get state => _state;
+  String? _currentPath;
+  String? get currentPath => _currentPath;
+  Duration? _currentLength;
+  Duration? get currentLength => _currentLength;
+  Duration? _recordTime;
+  Duration? get recordTime => _recordTime;
+
+  RangeValues? _loopRange;
+  RangeValues? get loopRange => _loopRange;
+
+  AudioFile? _audioFile;
+  AudioFile? get currentAudioFile => _audioFile;
+
+  Stream<AudioFile> get onRecordingFinished => _recordingFinishedController.stream;
+
+  Duration? getDurationLoopEnd() {
     if (_loopRange == null) return null;
-    return Duration(milliseconds: (_loopRange.end * 1000).floor());
+    return Duration(milliseconds: (_loopRange!.end * 1000).floor());
   }
 
-  getDurationLoopStart() {
+  Duration? getDurationLoopStart() {
     if (_loopRange == null) return null;
-    return Duration(milliseconds: (_loopRange.start * 1000).floor());
+    return Duration(milliseconds: (_loopRange!.start * 1000).floor());
   }
 
-  Future<int> stopPlayer() async {
-    int res = await _player.stop();
-    changePlayerPosition(Duration(seconds: 0));
-    return res;
+  Future<void> _stopPlayerInternal() async {
+    await _player.stop();
+    playerPositionStore.changePlayerPosition(Duration.zero);
   }
 
-  Future<int> startPlayer(String path) async {
-    print("playing $path");
-    // set length not yet available
+  Future<void> _bindPlayerStreams() async {
+    await _positionSub?.cancel();
+    await _durationSub?.cancel();
+    await _completeSub?.cancel();
 
-    _player.onAudioPositionChanged.listen((pos) async {
-      if (_loopRange != null && pos >= getDurationLoopEnd()) {
-        pos = getDurationLoopStart();
-        await _player.seek(pos);
+    _positionSub = _player.onPositionChanged.listen((pos) async {
+      final loopEnd = getDurationLoopEnd();
+      final loopStart = getDurationLoopStart();
+      if (loopEnd != null && loopStart != null && pos >= loopEnd) {
+        await _player.seek(loopStart);
+        pos = loopStart;
       }
-      changePlayerPosition(pos);
+      playerPositionStore.changePlayerPosition(pos);
     });
 
-    _player.onDurationChanged.listen((event) {
-      if (_currentLength != event) {
-        setDuration(Tuple2(_audioFile, event));
-        _currentLength = event;
-        trigger();
+    _durationSub = _player.onDurationChanged.listen((event) {
+      if (_currentLength == event) return;
+      _currentLength = event;
+      if (_audioFile != null) {
+        setDuration(Tuple2(_audioFile!, event));
       }
+      notifyListeners();
     });
 
-    _state = RecorderState.PLAYING;
-    _player.onPlayerStateChanged.listen((AudioPlayerState event) {
-      print("player state change $event");
-    });
-
-    _player.onPlayerCompletion.listen((event) {
-      print("player completed");
+    _completeSub = _player.onPlayerComplete.listen((_) {
       stopAction();
     });
-
-    print("play me");
-    int result = await _player.play(path, isLocal: true);
-    trigger();
-    return result;
   }
 
-  Future<bool> init(String path) async {
-    try {
-      if (await Permission.microphone.request().isGranted) {
-        _recorder = FlutterAudioRecorder(path, audioFormat: _audioFormat);
-        await _recorder.initialized;
+  Future<void> startPlayer(String path) async {
+    await _bindPlayerStreams();
+    _state = RecorderState.playing;
+    await _player.play(DeviceFileSource(path));
+    notifyListeners();
+  }
 
-        // after initialization
-        _current = await _recorder.current(channel: 0);
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      print("ERRROR!");
-      print(e);
+  Future<bool> _initRecorder() async {
+    try {
+      return await _recorder.hasPermission();
+    } catch (_) {
       return false;
     }
+  }
+
+  RecordConfig _recordConfig() {
+    // Prefer AAC for iOS compatibility. Use WAV elsewhere if selected.
+    if (_audioFormat == AudioFormat.wav && !Platform.isIOS) {
+      return const RecordConfig(encoder: AudioEncoder.wav);
+    }
+    return const RecordConfig(encoder: AudioEncoder.aacLc);
   }
 
   Future<bool> startRecorder(String path) async {
-    // Check permissions before starting
-    print("init...");
-    print("starting recorder $path");
-
-    // Check permissions before starting
-    bool hasPermissions = await init(path);
-    print("has permissions: $hasPermissions");
-
-    if (!hasPermissions) {
-      return false;
-    }
-
-    await _recorder.start();
-    _current = await _recorder.current(channel: 0);
-    _currentStatus = _current.status;
-
-    const tick = const Duration(milliseconds: 50);
-
-    new Timer.periodic(tick, (Timer t) async {
-      if (_currentStatus == RecordingStatus.Stopped) {
-        t.cancel();
+    if (!await _initRecorder()) return false;
+    await _recorder.start(_recordConfig(), path: path);
+    _recordStartedAt = DateTime.now();
+    _recordTicker?.cancel();
+    _recordTicker = Timer.periodic(const Duration(milliseconds: 100), (_) async {
+      final current = await _recorder.getAmplitude();
+      final elapsed = _recordStartedAt == null
+          ? Duration.zero
+          : DateTime.now().difference(_recordStartedAt!);
+      recorderPositionStore.changeRecorderPosition(elapsed);
+      if (current.current.isNaN) {
+        // keep ticker alive while recording; no-op
       }
-
-      var current = await _recorder.current(channel: 0);
-      // print(current.status);
-      if (_currentStatus != current.status) {
-        _currentStatus = current.status;
-        _current = current;
-
-        trigger();
-      }
-
-      changeRecorderPosition(current.duration);
     });
-
     return true;
   }
 
-  Future<String> stopRecorder() async {
-    print("stopping...");
-    if (_currentStatus != RecordingStatus.Unset) {
-      var result = await _recorder.stop();
-      // reuslt.path, result.duration
-      print("Stop recording: ${result.path}");
-      print("Stop recording: ${result.duration}");
-      _recordTime = result.duration;
-      _current = result;
-      changeRecorderPosition(Duration(seconds: 0));
+  Future<void> stopRecorder() async {
+    final path = await _recorder.stop();
+    _recordTicker?.cancel();
+    _recordStartedAt = null;
+    final elapsed = recorderPositionStore.position;
+    _recordTime = elapsed;
+    recorderPositionStore.changeRecorderPosition(Duration.zero);
+    if (path != null) {
+      _currentPath = path;
+      _recordingFinishedController
+          .add(AudioFile(duration: elapsed, path: path));
     }
-
-    return "";
   }
 
   Future<String> getFilename() async {
-    var d = (await getApplicationDocumentsDirectory()).parent;
+    var d = await getApplicationDocumentsDirectory();
     d = Directory(p.join(d.path, 'files'));
-
-    String date = DateTime.now().toString();
-    String ext = _audioFormat == AudioFormat.WAV ? "wav" : "aac";
-    return d.path +
-        '/' +
-        DateTime.now()
-            .toString()
-            .substring(0, date.length - 7)
-            .replaceAll(":", "-") +
-        ".$ext";
+    if (!d.existsSync()) {
+      d.createSync(recursive: true);
+    }
+    final date = DateTime.now().toIso8601String().replaceAll(':', '-');
+    final ext = (_audioFormat == AudioFormat.wav && !Platform.isIOS)
+        ? 'wav'
+        : 'm4a';
+    return p.join(d.path, '$date.$ext');
   }
 
-  RecorderBottomSheetStore() {
-    // sound = FlutterSound();
-    startPlaybackAction.listen((AudioFile f) {
-      if (_state == RecorderState.STOP || _state == RecorderState.PAUSING) {
-        changePlayerPosition(Duration(seconds: 0));
-        _audioFile = f;
-        _currentPath = f.path;
-        _loopRange = f.loopRange;
-        print("Loop Range: $_loopRange");
+  Future<void> startPlaybackAction(AudioFile f) async {
+    if (_state == RecorderState.stop || _state == RecorderState.pausing) {
+      playerPositionStore.changePlayerPosition(Duration.zero);
+      _audioFile = f;
+      _currentPath = f.path;
+      _loopRange = f.loopRange;
+      await startPlayer(f.path);
+    }
+  }
 
-        startPlayer(f.path).then((t) {
-          //   _state = RecorderState.PLAYING;
-          // trigger();
-        });
-      }
-    });
+  Future<void> stopAction([dynamic _]) async {
+    _loopRange = null;
+    if (_state == RecorderState.playing || _state == RecorderState.pausing) {
+      await _stopPlayerInternal();
+      _state = RecorderState.stop;
+      notifyListeners();
+      return;
+    }
+    if (_state == RecorderState.recording) {
+      await stopRecorder();
+      _state = RecorderState.stop;
+      notifyListeners();
+    }
+  }
 
-    stopAction.listen((_) {
-      _loopRange = null;
-      if (_state == RecorderState.RECORDING ||
-          _state == RecorderState.PLAYING ||
-          _state == RecorderState.PAUSING) {
-        if (_state == RecorderState.PLAYING ||
-            _state == RecorderState.PAUSING) {
-          stopPlayer();
-          _state = RecorderState.STOP;
-          trigger();
-        } else {
-          stopRecorder().then((_) {
-            _state = RecorderState.STOP;
-            recordingFinished(
-                AudioFile(duration: _recordTime, path: currentPath));
-          });
-        }
-      }
-    });
+  Future<void> startRecordingAction([dynamic _]) async {
+    final path = await getFilename();
+    _currentPath = path;
+    final hasPermissions = await startRecorder(path);
+    if (hasPermissions) {
+      _state = RecorderState.recording;
+      notifyListeners();
+    }
+  }
 
-    startRecordingAction.listen((_) {
-      getFilename().then((path) {
-        _currentPath = path;
+  Future<void> skipTo(Duration d) async {
+    await _player.seek(d);
+    notifyListeners();
+  }
 
-        void start() {
-          startRecorder(path).then((hasPermissions) {
-            if (hasPermissions) {
-              _state = RecorderState.RECORDING;
-              trigger();
-            } else {
-              //start();
-            }
-          });
-        }
+  Future<void> pauseAction([dynamic _]) async {
+    await _player.pause();
+    _state = RecorderState.pausing;
+    notifyListeners();
+  }
 
-        start();
-      });
-    });
+  Future<void> resumeAction([dynamic _]) async {
+    await _player.resume();
+    _state = RecorderState.playing;
+    notifyListeners();
+  }
 
-    skipTo.listen((d) async {
-      print("seeking to $d");
-      await _player.seek(d);
-      trigger();
-    });
+  void resetRecorderState([dynamic _]) {
+    _state = RecorderState.stop;
+    notifyListeners();
+  }
 
-    pauseAction.listen((_) async {
-      await _player.pause();
-      _state = RecorderState.PAUSING;
-      trigger();
-    });
-    resumeAction.listen((_) async {
-      await _player.resume();
-      _state = RecorderState.PLAYING;
-      trigger();
-    });
+  void setRecorderState(RecorderState s) {
+    _state = s;
+    notifyListeners();
+  }
 
-    resetRecorderState.listen((_) {
-      //_currentPath = null;
-      _state = RecorderState.STOP;
-      trigger();
-    });
+  void setAudioFormat(AudioFormat format) {
+    _audioFormat = format;
+    notifyListeners();
+  }
 
-    setRecorderState.listen((s) {
-      _state = s;
-      trigger();
-    });
+  Future<void> setLoopRange(RangeValues range) async {
+    if (_loopRange == null || range.start != _loopRange!.start) {
+      final start = Duration(milliseconds: (range.start * 1000).floor());
+      await _player.seek(start);
+    }
+    _loopRange = range;
+    notifyListeners();
+  }
 
-    setAudioFormat.listen((format) {
-      _audioFormat = format;
-      print("setting audio format to $_audioFormat");
-      trigger();
-    });
-
-    setLoopRange.listen((range) async {
-      print("$range, $_loopRange");
-
-      if (_loopRange == null ||
-          (_loopRange != null && range.start != _loopRange.start)) {
-        var start = Duration(milliseconds: (range.start * 1000).floor());
-        await _player.seek(start);
-      }
-      _loopRange = range;
-      trigger();
-    });
-
-    setDefaultAudioFormat.listen((format) {
-      _audioFormat = format;
-      print("ping");
-      trigger();
-    });
-    print("editor store created");
+  @override
+  void dispose() {
+    _recordTicker?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    _completeSub?.cancel();
+    _recordingFinishedController.close();
+    _player.dispose();
+    super.dispose();
   }
 }
 
-Action<String> startRecordingAction = Action();
-Action<AudioFile> startPlaybackAction = Action();
+final PlayerPositionStore playerPositionStore = PlayerPositionStore();
+final RecorderPositionStore recorderPositionStore = RecorderPositionStore();
+final RecorderBottomSheetStore recorderBottomSheetStore = RecorderBottomSheetStore();
 
-Action<RecorderState> setRecorderState = Action();
-Action<String> setPath = Action();
-Action stopAction = Action();
-Action pauseAction = Action();
-Action resumeAction = Action();
-Action<Duration> setElapsed = Action();
-Action<Duration> skipTo = Action();
-Action<AudioFile> recordingFinished = Action();
-Action resetRecorderState = Action();
-Action<RangeValues> setLoopRange = Action();
-Action<AudioFormat> setAudioFormat = Action();
-
-StoreToken recorderBottomSheetStoreToken =
-    StoreToken(RecorderBottomSheetStore());
+void changePlayerPosition(Duration event) =>
+    playerPositionStore.changePlayerPosition(event);
+void changeRecorderPosition(Duration event) =>
+    recorderPositionStore.changeRecorderPosition(event);
+Future<void> startRecordingAction([dynamic _]) =>
+    recorderBottomSheetStore.startRecordingAction();
+Future<void> startPlaybackAction(AudioFile f) =>
+    recorderBottomSheetStore.startPlaybackAction(f);
+void setRecorderState(RecorderState s) => recorderBottomSheetStore.setRecorderState(s);
+void setPath(String path) {}
+Future<void> stopAction([dynamic _]) => recorderBottomSheetStore.stopAction();
+Future<void> pauseAction([dynamic _]) => recorderBottomSheetStore.pauseAction();
+Future<void> resumeAction([dynamic _]) => recorderBottomSheetStore.resumeAction();
+void setElapsed(Duration d) {}
+Future<void> skipTo(Duration d) => recorderBottomSheetStore.skipTo(d);
+void recordingFinished(AudioFile f) =>
+    recorderBottomSheetStore.onRecordingFinished.listen((_) {}).cancel();
+void resetRecorderState([dynamic _]) => recorderBottomSheetStore.resetRecorderState();
+Future<void> setLoopRange(RangeValues range) =>
+    recorderBottomSheetStore.setLoopRange(range);
+void setAudioFormat(AudioFormat format) => recorderBottomSheetStore.setAudioFormat(format);

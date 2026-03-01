@@ -1,143 +1,91 @@
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
-import 'package:sound/dialogs/initial_import_dialog.dart';
-import 'package:sound/local_storage.dart';
-import 'package:sound/model.dart';
-import 'package:sound/recorder_store.dart';
-import 'package:sound/utils.dart';
-import 'package:uuid/uuid.dart';
-import 'settings_store.dart';
-import "backup.dart";
-import 'db.dart';
-import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
+
+import 'backup.dart';
+import 'dialogs/initial_import_dialog.dart';
+import 'local_storage.dart';
+import 'model.dart';
+import 'recorder_store.dart';
+import 'settings_store.dart';
+import 'sync_debug_panel.dart';
+import 'sync_network.dart';
+import 'utils.dart';
 
 class Settings extends StatefulWidget {
-  final Function onMenuPressed;
-  Settings(this.onMenuPressed);
+  final VoidCallback onMenuPressed;
+  const Settings(this.onMenuPressed, {super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return SettingsState();
-  }
+  State<StatefulWidget> createState() => SettingsState();
 }
 
-class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
-  SettingsStore store;
-
-  GlobalKey<ScaffoldState> _globalKey = GlobalKey();
+class SettingsState extends State<Settings> {
+  final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
+  bool _syncEnabled = true;
+  String _syncBackendUrl = 'http://192.168.178.52:8009';
 
   @override
   void initState() {
     super.initState();
-    store = listenToStore(settingsToken);
+    _loadSyncConfig();
   }
 
-  _themeAsString() {
-    if (store.theme == SettingsTheme.dark) {
-      return "Dark";
-    } else {
-      return "Light";
-    }
+  Future<void> _loadSyncConfig() async {
+    final enabled = await LocalStorage().getSyncEnabled();
+    final backendUrl = await LocalStorage().getSyncBackendUrl();
+    if (!mounted) return;
+    setState(() {
+      _syncEnabled = enabled;
+      _syncBackendUrl = backendUrl;
+    });
   }
 
-  _wrapItem(item) {
+  String _themeAsString(SettingsStore store) =>
+      store.theme == SettingsTheme.dark ? 'Dark' : 'Light';
+
+  Widget _wrapItem(Widget item) {
     return Padding(
-        padding: EdgeInsets.only(left: 48, bottom: 8, top: 8, right: 48),
-        child: item);
+      padding: const EdgeInsets.only(left: 48, bottom: 8, top: 8, right: 48),
+      child: item,
+    );
   }
 
-  _themeItem() {
-    return _wrapItem(Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(child: Text("Theme: ")),
-        RaisedButton(
-          child: Text(_themeAsString()),
-          onPressed: toggleTheme,
-        ),
-      ],
-    ));
+  String _audioFormatAsString(SettingsStore store) =>
+      store.audioFormat == AudioFormat.aac ? 'AAC' : 'WAV';
+
+  Future<void> _toggleAudioFormat(SettingsStore store) async {
+    final newAudioFormat = store.audioFormat == AudioFormat.aac
+        ? AudioFormat.wav
+        : AudioFormat.aac;
+    await setDefaultAudioFormat(newAudioFormat);
+    setAudioFormat(newAudioFormat);
   }
 
-  _audioFormatAsString() {
-    return store.audioFormat == AudioFormat.AAC ? "AAC" : "WAV";
-  }
-
-  _toggleAudioFormat() {
-    AudioFormat newAudioFormat;
-    if (store.audioFormat == AudioFormat.AAC) {
-      newAudioFormat = AudioFormat.WAV;
-    } else {
-      newAudioFormat = AudioFormat.AAC;
-    }
-    setDefaultAudioFormat(newAudioFormat);
-  }
-
-  _audioFormatItem() {
-    return _wrapItem(Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(child: Text("AudioFormat: ")),
-        RaisedButton(
-            child: Text(_audioFormatAsString()), onPressed: _toggleAudioFormat),
-      ],
-    ));
-  }
-
-  _setName() {
-    return _wrapItem(Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text("Name:"),
-          Text(
-            "Used for copyright in exported files",
-            textScaleFactor: 0.4,
-          )
-        ])),
-        RaisedButton(
-            child: Text(store.name == null ? "Edit" : store.name),
-            onPressed: _showEditNameDialog),
-      ],
-    ));
-  }
-
-  _showEditNameDialog() {
-    print(store.name);
-    TextEditingController _controller = TextEditingController.fromValue(
-        TextEditingValue(text: (store.name == null ? "Edit" : store.name)));
-    showDialog(
+  Future<void> _showEditNameDialog(SettingsStore store) async {
+    final controller = TextEditingController(text: store.name ?? '');
+    await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        // return object of type Dialog
         return AlertDialog(
-          title: new Text("Set Name"),
-          content: new TextField(
+          title: const Text('Set Name'),
+          content: TextField(
             autofocus: true,
             maxLines: 1,
             minLines: 1,
-            onSubmitted: (s) => print("submit $s"),
-            controller: _controller,
+            controller: controller,
           ),
           actions: <Widget>[
-            new FlatButton(
-              child: Text("Cancel"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
             ),
-            // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text("Apply"),
+            TextButton(
+              child: const Text('Apply'),
               onPressed: () {
-                setName(_controller.value.text);
+                setName(controller.value.text);
                 Navigator.of(context).pop();
               },
             ),
@@ -147,65 +95,219 @@ class SettingsState extends State<Settings> with StoreWatcherMixin<Settings> {
     );
   }
 
-  _onExport() async {
-    String path = await Backup().exportZip(await LocalStorage().getNotes());
-    showSnack(_globalKey.currentState, "Exported zip to $path");
-    String filename = p.basename(path);
-    await FlutterShare.shareFile(
-        title: filename, text: 'Share backup zip', filePath: path);
+  Future<void> _onExport() async {
+    final path = await Backup().exportZip(await LocalStorage().getNotes());
+    showSnack(_globalKey.currentState, 'Exported zip to $path');
+    final filename = p.basename(path);
+    await SharePlus.instance.share(ShareParams(
+      text: 'Share backup zip',
+      title: filename,
+      files: [XFile(path)],
+    ));
   }
 
-  _onImport() async {
+  Future<void> _onImport() async {
     try {
-      List<Note> notes = await Backup().import();
-      for (Note note in notes) {
-        // update id
-        note.id = Uuid().v4();
-        //await LocalStorage().syncNote(note);
+      final notes = await Backup().import();
+      for (final note in notes) {
+        note.id = const Uuid().v4();
       }
-      showSelectNotesImportDialog(context, (List<Note> restoredNotes) {
-        showSnack(_globalKey.currentState,
-            "Successfully restored ${restoredNotes.length} notes");
-      }, notes, title: "Which songs would you like to restore?");
+      showSelectNotesImportDialog(
+        context,
+        (List<Note> restoredNotes) {
+          showSnack(
+            _globalKey.currentState,
+            'Successfully restored ${restoredNotes.length} notes',
+          );
+        },
+        notes,
+        title: 'Which songs would you like to restore?',
+      );
     } on ImportException {
-      showSnack(_globalKey.currentState, "Error while importing zip");
+      showSnack(_globalKey.currentState, 'Error while importing zip');
     }
   }
 
-  _list() {
-    var items = [
-      _setName(),
-      _themeItem(),
-      _audioFormatItem(),
-      SizedBox(height: 10),
-      RaisedButton(child: Text("Backup"), onPressed: _onExport),
-      SizedBox(height: 10),
-      RaisedButton(child: Text("Restore"), onPressed: _onImport),
-      SizedBox(height: 10),
+  Future<void> _showBackendUrlDialog() async {
+    final controller = TextEditingController(text: _syncBackendUrl);
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sync Backend URL'),
+          content: TextField(
+            autofocus: true,
+            maxLines: 1,
+            minLines: 1,
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'http://127.0.0.1:8009',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Apply'),
+              onPressed: () async {
+                final next = controller.text.trim();
+                if (next.isNotEmpty) {
+                  await LocalStorage().setSyncBackendUrl(next);
+                  if (mounted) {
+                    setState(() {
+                      _syncBackendUrl = next;
+                    });
+                  }
+                }
+                if (mounted) Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _setLanBackendUrl() async {
+    final ip = await SyncNetwork.firstPrivateIpv4();
+    if (ip == null) {
+      showSnack(_globalKey.currentState, 'No private IPv4 interface found');
+      return;
+    }
+    final url = 'http://$ip:8009';
+    await LocalStorage().setSyncBackendUrl(url);
+    if (!mounted) return;
+    setState(() {
+      _syncBackendUrl = url;
+    });
+    showSnack(_globalKey.currentState, 'Sync backend set to $url');
+  }
+
+  Widget _list(SettingsStore store) {
+    final items = <Widget>[
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Name:')),
+          ElevatedButton(
+            child: Text((store.name == null || store.name!.isEmpty)
+                ? 'Edit'
+                : store.name!),
+            onPressed: () => _showEditNameDialog(store),
+          ),
+        ],
+      )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Theme:')),
+          ElevatedButton(
+            child: Text(_themeAsString(store)),
+            onPressed: () => toggleTheme(),
+          ),
+        ],
+      )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Audio Format:')),
+          ElevatedButton(
+            child: Text(_audioFormatAsString(store)),
+            onPressed: () => _toggleAudioFormat(store),
+          ),
+        ],
+      )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Sync Enabled:')),
+          Switch(
+            value: _syncEnabled,
+            onChanged: (v) async {
+              await LocalStorage().setSyncEnabled(v);
+              if (!mounted) return;
+              setState(() {
+                _syncEnabled = v;
+              });
+            },
+          ),
+        ],
+      )),
+      _wrapItem(Row(
+        children: [
+          const Expanded(child: Text('Sync Backend:')),
+          Flexible(
+            child: ElevatedButton(
+              onPressed: _showBackendUrlDialog,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _syncBackendUrl,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ),
+          ),
+        ],
+      )),
+      _wrapItem(
+        Row(
+          children: [
+            const Expanded(child: Text('Use LAN URL:')),
+            ElevatedButton(
+              onPressed: _setLanBackendUrl,
+              child: const Text('Auto-detect'),
+            ),
+          ],
+        ),
+      ),
+      _wrapItem(
+        Row(
+          children: [
+            const Expanded(child: Text('Sync Debug:')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SyncDebugPanel(),
+                  ),
+                );
+              },
+              child: const Text('Open Panel'),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      ElevatedButton(onPressed: _onExport, child: const Text('Backup')),
+      const SizedBox(height: 10),
+      ElevatedButton(onPressed: _onImport, child: const Text('Restore')),
     ];
 
     return ListView.builder(
-        padding: EdgeInsets.all(10),
-        itemBuilder: (context, index) {
-          return items[index];
-        },
-        itemCount: items.length);
+      padding: const EdgeInsets.all(10),
+      itemBuilder: (context, index) => items[index],
+      itemCount: items.length,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // items.add(_title());
-    List<Widget> stackChildren = [];
-
-    stackChildren.add(Container(padding: EdgeInsets.all(16), child: _list()));
-
+    final store = context.watch<SettingsStore>();
     return Scaffold(
-        key: _globalKey,
-        appBar: AppBar(
-            title: Text("Settings"),
-            leading: IconButton(
-                icon: Icon(Icons.menu), onPressed: widget.onMenuPressed)),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-        body: Stack(children: stackChildren));
+      key: _globalKey,
+      appBar: AppBar(
+        title: const Text('Settings'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: widget.onMenuPressed,
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _list(store),
+      ),
+    );
   }
 }

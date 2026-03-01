@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +15,15 @@ class ImportException implements Exception {
 }
 
 class Backup {
+  Future<String?> _pickFilePath(
+      {required FileType type, List<String>? allowedExtensions}) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: type,
+      allowedExtensions: allowedExtensions,
+    );
+    return result?.files.single.path;
+  }
+
   Future<bool> getPermissions() async {
     return await Permission.storage.request().isGranted;
   }
@@ -33,23 +41,21 @@ class Backup {
   }
 
   Future<List<Note>> importZip() async {
-    File f = await FilePicker.getFile(
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
-    );
-    return await readZip(f.path);
+    final path =
+        await _pickFilePath(type: FileType.custom, allowedExtensions: ['zip']);
+    if (path == null) return [];
+    return readZip(path);
   }
 
   Future<List<Note>> import() async {
-    File f = await FilePicker.getFile(
-      type: FileType.any,
-      // allowedExtensions: ['zip', 'json'],
-    );
-    if (f.path.endsWith(".json")) {
-      Note note = readNote(f.path);
+    final path = await _pickFilePath(type: FileType.any);
+    if (path == null) return [];
+    if (path.endsWith(".json")) {
+      Note? note = readNote(path);
+      if (note == null) return [];
       return [note];
-    } else if (f.path.endsWith(".zip")) {
-      return await readZip(f.path);
+    } else if (path.endsWith(".zip")) {
+      return await readZip(path);
     }
 
     return [];
@@ -71,22 +77,20 @@ class Backup {
         print(f.name);
       }
       final noteListFile = archive.files
-          .firstWhere((a) => a.name == NOTES_FILENAME, orElse: () => null);
-
-      if (noteListFile == null) {
-        print("cannot find note list");
-        throw new ImportException();
-      }
+          .where((a) => a.name == NOTES_FILENAME)
+          .cast<ArchiveFile?>()
+          .firstWhere((a) => a != null, orElse: () => null);
+      if (noteListFile == null) throw ImportException();
       final noteIds = jsonDecode(decodeZipContent(noteListFile));
       print("zip contains $noteIds");
 
       for (String noteId in noteIds) {
-        var noteFile = archive.files
-            .firstWhere((a) => a.name == "$noteId.json", orElse: () => null);
-
+        final noteFile = archive.files
+            .where((a) => a.name == "$noteId.json")
+            .cast<ArchiveFile?>()
+            .firstWhere((a) => a != null, orElse: () => null);
         if (noteFile == null) {
-          print("cannot find note with id $noteId");
-          throw new ImportException();
+          continue;
         }
         var noteMap = jsonDecode(decodeZipContent(noteFile));
         Note note = Note.fromJson(noteMap, noteMap['id']);
@@ -100,7 +104,7 @@ class Backup {
     return notes;
   }
 
-  Note readNote(String path) {
+  Note? readNote(String path) {
     String data = File(path).readAsStringSync();
     try {
       var jsonData = jsonDecode(data);
@@ -119,12 +123,10 @@ class Backup {
   }
 
   Future<Note> importNote() async {
-    File f = await FilePicker.getFile(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-
-    return readNote(f.path);
+    final path =
+        await _pickFilePath(type: FileType.custom, allowedExtensions: ['json']);
+    if (path == null) return Note.empty();
+    return readNote(path) ?? Note.empty();
   }
 
   Future<String> exportZip(List<Note> notes) async {
@@ -146,7 +148,7 @@ class Backup {
       encoder.create(path);
     } on FileSystemException catch (e) {
       print("cannot create zip at location $path ${e.message}");
-      return null;
+      return '';
     }
 
     for (Note note in notes) {

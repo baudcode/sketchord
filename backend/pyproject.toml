@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sketchord-sync-backend"
+version = "0.1.0"
+description = "Sketchord sync backend with deterministic merge and conflict logging."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.116.0",
+  "uvicorn>=0.35.0",
+  "pydantic>=2.11.0",
+]
+
+[project.optional-dependencies]
+rethinkdb = [
+  "rethinkdb>=2.4.10",
+]
+
+[project.scripts]
+sketchord-sync-backend = "sketchord_sync_backend.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sketchord_sync_backend"]
+

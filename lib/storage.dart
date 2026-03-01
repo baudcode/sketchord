@@ -1,4 +1,4 @@
-import 'package:flutter_flux/flutter_flux.dart';
+import 'package:flutter/foundation.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'model.dart';
@@ -112,7 +112,7 @@ class Filter {
   FilterBy by;
   String content;
 
-  Filter({this.by, this.content});
+  Filter({required this.by, required this.content});
 
   @override
   int get hashCode => (by.index.toString() + content).hashCode;
@@ -120,16 +120,16 @@ class Filter {
   bool operator ==(o) => (o is Filter && o.by == by && o.content == content);
 }
 
-class StaticStorage extends Store {
-  List<Filter> _filters;
-  Map<FilterBy, bool> _showMore;
-  bool _twoPerRow;
+class StaticStorage extends ChangeNotifier {
+  List<Filter> _filters = [];
+  Map<FilterBy, bool> _showMore = {};
+  bool _twoPerRow = false;
 
   bool get view => _twoPerRow;
 
   List<Filter> get filters => _filters;
 
-  List<Note> _selectedNotes;
+  List<Note> _selectedNotes = [];
   List<Note> get selectedNotes => _selectedNotes;
 
   String _search = "";
@@ -138,7 +138,7 @@ class StaticStorage extends Store {
   bool mustShowMore(FilterBy by) {
     Map<FilterBy, List<Filter>> f = _getFiltersByCategory();
     if (f.keys.contains(by)) {
-      return f[by].length > 3;
+      return (f[by]?.length ?? 0) > 3;
     } else
       return false;
   }
@@ -150,156 +150,139 @@ class StaticStorage extends Store {
   bool isAnyNoteStarred() => filteredNotes.any((n) => n.starred);
 
   bool showMore(FilterBy by) =>
-      _showMore.containsKey(by) ? _showMore[by] : false;
+      _showMore.containsKey(by) ? (_showMore[by] ?? false) : false;
 
   bool isFilterApplied(Filter filter) => _filters.contains(filter);
 
   StaticStorage() {
     _twoPerRow = false;
+  }
 
-    toggleChangeView.listen((_) {
-      _twoPerRow = !_twoPerRow;
-      trigger();
-    });
+  void toggleChangeView() {
+    _twoPerRow = !_twoPerRow;
+    notifyListeners();
+  }
 
-    _filters = [];
-    _selectedNotes = [];
-    _showMore = Map();
+  void toggleShowMore(FilterBy by) {
+    _showMore[by] = !(_showMore[by] ?? false);
+    notifyListeners();
+  }
 
-    toggleShowMore.listen((by) {
-      if (_showMore.containsKey(by)) {
-        _showMore[by] = !_showMore[by];
-      } else {
-        _showMore[by] = true;
+  void addNote(Note note) {
+    DB().addNote(note);
+    notifyListeners();
+  }
+
+  void addFilter(Filter f) {
+    if (_filters.contains(f)) return;
+    _filters.add(f);
+    notifyListeners();
+  }
+
+  void removeFilter(Filter f) {
+    _filters.remove(f);
+    notifyListeners();
+  }
+
+  void searchNotes(String s) {
+    _search = s;
+    notifyListeners();
+  }
+
+  void triggerSelectNote(Note note) {
+    if (_selectedNotes.contains(note)) {
+      _selectedNotes.remove(note);
+    } else {
+      _selectedNotes.add(note);
+    }
+    notifyListeners();
+  }
+
+  Future<void> removeAllSelectedNotes() async {
+    for (final note in _selectedNotes) {
+      for (final audio in note.audioFiles) {
+        FileManager().delete(audio);
       }
-      trigger();
-    });
+      await LocalStorage().deleteNote(note);
+    }
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    addNote.listen((note) {
-      DB().addNote(note);
-      trigger();
-    });
+  Future<void> discardAllSelectedNotes() async {
+    for (final note in _selectedNotes) {
+      await LocalStorage().discardNote(note);
+    }
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    addFilter.listen((f) {
-      if (!_filters.contains(f)) {
-        _filters.add(f);
-        trigger();
-      }
-    });
+  Future<void> starAllSelectedNotes() async {
+    for (final note in _selectedNotes) {
+      note.starred = true;
+      await LocalStorage().syncNoteAttr(note, 'starred');
+    }
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    removeFilter.listen((f) {
-      _filters.remove(f);
-      trigger();
-    });
-    searchNotes.listen((s) {
-      _search = s;
-      trigger();
-    });
+  Future<void> unstarAllSelectedNotes() async {
+    for (final note in _selectedNotes) {
+      note.starred = false;
+      await LocalStorage().syncNoteAttr(note, 'starred');
+    }
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    triggerSelectNote.listen((Note note) {
-      if (!_selectedNotes.contains(note)) {
-        _selectedNotes.add(note);
-        trigger();
-      } else {
-        _selectedNotes.remove(note);
-        trigger();
-      }
-    });
+  Future<void> colorAllSelectedNotes(Color color) async {
+    for (final note in _selectedNotes) {
+      note.color = color;
+      await LocalStorage().syncNoteAttr(note, 'color');
+    }
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    removeAllSelectedNotes.listen((_) {
-      for (Note note in _selectedNotes) {
-        for (var audio in note.audioFiles) {
-          FileManager().delete(audio);
-        }
+  Future<void> restoreNotes(List<Note> notes) async {
+    for (final note in notes) {
+      await LocalStorage().restoreNote(note);
+    }
+    notifyListeners();
+  }
 
-        LocalStorage().deleteNote(note);
-      }
-      _selectedNotes.clear();
-      trigger();
-    });
+  void clearSelection() {
+    _selectedNotes.clear();
+    notifyListeners();
+  }
 
-    discardAllSelectedNotes.listen((_) {
-      for (Note note in _selectedNotes) {
-        LocalStorage().discardNote(note);
-      }
-      _selectedNotes.clear();
-      trigger();
-    });
-
-    starAllSelectedNotes.listen((_) {
-      for (Note note in _selectedNotes) {
-        note.starred = true;
-        LocalStorage().syncNoteAttr(note, 'starred');
-      }
-      _selectedNotes.clear();
-      trigger();
-    });
-    unstarAllSelectedNotes.listen((_) {
-      for (Note note in _selectedNotes) {
-        note.starred = false;
-        LocalStorage().syncNoteAttr(note, 'starred');
-      }
-      _selectedNotes.clear();
-      trigger();
-    });
-
-    colorAllSelectedNotes.listen((Color color) {
-      for (Note note in _selectedNotes) {
-        note.color = color;
-        LocalStorage().syncNoteAttr(note, 'color');
-      }
-      _selectedNotes.clear();
-      trigger();
-    });
-
-    restoreNotes.listen((_notes) {
-      for (Note note in _notes) {
-        LocalStorage().restoreNote(note);
-      }
-      trigger();
-    });
-
-    clearSelection.listen((_) {
-      _selectedNotes.clear();
-      trigger();
-    });
-
-    updateView.listen((_) {
-      // only update the view, data is stored in file_manager
-      trigger();
-    });
+  void updateView() {
+    notifyListeners();
   }
 
   bool _isSearchValid(Note note) {
-    if (_search != null) {
-      var search = _search.toLowerCase();
-      if (note.label != null && note.label.toLowerCase().contains(search))
-        return true;
-      if (note.capo != null &&
-          note.capo.toString().toLowerCase().contains(search)) return true;
-      if (note.title != null && note.title.toLowerCase().contains(search))
-        return true;
+    var search = _search.toLowerCase();
+    if ((note.label ?? '').toLowerCase().contains(search))
+      return true;
+    if (note.capo.toString().toLowerCase().contains(search)) return true;
+    if ((note.title).toLowerCase().contains(search))
+      return true;
 
-      if (note.artist != null && note.artist.toLowerCase().contains(search))
-        return true;
+    if ((note.artist ?? '').toLowerCase().contains(search))
+      return true;
 
-      if (note.tuning != null && note.tuning.toLowerCase().contains(search))
-        return true;
-      if (note.sections.any((s) =>
-          s.content.toLowerCase().contains(search) ||
-          s.title.toLowerCase().contains(search))) return true;
-    }
-    return false;
+    if ((note.tuning ?? '').toLowerCase().contains(search))
+      return true;
+    if (note.sections.any((s) =>
+        s.content.toLowerCase().contains(search) ||
+        s.title.toLowerCase().contains(search))) return true;
+      return false;
   }
 
   Map<FilterBy, List<Filter>> _getFiltersByCategory() {
-    Map<FilterBy, List<Filter>> m = Map();
+    final m = <FilterBy, List<Filter>>{};
     for (Filter f in _filters) {
-      if (m.keys.contains(f.by)) {
-        m[f.by].add(f);
-      } else {
-        m[f.by] = [f];
-      }
+      m.putIfAbsent(f.by, () => []).add(f);
     }
     return m;
   }
@@ -328,10 +311,10 @@ class StaticStorage extends Store {
   }
 
   List<Note> get filteredNotes => DB().notes.where((Note note) {
-        if (_filters.length == 0 && (_search == null || _search == ""))
+        if (_filters.length == 0 && (_search == ""))
           return true;
 
-        if (_search != null && search != "") {
+        if (search != "") {
           if (_filters.length == 0) {
             return _isSearchValid(note);
           } else {
@@ -343,26 +326,27 @@ class StaticStorage extends Store {
       }).toList();
 }
 
-Action<List<Note>> setNotes = Action();
-Action<Note> addNote = Action();
-Action<Filter> addFilter = Action();
-Action<Filter> removeFilter = Action();
+final StaticStorage storageStore = StaticStorage();
 
-Action<String> searchNotes = Action();
-Action<FilterBy> toggleShowMore = Action();
-Action toggleChangeView = Action();
-Action openSettings = Action();
-//Action<FirebaseUser> setUser = Action();
-
-Action<Note> triggerSelectNote = Action();
-Action removeAllSelectedNotes = Action();
-Action discardAllSelectedNotes = Action();
-Action starAllSelectedNotes = Action();
-Action unstarAllSelectedNotes = Action();
-Action<Color> colorAllSelectedNotes = Action();
-
-Action<List<Note>> restoreNotes = Action();
-Action clearSelection = Action();
-Action updateView = Action();
-
-StoreToken storageToken = StoreToken(StaticStorage());
+void setNotes(List<Note> notes) => DB().setNotes(notes);
+void addNote(Note note) => storageStore.addNote(note);
+void addFilter(Filter filter) => storageStore.addFilter(filter);
+void removeFilter(Filter filter) => storageStore.removeFilter(filter);
+void searchNotes(String search) => storageStore.searchNotes(search);
+void toggleShowMore(FilterBy by) => storageStore.toggleShowMore(by);
+void toggleChangeView([dynamic _]) => storageStore.toggleChangeView();
+void openSettings([dynamic _]) {}
+void triggerSelectNote(Note note) => storageStore.triggerSelectNote(note);
+Future<void> removeAllSelectedNotes([dynamic _]) =>
+    storageStore.removeAllSelectedNotes();
+Future<void> discardAllSelectedNotes([dynamic _]) =>
+    storageStore.discardAllSelectedNotes();
+Future<void> starAllSelectedNotes([dynamic _]) =>
+    storageStore.starAllSelectedNotes();
+Future<void> unstarAllSelectedNotes([dynamic _]) =>
+    storageStore.unstarAllSelectedNotes();
+Future<void> colorAllSelectedNotes(Color color) =>
+    storageStore.colorAllSelectedNotes(color);
+Future<void> restoreNotes(List<Note> notes) => storageStore.restoreNotes(notes);
+void clearSelection([dynamic _]) => storageStore.clearSelection();
+void updateView([dynamic _]) => storageStore.updateView();

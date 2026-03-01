@@ -70,21 +70,26 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
                   title: Text(title),
                   content: isImporting
                       ? Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          itemBuilder: (context, index) {
-                            Note note = notes[index];
-                            return CheckboxListTile(
-                                activeColor: Theme.of(context).accentColor,
-                                value: checked[note],
-                                onChanged: (v) {
-                                  setState(() => checked[note] = v);
-                                },
-                                title: ListTile(
-                                  title: Text(note.title),
-                                  subtitle: Text(note.artist),
-                                ));
-                          },
-                          itemCount: notes.length,
+                      : SizedBox(
+                          width: 480,
+                          height: 320,
+                          child: ListView.builder(
+                            itemBuilder: (context, index) {
+                              Note note = notes[index];
+                              return CheckboxListTile(
+                                  activeColor:
+                                      Theme.of(context).colorScheme.secondary,
+                                  value: checked[note],
+                                  onChanged: (v) {
+                                    setState(() => checked[note] = v ?? false);
+                                  },
+                                  title: ListTile(
+                                    title: Text(note.title),
+                                    subtitle: Text(note.artist ?? ''),
+                                  ));
+                            },
+                            itemCount: notes.length,
+                          ),
                         ),
                   actions: isImporting
                       ? []

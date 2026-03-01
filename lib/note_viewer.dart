@@ -17,21 +17,21 @@ class NoteViewer extends StatefulWidget {
       showSheet;
 
   NoteViewer(this.note,
-      {this.actions,
+      {List<Widget>? actions,
       this.showZoomPlayback = true,
       this.showAudioFiles = true,
       this.showTitle = true,
       this.showSheet = false,
       this.showAdditionalInformation = true,
-      Key key})
-      : super(key: key);
+      super.key})
+      : actions = actions ?? const [];
 
   @override
   _NoteViewerState createState() => _NoteViewerState();
 }
 
 class _NoteViewerState extends State<NoteViewer> {
-  ScrollController _controller;
+  late ScrollController _controller;
   bool showButtons = true;
   double textScaleFactor = 1.0;
   bool isPlaying = false;
@@ -42,8 +42,7 @@ class _NoteViewerState extends State<NoteViewer> {
     super.initState();
     _controller = ScrollController()
       ..addListener(() {
-        bool upDirection =
-            _controller.position.userScrollDirection == ScrollDirection.forward;
+        _controller.position.userScrollDirection == ScrollDirection.forward;
       });
 
     textScaleFactor = widget.note.zoom;
@@ -91,7 +90,7 @@ class _NoteViewerState extends State<NoteViewer> {
 
     List<Widget> playingActions = [
       IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           icon: Icon(Icons.stop),
           onPressed: () {
             setState(() {
@@ -99,7 +98,7 @@ class _NoteViewerState extends State<NoteViewer> {
             });
           }),
       IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           icon: Icon(Icons.fast_rewind),
           onPressed: () {
             setState(() {
@@ -108,7 +107,7 @@ class _NoteViewerState extends State<NoteViewer> {
             _updateScrollOffset();
           }),
       IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           icon: Icon(Icons.fast_forward),
           onPressed: () {
             setState(() {
@@ -121,7 +120,7 @@ class _NoteViewerState extends State<NoteViewer> {
     List<Widget> actions = [
       IconButton(
           icon: Icon(Icons.play_arrow),
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           onPressed: () {
             if (!isPlaying) {
               setState(() {
@@ -141,7 +140,7 @@ class _NoteViewerState extends State<NoteViewer> {
             }
           }),
       IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           icon: Icon(Icons.zoom_in),
           onPressed: () {
             setState(() {
@@ -150,7 +149,7 @@ class _NoteViewerState extends State<NoteViewer> {
             _updateZoom();
           }),
       IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           icon: Icon(Icons.zoom_out),
           onPressed: () {
             setState(() {
@@ -159,7 +158,7 @@ class _NoteViewerState extends State<NoteViewer> {
             _updateZoom();
           }),
       IconButton(
-        color: Theme.of(context).accentColor,
+        color: Theme.of(context).colorScheme.secondary,
         icon: Icon(Icons.settings_backup_restore_outlined),
         onPressed: () {
           setState(() {
@@ -195,7 +194,7 @@ class _NoteViewerState extends State<NoteViewer> {
           padding: EdgeInsets.symmetric(vertical: 20),
           child: Text(
             'Audio Files',
-            style: Theme.of(context).textTheme.subtitle1,
+            style: Theme.of(context).textTheme.titleMedium,
           )));
 
       items.addAll(widget.note.audioFiles.map<Widget>((e) {
@@ -206,9 +205,7 @@ class _NoteViewerState extends State<NoteViewer> {
     }
 
     return Scaffold(
-        appBar: widget.actions == null
-            ? null
-            : AppBar(
+        appBar: AppBar(
                 actions: widget.actions,
               ),
         bottomSheet: widget.showSheet

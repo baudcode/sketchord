@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sound/db.dart';
 import 'package:sound/storage.dart';
 
 typedef FilterByCallback = bool Function(FilterBy);
@@ -10,11 +9,16 @@ class FilterView extends StatelessWidget {
   final Filter filter;
   final ValueChanged<Filter> remove, add;
 
-  FilterView({this.filter, this.active, this.remove, this.add});
+  const FilterView(
+      {required this.filter,
+      required this.active,
+      required this.remove,
+      required this.add,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor = (active)
+    Color? backgroundColor = (active)
         ? Theme.of(context).chipTheme.selectedColor
         : Theme.of(context).chipTheme.backgroundColor;
 
@@ -36,15 +40,14 @@ class FilterOptionsView extends StatelessWidget {
   final bool mustShowMore;
   final FilterCallback isFilterApplied;
 
-  FilterOptionsView(
-      {this.title,
-      this.data,
-      this.by,
-      this.showMore,
-      this.mustShowMore,
-      this.isFilterApplied,
-      Key key})
-      : super(key: key);
+  const FilterOptionsView(
+      {required this.title,
+      required this.data,
+      required this.by,
+      required this.showMore,
+      required this.mustShowMore,
+      required this.isFilterApplied,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +65,7 @@ class FilterOptionsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(title.toUpperCase(),
-                      style: Theme.of(context).appBarTheme.textTheme.caption),
+                      style: Theme.of(context).textTheme.bodySmall),
                   (mustShowMore)
                       ? GestureDetector(
                           onTap: () => toggleShowMore(by),
@@ -72,10 +75,10 @@ class FilterOptionsView extends StatelessWidget {
                                   (showMore) ? 'Show Less' : 'Show More',
                                   style: Theme.of(context)
                                       .textTheme
-                                      .caption
-                                      .copyWith(
+                                      .bodySmall
+                                      ?.copyWith(
                                           color:
-                                              Theme.of(context).accentColor))))
+                                              Theme.of(context).colorScheme.secondary))))
                       : Container(height: 0, width: 0),
                 ],
               ),
@@ -101,8 +104,8 @@ class ActiveFiltersView extends StatelessWidget {
   final List<Filter> filters;
   final ValueChanged<Filter> removeFilter;
 
-  ActiveFiltersView({this.filters, this.removeFilter, Key key})
-      : super(key: key);
+  const ActiveFiltersView(
+      {required this.filters, required this.removeFilter, super.key});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -119,7 +122,9 @@ class ActiveFiltersView extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (context, index) {
                       Filter filter = filters[index];
-                      Color color = Theme.of(context).chipTheme.selectedColor;
+                      Color color =
+                          Theme.of(context).chipTheme.selectedColor ??
+                              Theme.of(context).colorScheme.secondary;
 
                       return Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
@@ -132,7 +137,6 @@ class ActiveFiltersView extends StatelessWidget {
                     },
                   ))
             ])));
-    ;
   }
 }
 

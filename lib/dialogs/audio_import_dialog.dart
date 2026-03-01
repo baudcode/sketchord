@@ -8,21 +8,18 @@ import 'package:sound/file_manager.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 
 showAudioImportDialog(BuildContext context, List<File> files) {
   // analyse the playability and duration of audio files
 
   Future<Duration> getDuration(File f) async {
-    AudioPlayer _player = AudioPlayer();
-
-    int result = await _player.play(f.path, isLocal: true, volume: 0);
-    if (result != 1) return null;
-
-    Duration duration = await _player.onDurationChanged.first;
-
-    await _player.stop();
-    await _player.dispose();
-
+    final player = AudioPlayer();
+    await player.setSource(DeviceFileSource(f.path));
+    await player.play(DeviceFileSource(f.path), volume: 0);
+    final duration = await player.onDurationChanged.first;
+    await player.stop();
+    await player.dispose();
     return duration;
   }
 
@@ -30,13 +27,7 @@ showAudioImportDialog(BuildContext context, List<File> files) {
     List<AudioFile> audioFiles = [];
 
     for (File f in files) {
-      Duration duration = await getDuration((f));
-      if (duration == null) {
-        final snackBar = SnackBar(
-            backgroundColor: Theme.of(context).errorColor,
-            content: Text("cannot load audio ${f.path}"));
-        Scaffold.of(context).showSnackBar(snackBar);
-      }
+      Duration duration = await getDuration(f);
 
       print("=> File ${f.path} is ${duration.inSeconds} seconds");
       var audioFile = AudioFile(
@@ -58,8 +49,12 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
 
     for (AudioFile f in files) {
       Directory filesDir = await Backup().getFilesDir();
-      String newPath = p.join(filesDir.path, p.basename(f.path));
-      AudioFile move = await FileManager().move(f, newPath, id: f.id);
+      String ext = p.extension(f.path);
+      String newBase = Uuid().v4() + ext;
+      String newPath = p.join(filesDir.path, newBase);
+      AudioFile move = await FileManager().copy(f, newPath, id: f.id);
+      move.createdAt = f.file.lastModifiedSync();
+      move.name = p.basename(f.path);
       copied.add(move);
     }
     return copied;
@@ -76,6 +71,18 @@ _showAudioImportDialog(BuildContext context, List<AudioFile> files) async {
     return note;
   }
 
+  Future<void> onImportAudioIdeas() async {
+    final prepared = await _prepareFiles();
+    for (final f in prepared) {
+      await LocalStorage().addAudioIdea(f);
+    }
+  }
+
   showImportDialog(
-      context, "Import ${files.length} Audio Files", onNew, onImport);
+    context,
+    "Import ${files.length} Audio Files",
+    onNew,
+    onImport,
+    onImportAudioIdeas: onImportAudioIdeas,
+  );
 }

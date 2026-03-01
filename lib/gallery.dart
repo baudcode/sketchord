@@ -8,18 +8,19 @@ class Gallery extends StatelessWidget {
 
   int get maxRows => (items.length / numItemsPerRow).ceil();
 
-  Gallery(
-      {@required this.numItemsPerRow,
-      @required this.items,
+  const Gallery(
+      {required this.numItemsPerRow,
+      required this.items,
       this.padding = 8.0,
-      this.widthHeightRatio = 1.0});
+      this.widthHeightRatio = 1.0,
+      super.key});
 
   EdgeInsetsGeometry _getPadding(int row, int col) {
     double top = (row == 0) ? padding : padding / 2;
     double bottom = (row == maxRows - 1) ? padding : padding / 2;
     double left = (col == 0) ? padding : padding / 2;
     double right = (col == numItemsPerRow - 1) ? padding : padding / 2;
-    return new EdgeInsets.fromLTRB(left, top, right, bottom);
+    return EdgeInsets.fromLTRB(left, top, right, bottom);
   }
 
   Widget _getItem(int row, int col, double width) {
@@ -29,12 +30,11 @@ class Gallery extends StatelessWidget {
     double _itemHeight = _itemWidth * widthHeightRatio;
 
     EdgeInsetsGeometry _padding = _getPadding(row, col);
-    print(_padding);
     if (index >= items.length)
-      return new Container(
+      return Container(
           width: _itemWidth, height: _itemHeight, padding: _padding);
     else
-      return new Container(
+      return Container(
         width: _itemWidth,
         height: _itemHeight,
         padding: _padding,
@@ -50,7 +50,7 @@ class Gallery extends StatelessWidget {
       itemCount: rows,
       shrinkWrap: true,
       itemBuilder: (context, index) {
-        return new Row(
+        return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             //crossAxisAlignment: CrossAxisAlignment.center,
             //mainAxisSize: MainAxisSize.min,

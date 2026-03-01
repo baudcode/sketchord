@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sound/export.dart';
 import 'package:sound/utils.dart';
 import 'db.dart';
-import 'backup.dart';
 import 'model.dart';
 
 class ExportNote extends StatefulWidget {
-  final ScaffoldState state;
+  final ScaffoldState? state;
 
   ExportNote({this.state});
 
@@ -18,7 +17,7 @@ class ExportNote extends StatefulWidget {
 }
 
 class ExportNoteState extends State<ExportNote> {
-  String id;
+  String? id;
 
   @override
   void initState() {
@@ -26,19 +25,24 @@ class ExportNoteState extends State<ExportNote> {
     id = null;
   }
 
-  Note get note => DB().notes.firstWhere((n) => n.id == id, orElse: () => null);
+  Note? get note {
+    for (final n in DB().notes) {
+      if (n.id == id) return n;
+    }
+    return null;
+  }
 
   _export() async {
     if (note == null) {
       showSnack(widget.state, "Please select a note to export first");
       return;
     }
-    String path = await Exporter.pdf(note);
-
-    await FlutterShare.shareFile(
-        title: '${note.title}.pdf',
-        text: 'Sharing PDF of ${note.title}',
-        filePath: path);
+    String path = await Exporter.pdf(note!);
+    await SharePlus.instance.share(ShareParams(
+      title: '${note!.title}.pdf',
+      text: 'Sharing PDF of ${note!.title}',
+      files: [XFile(path)],
+    ));
 
     /*
     String path = await Backup().exportNote(note);
@@ -88,7 +92,7 @@ class ExportNoteState extends State<ExportNote> {
               child: Padding(
                   padding: EdgeInsets.only(left: 10),
                   child:
-                      RaisedButton(onPressed: _export, child: Text("Export"))),
+                      ElevatedButton(onPressed: _export, child: Text("Export"))),
             )
           ])
         ]);

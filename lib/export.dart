@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
 import 'package:sound/backup.dart';
-import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
 import 'package:path/path.dart' as p;
@@ -20,18 +19,11 @@ String getExtension(ExportType t) {
       return "pdf";
     case ExportType.TEXT:
       return "text";
-    default:
-      return "";
   }
 }
 
 class Exporter {
   static Future<String> export(Note note, ExportType t) async {
-    if (note.artist == null) {
-      Settings settings = await LocalStorage().getSettings();
-      note.artist = settings.name;
-    }
-
     switch (t) {
       case ExportType.JSON:
         return json(note);
@@ -39,24 +31,23 @@ class Exporter {
         return pdf(note);
       case ExportType.TEXT:
         return text(note);
-      default:
-        return null;
     }
   }
 
   static Future<void> exportShare(Note note, ExportType t) async {
-    String path = await export(note, t);
-    await FlutterShare.shareFile(
-        title: '${note.title}.${getExtension(t)}',
-        text: 'Sharing ${note.title} from SOUND',
-        filePath: path);
+    final path = await export(note, t);
+    await SharePlus.instance.share(ShareParams(
+      title: '${note.title}.${getExtension(t)}',
+      text: 'Sharing ${note.title} from SOUND',
+      files: [XFile(path)],
+    ));
   }
 
   static String getText(Note note) {
-    String info = note.getInfoText();
+    String? info = note.getInfoText();
     String contents = "";
 
-    if (note.artist != null) {
+    if (note.artist != null && note.artist!.isNotEmpty) {
       contents += "© ${note.artist} \n";
     }
     contents += note.title + "\n";
@@ -91,7 +82,7 @@ class Exporter {
     return (TextPainter(
             text: TextSpan(text: text, style: textStyle),
             maxLines: 1,
-            textScaleFactor: textScaleFactor,
+            textScaler: TextScaler.linear(textScaleFactor),
             textDirection: TextDirection.ltr)
           ..layout())
         .size;
@@ -101,7 +92,7 @@ class Exporter {
     Directory d = await Backup().getFilesDir();
     String path = p.join(d.path, "${note.title}.pdf");
 
-    String info = note.getInfoText();
+    String? info = note.getInfoText();
     // final Uint8List fontData = File('open-sans.ttf').readAsBytesSync();
     // final ttf = pw.Font.ttf(fontData.buffer.asByteData());
     final pdf = pw.Document();
@@ -141,7 +132,7 @@ class Exporter {
     List<pw.Row> titleRows = [];
 
     // add capo information / artist information...
-    if (info != null) {
+    if (info != null && info.isNotEmpty) {
       titleRows.addAll([
         pw.Row(children: [pw.Text(info, style: pw.TextStyle(fontSize: 12))]),
         pw.Row(children: [pw.Container(height: 10)])
@@ -154,7 +145,7 @@ class Exporter {
     // spacing between title and content
     titleRows.add(pw.Row(children: [pw.Container(height: 20)]));
 
-    String artist = (note.artist != null ? note.artist : Settings().name);
+    String? artist = note.artist;
 
     var copyright = (artist == null)
         ? pw.Container()
@@ -179,7 +170,7 @@ class Exporter {
           })); // Page
     }
     final file = File(path);
-    await file.writeAsBytes(pdf.save());
+    await file.writeAsBytes(await pdf.save());
     return path;
   }
 }

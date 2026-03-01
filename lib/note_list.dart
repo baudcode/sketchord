@@ -1,14 +1,13 @@
 import 'package:sound/note_item.dart';
 import 'model.dart';
 import 'package:flutter/material.dart';
-import 'storage.dart';
 
 class NoteListItemModel {
   final Note note;
   final bool isSelected;
-  final String highlight; // a test to highlight
+  final String? highlight; // a test to highlight
 
-  NoteListItemModel({this.note, this.isSelected, this.highlight});
+  NoteListItemModel({required this.note, required this.isSelected, this.highlight});
 }
 
 class NoteList extends StatefulWidget {
@@ -16,7 +15,7 @@ class NoteList extends StatefulWidget {
   final bool singleView;
   final ValueChanged<Note> onTap;
   final ValueChanged<Note> onLongPress;
-  final String highlight;
+  final String? highlight;
 
   final List<NoteListItemModel> items;
   NoteList(
@@ -36,7 +35,7 @@ class NoteListState extends State<NoteList> {
   }
 
   List<NoteListItemModel> processList(List<NoteListItemModel> data, bool even) {
-    List<NoteListItemModel> returns = new List();
+    List<NoteListItemModel> returns = [];
 
     for (int i = 0; i < data.length; i++) {
       if (even && i % 2 == 0) returns.add(data[i]);
@@ -95,8 +94,6 @@ class NoteListState extends State<NoteList> {
                     ]))
               ]));
     } else {
-      print("index: $index");
-      print(widget.items);
       var item = widget.items[index];
 
       return Padding(

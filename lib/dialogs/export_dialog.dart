@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
-import 'package:sound/backup.dart';
 import 'package:sound/export.dart';
 import 'package:sound/model.dart';
 
@@ -19,30 +17,30 @@ showExportDialog(BuildContext context, Note note) {
 
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
-          title: new Text("Export Options"),
+          title: const Text("Export Options"),
           content: Row(children: [
-            Padding(
+            const Padding(
               child: Text("Format:"),
               padding: EdgeInsets.only(right: 10),
             ),
-            new DropdownButton(
+            DropdownButton<ExportType>(
                 value: current,
                 items: ExportType.values
-                    .map((e) => DropdownMenuItem(
+                    .map((e) => DropdownMenuItem<ExportType>(
                         child: Text(getExtension(e)), value: e))
                     .toList(),
-                onChanged: (v) => setState(() => current = v)),
+                onChanged: (v) => setState(() => current = v!)),
           ]),
           actions: <Widget>[
-            new FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text("Export"),
+            TextButton(
+              child: const Text("Export"),
               onPressed: () {
                 _export();
               },
