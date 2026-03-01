@@ -1,64 +1,93 @@
-import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_flux/flutter_flux.dart';
 import 'package:flutter/material.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:provider/provider.dart';
+import 'package:sound/editor_store.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/menu.dart';
 import 'package:sound/model.dart';
+import 'package:sound/recorder_store.dart';
+import 'package:sound/storage.dart';
 import 'settings_store.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:sentry/sentry.dart';
 
-Future<void> main() async {
-  if (kReleaseMode) {
-    print("Running release mode");
-    await SentryFlutter.init(
-      (options) {
-        options.dsn =
-            'https://1b2a119a53224f48966b710bc30123be@o1005300.ingest.sentry.io/5966036';
-      },
-      // Init your App.
-      appRunner: () => runApp(App()),
-    );
-  } else {
-    print("Running debug mode");
-    runApp(App());
-  }
+void main() {
+  runApp(App());
 }
 
 // ffe57c73
 Color mainColor = Colors.red.shade300;
-Color appBarColor = Colors.grey[900];
-Color secondaryColor = Colors.grey[900];
+Color appBarColor = Colors.grey.shade900;
 
 class App extends StatefulWidget {
+  App({super.key});
+
   // This widget is the root of your application.
+  final ThemeData dark = ThemeData.dark().copyWith(
+      primaryColor: mainColor,
+      textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
+          selectionColor: mainColor,
+          cursorColor: mainColor,
+          selectionHandleColor: mainColor),
+      highlightColor: Colors.black54,
+      cardColor: Colors.grey.shade800,
+      appBarTheme: ThemeData.dark()
+          .appBarTheme
+          .copyWith(backgroundColor: appBarColor, titleTextStyle: ThemeData.dark().textTheme.titleLarge),
+      buttonTheme:
+          ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
+      chipTheme: ThemeData.dark().chipTheme.copyWith(selectedColor: mainColor),
+      sliderTheme: ThemeData.dark().sliderTheme.copyWith(
+          trackHeight: 5,
+          showValueIndicator: ShowValueIndicator.onDrag,
+          activeTrackColor: mainColor,
+          valueIndicatorColor: mainColor,
+          activeTickMarkColor: mainColor,
+          thumbColor: mainColor,
+          valueIndicatorTextStyle: ThemeData.dark().textTheme.bodyMedium,
+
+          //overlayColor: mainColor
+          inactiveTrackColor: Colors.white),
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      floatingActionButtonTheme:
+          FloatingActionButtonThemeData(backgroundColor: mainColor), tabBarTheme: TabBarThemeData(indicatorColor: mainColor));
+
+  final ThemeData light = ThemeData.light().copyWith(
+      primaryColor: mainColor,
+      textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
+          selectionColor: mainColor,
+          cursorColor: mainColor,
+          selectionHandleColor: mainColor),
+      cardColor: Colors.grey.shade200,
+      appBarTheme: ThemeData.light().appBarTheme.copyWith(
+          backgroundColor: appBarColor,
+          titleTextStyle: ThemeData.light().textTheme.titleLarge),
+      chipTheme: ThemeData.light().chipTheme.copyWith(selectedColor: mainColor),
+      highlightColor: mainColor,
+      sliderTheme: ThemeData.light().sliderTheme.copyWith(
+          trackHeight: 4,
+          thumbColor: mainColor,
+          showValueIndicator: ShowValueIndicator.onDrag,
+          valueIndicatorTextStyle: ThemeData.light().textTheme.bodyMedium,
+          //overlayColor: mainColor,
+          valueIndicatorColor: mainColor,
+          activeTickMarkColor: mainColor,
+          activeTrackColor: mainColor, // inactive loop area
+          inactiveTrackColor: appBarColor),
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      floatingActionButtonTheme:
+          FloatingActionButtonThemeData(backgroundColor: mainColor), tabBarTheme: TabBarThemeData(indicatorColor: mainColor));
 
   @override
-  State<StatefulWidget> createState() {
-    return AppState();
-  }
+  State<StatefulWidget> createState() => AppState();
 }
 
-class AppState extends State<App> with StoreWatcherMixin<App> {
-  SettingsStore store;
+class AppState extends State<App> {
 
   @override
   void initState() {
     super.initState();
-
-    store = listenToStore(settingsToken);
-
     // initialize app with loaded settings
     LocalStorage().getSettings().then((s) {
-      if (s != null) {
-        updateSettings(s);
-      } else {
-        updateSettings(Settings.defaults());
-      }
+      updateSettings(s);
     });
 
     // _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
@@ -66,7 +95,7 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
     //   setState(() {
     //     print("shared media: $value");
     //     _sharedFiles = value;
-    //     print("Shared:" + (_sharedarkdFiles?.map((f) => f.path)?.join(",") ?? ""));
+    //     print("Shared:" + (_sharedFiles?.map((f) => f.path)?.join(",") ?? ""));
     //   });
     // }, onError: (err) {
     //   print("getIntentDataStream error: $err");
@@ -85,111 +114,26 @@ class AppState extends State<App> with StoreWatcherMixin<App> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData dark = ThemeData.dark().copyWith(
-        indicatorColor: mainColor,
-        primaryColor: Colors.white,
-        accentColor: mainColor,
-        buttonColor: mainColor,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.light().copyWith(
-            primary: mainColor,
-            secondary: Colors.white,
-            background: Colors.white,
-            surface: Colors.white),
-        textSelectionTheme: ThemeData.dark().textSelectionTheme.copyWith(
-            selectionColor: mainColor,
-            cursorColor: mainColor,
-            selectionHandleColor: mainColor),
-        highlightColor: Colors.black54,
-        cardColor: Colors.grey.shade800,
-        selectedRowColor: mainColor,
-        //iconTheme: ThemeData.dark().iconTheme.copyWith(color: Colors.white),
-        appBarTheme: ThemeData.dark().appBarTheme.copyWith(
-            brightness: Brightness.light,
-            color: appBarColor,
-            foregroundColor: Colors.white,
-            textTheme: ThemeData.dark().textTheme
-            //titleTextStyle: ThemeData.dark()
-            //    .appBarTheme
-            //    .titleTextStyle
-            //    .copyWith(fontSize: 16)),
-            ),
-        buttonTheme:
-            ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
-        chipTheme: ThemeData.dark().chipTheme.copyWith(
-            selectedColor: mainColor,
-            secondaryLabelStyle: ThemeData.light()
-                .chipTheme
-                .labelStyle
-                .copyWith(color: Colors.white)),
-        sliderTheme: ThemeData.dark().sliderTheme.copyWith(
-            trackHeight: 5,
-            showValueIndicator: ShowValueIndicator.always,
-            activeTrackColor: mainColor,
-            valueIndicatorColor: mainColor,
-            activeTickMarkColor: mainColor,
-            thumbColor: mainColor,
-            valueIndicatorTextStyle:
-                ThemeData.dark().primaryTextTheme.bodyText1,
-
-            //overlayColor: mainColor
-            inactiveTrackColor: Colors.white),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-            foregroundColor: appBarColor,
-            backgroundColor: ThemeData.dark().appBarTheme.backgroundColor));
-
-    //   foregroundColor: Theme.of(context).appBarTheme.backgroundColor,
-    // backgroundColor: Theme.of(context).appBarTheme.textTheme.button.color,
-    final ThemeData light = ThemeData.light().copyWith(
-        primaryColor: Colors.white,
-        textSelectionTheme: ThemeData().textSelectionTheme.copyWith(
-            selectionColor: mainColor,
-            cursorColor: mainColor,
-            selectionHandleColor: mainColor),
-        cardColor: Colors.grey.shade200,
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.light().copyWith(
-            primary: mainColor,
-            secondary: Colors.black54,
-            background: Colors.black54,
-            surface: Colors.black54),
-        appBarTheme: ThemeData.light().appBarTheme.copyWith(
-            brightness: Brightness.dark,
-            color: appBarColor,
-            textTheme: ThemeData.light().accentTextTheme),
-        chipTheme: ThemeData.light().chipTheme.copyWith(
-            selectedColor: mainColor,
-            secondaryLabelStyle: ThemeData.light()
-                .chipTheme
-                .labelStyle
-                .copyWith(color: Colors.white)),
-        indicatorColor: mainColor,
-        accentColor: mainColor,
-        highlightColor: mainColor,
-        buttonTheme:
-            ThemeData.dark().buttonTheme.copyWith(buttonColor: mainColor),
-        sliderTheme: ThemeData.light().sliderTheme.copyWith(
-            trackHeight: 4,
-            thumbColor: mainColor,
-            showValueIndicator: ShowValueIndicator.always,
-            valueIndicatorTextStyle:
-                ThemeData.light().primaryTextTheme.bodyText1,
-            //overlayColor: mainColor,
-            valueIndicatorColor: mainColor,
-            activeTickMarkColor: mainColor,
-            activeTrackColor: mainColor, // inactive loop area
-            inactiveTrackColor: appBarColor),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          foregroundColor: Colors.white,
-          backgroundColor: appBarColor,
-        ));
-
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'SketChord',
-        theme: store.theme == SettingsTheme.dark ? dark : light,
-        home: Menu());
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsStore>.value(value: settingsStore),
+        ChangeNotifierProvider<StaticStorage>.value(value: storageStore),
+        ChangeNotifierProvider<NoteEditorStore>.value(value: noteEditorStore),
+        ChangeNotifierProvider<RecorderBottomSheetStore>.value(
+            value: recorderBottomSheetStore),
+        ChangeNotifierProvider<PlayerPositionStore>.value(
+            value: playerPositionStore),
+        ChangeNotifierProvider<RecorderPositionStore>.value(
+            value: recorderPositionStore),
+      ],
+      child: Consumer<SettingsStore>(
+        builder: (context, store, _) => MaterialApp(
+          title: 'SketChord',
+          theme:
+              store.theme == SettingsTheme.dark ? widget.dark : widget.light,
+          home: Menu(),
+        ),
+      ),
+    );
   }
 }

@@ -1,11 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:sound/backup.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:uuid/uuid.dart';
 
 Future<List<Note>> getExampleNotes() async {
   String path = "assets/initial_data.json";
@@ -14,49 +12,23 @@ Future<List<Note>> getExampleNotes() async {
   return _notes.map<Note>((s) => Note.fromJson(s, s['id'])).toList();
 }
 
-Future<List<Note>> getInitialNotes() async {
-  String path = "assets/initial_notes.json";
-  String data = await rootBundle.loadString(path);
-  Map map = jsonDecode(data);
-  return map['notes'].map<Note>((s) => Note.fromJson(s, s['id'])).toList();
-}
-
 showInitialImportDialog(
-    BuildContext context, ValueChanged<BackupData> onDone) async {
-  List<Note> exampleNotes = await getInitialNotes();
-  NoteCollection exampleCollection = NoteCollection.empty();
-  exampleCollection.notes = exampleNotes;
-  exampleCollection.title = "Example Set";
-  exampleCollection.description = "Your imported notes";
-  exampleCollection.starred = true;
-
-  showSelectNotesImportDialog(context, onDone,
-      BackupData(notes: exampleNotes, collections: [exampleCollection]));
+    BuildContext context, ValueChanged<List<Note>> onDone) async {
+  List<Note> exampleNotes = await getExampleNotes();
+  showSelectNotesImportDialog(context, onDone, exampleNotes);
 }
 
 showSelectNotesImportDialog(
-    BuildContext context, ValueChanged<BackupData> onDone, BackupData backup,
+    BuildContext context, ValueChanged<List<Note>> onDone, List<Note> notes,
     {String title =
         "Would you like to import any of these example songs?"}) async {
   showSelectNotesDialog(context, (List<Note> selected) async {
-    List<String> noteIds = selected.map((n) => n.id).toList();
-    print("selected note ids: $noteIds");
-
     for (Note note in selected) {
       await LocalStorage().syncNote(note);
       Future.delayed(Duration(milliseconds: 50));
     }
-
-    for (NoteCollection collection in backup.collections) {
-      // remove all notes that where not imported
-      collection.notes.removeWhere((note) => !noteIds.contains(note.id));
-      await LocalStorage().syncCollection(collection);
-      Future.delayed(Duration(milliseconds: 50));
-    }
-
-    onDone(backup);
-  }, () => onDone(BackupData(notes: [], collections: [])), backup.notes,
-      title: title);
+    onDone(selected);
+  }, onDone, notes, title: title);
 }
 
 typedef NoteListCallback = Future<void> Function(List<Note>);
@@ -91,8 +63,6 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
-          var width = MediaQuery.of(context).size.width;
-
           return Center(
               child: AlertDialog(
                   titlePadding: EdgeInsets.all(16),
@@ -100,28 +70,27 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
                   title: Text(title),
                   content: isImporting
                       ? Center(child: CircularProgressIndicator())
-                      : Container(
-                          width: width,
-                          height: 400,
+                      : SizedBox(
+                          width: 480,
+                          height: 320,
                           child: ListView.builder(
                             itemBuilder: (context, index) {
                               Note note = notes[index];
                               return CheckboxListTile(
-                                  activeColor: Theme.of(context).accentColor,
+                                  activeColor:
+                                      Theme.of(context).colorScheme.secondary,
                                   value: checked[note],
                                   onChanged: (v) {
-                                    setState(() => checked[note] = v);
+                                    setState(() => checked[note] = v ?? false);
                                   },
                                   title: ListTile(
-                                    title: Text(note.hasEmptyTitle
-                                        ? EMPTY_TEXT
-                                        : note.title),
-                                    subtitle: Text(
-                                        note.artist == null ? "" : note.artist),
+                                    title: Text(note.title),
+                                    subtitle: Text(note.artist ?? ''),
                                   ));
                             },
                             itemCount: notes.length,
-                          )),
+                          ),
+                        ),
                   actions: isImporting
                       ? []
                       : [
@@ -129,7 +98,7 @@ showSelectNotesDialog(BuildContext context, NoteListCallback onApply,
                             child: Text("Cancel"),
                             onPressed: _onCancel,
                           ),
-                          ElevatedButton(
+                          TextButton(
                               child: Text("Import"),
                               onPressed: () {
                                 setState(() => isImporting = true);

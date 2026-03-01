@@ -1,113 +1,103 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:sound/model.dart';
-import 'package:sound/utils.dart';
+
+import 'model.dart';
+import 'utils.dart';
 
 class AbstractNoteItem extends StatelessWidget {
   final Note note;
   final bool isSelected;
-  final Function onTap, onLongPress;
-  final String highlight;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final String? highlight;
 
-  AbstractNoteItem(
-      {this.note,
-      this.isSelected,
-      this.onTap,
-      this.onLongPress,
-      this.highlight});
+  const AbstractNoteItem({
+    required this.note,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+    this.highlight,
+    super.key,
+  });
 
-  bool get empty => ((note.title == null || note.title.trim() == "") &&
-      this.sectionText().trim() == "");
+  bool get empty => (note.title.trim().isEmpty && sectionText().trim().isEmpty);
+
+  String sectionText() => note.sections.map((s) => s.content).join('\n');
 
   Widget singleText(BuildContext context, String text) {
-    return Container(
-        width: MediaQuery.of(context).size.width,
-        child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(text,
-                textScaleFactor: 0.8,
-                style: Theme.of(context).textTheme.headline6.copyWith())));
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        text,
+        style: Theme.of(context)
+            .textTheme
+            .headlineSmall
+            ?.copyWith(fontWeight: FontWeight.w200),
+      ),
+    );
   }
 
-  Widget highlightTitle(BuildContext context, String title, String highlight) {
-    List<TextSpan> spans = [];
-    if (highlight == null) {
-      spans.add(TextSpan(text: title));
-    } else {
-      int start = title.toLowerCase().indexOf(highlight);
-      if (start == -1) {
-        spans.add(TextSpan(text: title));
-      } else {
-        spans.add(TextSpan(text: title.substring(0, start)));
-        spans.add(TextSpan(
-            text: title.substring(start, start + highlight.length),
-            style:
-                TextStyle(backgroundColor: Theme.of(context).highlightColor)));
-        spans.add(TextSpan(text: title.substring(start + highlight.length)));
-      }
+  Widget highlightTitle(BuildContext context, String title, String? highlight) {
+    if (highlight == null || highlight.isEmpty) {
+      return Text(title, style: Theme.of(context).textTheme.titleLarge);
     }
-
+    final lowerTitle = title.toLowerCase();
+    final lowerHighlight = highlight.toLowerCase();
+    final start = lowerTitle.indexOf(lowerHighlight);
+    if (start == -1) {
+      return Text(title, style: Theme.of(context).textTheme.titleLarge);
+    }
     return Text.rich(
       TextSpan(
-        children: spans,
+        children: [
+          TextSpan(text: title.substring(0, start)),
+          TextSpan(
+            text: title.substring(start, start + highlight.length),
+            style: TextStyle(backgroundColor: Theme.of(context).highlightColor),
+          ),
+          TextSpan(text: title.substring(start + highlight.length)),
+        ],
       ),
-      //softWrap: true,
-      //overflow: TextOverflow.clip,
-      //maxLines: 1,
-      style: Theme.of(context).textTheme.headline6,
-      textScaleFactor: 0.75,
+      style: Theme.of(context).textTheme.titleLarge,
       textAlign: TextAlign.left,
     );
   }
 
   Widget highlightSectionText(
-      BuildContext context, String text, String highlight,
-      {int maxLines = 9}) {
-    if (highlight != null) {
-      highlight = highlight.toLowerCase();
+    BuildContext context,
+    String text,
+    String? highlight, {
+    int maxLines = 9,
+  }) {
+    if (highlight == null || highlight.isEmpty) {
+      return Text(
+        text,
+        softWrap: true,
+        overflow: TextOverflow.clip,
+        maxLines: maxLines,
+        textAlign: TextAlign.left,
+      );
     }
-
-    List<TextSpan> spans = [];
-
-    if (highlight == null) {
-      spans.add(TextSpan(text: text));
-    } else {
-      List<String> sections = text.split("\n");
-
-      int start = text.toLowerCase().indexOf(highlight);
-
-      if (start == -1)
-        spans.add(TextSpan(text: text));
-      else {
-        int k = 0;
-        int inSection = 0;
-        for (var i = 0; i < sections.length; i++) {
-          if (start >= k && start <= (k + sections[i].length)) {
-            inSection = i;
-            break;
-          }
-          k += sections[i].length + 1;
-        }
-
-        print("section: ${sections[inSection]}, text: $highlight");
-        // start at the start of the found section
-        int sectionStart = text.indexOf(sections[inSection]);
-        print("$sectionStart, $start, ${text.length}");
-        int end = start + highlight.length;
-
-        spans.add(TextSpan(text: text.substring(sectionStart, start)));
-        spans.add(TextSpan(
-            text: text.substring(start, end),
-            style:
-                TextStyle(backgroundColor: Theme.of(context).highlightColor)));
-        spans.add(TextSpan(text: text.substring(end)));
-      }
+    final start = text.toLowerCase().indexOf(highlight.toLowerCase());
+    if (start == -1) {
+      return Text(
+        text,
+        softWrap: true,
+        overflow: TextOverflow.clip,
+        maxLines: maxLines,
+        textAlign: TextAlign.left,
+      );
     }
-
+    final end = start + highlight.length;
     return Text.rich(
       TextSpan(
-        children: spans,
+        children: [
+          TextSpan(text: text.substring(0, start)),
+          TextSpan(
+            text: text.substring(start, end),
+            style: TextStyle(backgroundColor: Theme.of(context).highlightColor),
+          ),
+          TextSpan(text: text.substring(end)),
+        ],
       ),
       softWrap: true,
       overflow: TextOverflow.clip,
@@ -116,201 +106,145 @@ class AbstractNoteItem extends StatelessWidget {
     );
   }
 
-  Widget emptyText(BuildContext context) {
-    return singleText(context, "Empty");
-  }
-
-  Widget onlyTitle(BuildContext context) {
-    return singleText(context, note.title);
-  }
-
-  bool get hasOnlyTitle =>
-      (note.title != null && note.title != "") &&
-      this.sectionText().trim() == "";
-
-  String sectionText() {
-    String text = "";
-    for (Section section in note.sections) {
-      text += resolveRichContent(section.content) + '\n';
-    }
-    return text;
-  }
+  Widget emptyText(BuildContext context) => singleText(context, 'Empty');
+  Widget onlyTitle(BuildContext context) => singleText(context, note.title);
+  bool get hasOnlyTitle => note.title.isNotEmpty && sectionText().trim().isEmpty;
 
   @override
-  Widget build(BuildContext context) {
-    return null;
-  }
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class SmallNoteItem extends AbstractNoteItem {
   final double width;
   final EdgeInsets padding;
 
-  SmallNoteItem(Note note, bool isSelected, Function onTap,
-      Function onLongPress, String highlight, this.width, this.padding)
-      : super(
-            note: note,
-            isSelected: isSelected,
-            onTap: onTap,
-            onLongPress: onLongPress,
-            highlight: highlight);
+  SmallNoteItem(
+    Note note,
+    bool isSelected,
+    VoidCallback onTap,
+    VoidCallback onLongPress,
+    String? highlight,
+    this.width,
+    this.padding, {
+    super.key,
+  }) : super(
+          note: note,
+          isSelected: isSelected,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          highlight: highlight,
+        );
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Card(
-        color: note.color,
-        shape: (isSelected ? getSelectedChardShape(context) : null),
-        child: Container(
-            width: MediaQuery.of(context).size.width,
-            decoration: (isSelected)
-                ? getSelectedDecoration(context)
-                : getNormalDecoration(context),
-            child: empty
-                ? emptyText(context)
-                : hasOnlyTitle
-                    ? onlyTitle(context)
-                    : Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: highlightTitle(
-                                      context, note.title, highlight)),
-                              highlightSectionText(
-                                  context, this.sectionText(), highlight),
-                            ]))));
-    List<Widget> stackChildren = [];
-    stackChildren.add(child);
-
+    final child = Card(
+      color: note.color,
+      child: Container(
+        decoration: isSelected ? getSelectedDecoration(context) : null,
+        child: empty
+            ? emptyText(context)
+            : hasOnlyTitle
+                ? onlyTitle(context)
+                : Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: highlightTitle(context, note.title, highlight),
+                        ),
+                        highlightSectionText(context, sectionText(), highlight),
+                      ],
+                    ),
+                  ),
+      ),
+    );
     return GestureDetector(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Container(
-            width: this.width,
-            height: (empty) ? 50 : null,
-            padding: this.padding,
-            child: Stack(children: stackChildren)));
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Container(
+        width: width,
+        height: empty ? 50 : null,
+        padding: padding,
+        child: child,
+      ),
+    );
   }
 }
 
 class NoteItem extends AbstractNoteItem {
   final double padding;
 
-  NoteItem(Note note, bool isSelected, Function onTap, Function onLongPress,
-      String highlight, {this.padding = 8})
-      : super(
-            note: note,
-            isSelected: isSelected,
-            onTap: onTap,
-            onLongPress: onLongPress,
-            highlight: highlight);
-
-  showTop() {
-    return !((note.key == null || note.key.trim() == "") &&
-        (note.capo == null || note.capo.trim() == ""));
-  }
-
-  _top() {
-    return Padding(
-        padding: EdgeInsets.only(left: padding, right: padding, top: padding),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(note.lengthStr),
-            Text((note.capo == null || note.capo.trim() == "")
-                ? ""
-                : "Capo ${note.capo}")
-          ],
-        ));
-  }
-
-  _title(context) {
-    return Padding(
-        child: Row(children: [
-          highlightTitle(context, note.title, highlight)
-          // Text(
-          //   note.title,
-          //   textScaleFactor: .8,
-          //   style: Theme.of(context).textTheme.headline6,
-          // )
-        ]),
-        padding: EdgeInsets.all(padding));
-  }
-
-  _text(context) {
-    return Padding(
-        padding: EdgeInsets.all(padding),
-        child: highlightSectionText(context, this.sectionText(), highlight,
-            maxLines: 6)
-        // Text(
-        //   this.sectionText(),
-        //   textAlign: TextAlign.left,
-        //   softWrap: true,
-        //   maxLines: 5,
-        //   overflow: TextOverflow.clip,
-        // )
+  NoteItem(
+    Note note,
+    bool isSelected,
+    VoidCallback onTap,
+    VoidCallback onLongPress,
+    String? highlight, {
+    this.padding = 8,
+    super.key,
+  }) : super(
+          note: note,
+          isSelected: isSelected,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          highlight: highlight,
         );
-  }
-
-  _richText(String text) {
-    return Text.rich(
-      TextSpan(
-        text: text,
-      ),
-      //softWrap: true,
-      //overflow: TextOverflow.clip,
-      //maxLines: 1,
-      //style: Theme.of(context).textTheme.headline6,
-      textScaleFactor: 1.0,
-      textAlign: TextAlign.right,
-    );
-  }
-
-  showBottom() {
-    return note.sections.length > 0 ||
-        (note.tuning != null && note.tuning.trim() != "");
-  }
-
-  _bottom() {
-    return Padding(
-        padding: EdgeInsets.all(padding),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text("${note.sections.length} Sections"),
-            _richText((note.tuning == null) ? "" : "${note.tuning}")
-          ],
-        ));
-  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: onTap,
-        onLongPress: onLongPress,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Card(
+        color: note.color,
         child: Container(
-            child: Card(
-                shape: (isSelected ? getSelectedChardShape(context) : null),
-                color: note.color,
-                child: Container(
-                    decoration: (isSelected
-                        ? getSelectedDecoration(context)
-                        : getNormalDecoration(context)),
-                    child: (empty)
-                        ? emptyText(context)
-                        : hasOnlyTitle
-                            ? onlyTitle(context)
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                    if (showTop()) _top(),
-                                    _title(context),
-                                    _text(context),
-                                    if (showBottom()) _bottom(),
-                                  ])))));
+          decoration: isSelected ? getSelectedDecoration(context) : null,
+          child: empty
+              ? emptyText(context)
+              : hasOnlyTitle
+                  ? onlyTitle(context)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(note.key ?? 'No Key'),
+                              Text(note.capo == null ? 'No Capo' : 'Capo ${note.capo}'),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: highlightTitle(context, note.title, highlight),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: highlightSectionText(
+                            context,
+                            sectionText(),
+                            highlight,
+                            maxLines: 6,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text('${note.sections.length} Sections'),
+                              Text(note.tuning ?? 'Standard'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+        ),
+      ),
+    );
   }
 }

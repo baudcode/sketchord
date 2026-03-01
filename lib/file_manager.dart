@@ -42,24 +42,24 @@ class FileManager {
     }
   }
 
-  Future<AudioFile> copy(AudioFile f, String newPath, {String id}) async {
+  Future<AudioFile> copy(AudioFile f, String newPath, {String? id}) async {
     File fileCopy = await copyFile(File(f.path), newPath);
     print("copy audio file ${f.name}");
     return _new(f, fileCopy, id);
   }
 
-  AudioFile _new(AudioFile f, File newFile, String id) {
+  AudioFile _new(AudioFile f, File newFile, String? id) {
     return AudioFile(
         createdAt: f.createdAt,
         duration: f.duration,
-        id: id == null ? Uuid().v4() : id,
+        id: id,
         lastModified: DateTime.now(),
         loopRange: f.loopRange,
         name: f.name,
         path: newFile.path);
   }
 
-  Future<AudioFile> copyToNew(AudioFile f, {String id}) async {
+  Future<AudioFile> copyToNew(AudioFile f, {String? id}) async {
     Directory filesDir = await Backup().getFilesDir();
     String ext = p.extension(f.path);
     String newPath = p.join(filesDir.path,
@@ -67,7 +67,7 @@ class FileManager {
     return copy(f, newPath, id: id);
   }
 
-  Future<AudioFile> move(AudioFile f, String newPath, {String id}) async {
+  Future<AudioFile> move(AudioFile f, String newPath, {String? id}) async {
     File fileMove = await moveFile(File(f.path), newPath);
     return _new(f, fileMove, id);
   }

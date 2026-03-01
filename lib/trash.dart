@@ -7,9 +7,9 @@ import 'package:sound/note_viewer.dart';
 import 'package:sound/storage.dart';
 
 class Trash extends StatefulWidget {
-  final Function onMenuPressed;
+  final VoidCallback onMenuPressed;
 
-  Trash(this.onMenuPressed, {Key key}) : super(key: key);
+  const Trash(this.onMenuPressed, {super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -164,7 +164,7 @@ class _TrashState extends State<Trash> {
       } else {
         Navigator.push(
             context,
-            new MaterialPageRoute(
+            MaterialPageRoute(
                 builder: (context) => NoteViewer(
                       note,
                       actions: [

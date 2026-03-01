@@ -1,71 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:sound/dialogs/color_picker_dialog.dart';
-import 'package:sound/dialogs/export_dialog.dart';
 import 'package:sound/dialogs/initial_import_dialog.dart';
 import 'package:sound/note_views/appbar.dart';
 import 'package:sound/note_views/seach.dart';
-import 'package:sound/settings_store.dart';
-import 'package:sound/utils.dart';
 import 'package:tuple/tuple.dart';
+import 'package:provider/provider.dart';
 import 'local_storage.dart';
 import 'file_manager.dart';
 import 'note_list.dart';
 import 'storage.dart';
-import 'package:flutter_flux/flutter_flux.dart';
 import 'note_editor.dart';
 import 'model.dart';
 //import 'recorder.dart';
 import 'db.dart';
 
-class Home extends StatelessWidget {
-  final Function onMenuPressed;
+class Home extends StatefulWidget {
+  final VoidCallback onMenuPressed;
 
-  Home(this.onMenuPressed);
+  const Home(this.onMenuPressed, {super.key});
 
-  _floatingButtonPress(BuildContext context) {
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  bool _initialImportChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapHome();
+  }
+
+  Future<void> _bootstrapHome() async {
+    final notes = await LocalStorage().getNotes();
+    if (!mounted) return;
+
+    LocalStorage().controller.sink.add(
+          notes.where((e) => !e.discarded).toList(),
+        );
+    await _showInitialImportIfNeeded();
+  }
+
+  Future<void> _showInitialImportIfNeeded() async {
+    if (_initialImportChecked) return;
+    _initialImportChecked = true;
+
+    final initialStart = await LocalStorage().isInitialStart();
+    if (!mounted || !initialStart) return;
+
+    await showInitialImportDialog(context, (_) async {
+      await LocalStorage().setInitialStartDone();
+    });
+  }
+
+  void _floatingButtonPress(BuildContext context) {
     Note note = Note.empty();
     LocalStorage().syncNote(note);
 
     Navigator.push(
-        context, new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+        context, MaterialPageRoute(builder: (context) => NoteEditor(note)));
   }
 
   @override
   Widget build(BuildContext context) {
-    LocalStorage().getNotes().then((value) => LocalStorage()
-        .controller
-        .sink
-        .add(value.where((e) => !e.discarded).toList()));
-
     var builder = StreamBuilder<List<Note>>(
       stream: LocalStorage().stream,
       initialData: [],
       builder: (context, snap) {
+        print(snap);
         if (snap.hasData) {
-          DB().setNotes(snap.data.where((e) => !e.discarded).toList());
-          return HomeContent(this.onMenuPressed);
+          final data = snap.data ?? <Note>[];
+          DB().setNotes(data.where((e) => !e.discarded).toList());
+          return HomeContent(widget.onMenuPressed);
         } else {
           return CircularProgressIndicator();
         }
       },
     );
-    return ScaffoldMessenger(
-      child: Scaffold(
-          floatingActionButton: FloatingActionButton(
+    return Scaffold(
+        floatingActionButton: FloatingActionButton(
+          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          onPressed: () => _floatingButtonPress(context),
+          child: IconButton(
             onPressed: () => _floatingButtonPress(context),
-            child: IconButton(
-              onPressed: () => _floatingButtonPress(context),
-              icon: Icon(Icons.add),
-            ),
+            icon: Icon(Icons.add),
           ),
-          //bottomSheet: RecorderBottomSheet(),
-          body: builder),
-    );
+        ),
+        //bottomSheet: RecorderBottomSheet(),
+        body: builder);
   }
 }
 
 class HomeContent extends StatefulWidget {
-  final Function onMenuPressed;
+  final VoidCallback onMenuPressed;
   HomeContent(this.onMenuPressed);
 
   @override
@@ -75,18 +104,19 @@ class HomeContent extends StatefulWidget {
 }
 
 class HomeContentState extends State<HomeContent>
-    with StoreWatcherMixin, SingleTickerProviderStateMixin {
-  TextEditingController _controller;
-  StaticStorage storage;
+    with SingleTickerProviderStateMixin {
+  late TextEditingController _controller;
+  late StaticStorage storage;
   // settings store, use view and set recording format
 
-  bool isSearching;
-  bool filtersEnabled;
+  bool isSearching = false;
+  bool filtersEnabled = false;
 
   bool get isFiltering => storage.filters.length > 0;
 
   @override
   Widget build(BuildContext context) {
+    storage = context.watch<StaticStorage>();
     return _sliver();
   }
 
@@ -99,34 +129,9 @@ class HomeContentState extends State<HomeContent>
   @override
   void initState() {
     super.initState();
-    isSearching = false;
-    filtersEnabled = false;
     _controller = TextEditingController();
-    storage = listenToStore(storageToken);
-
-    LocalStorage().getSettings().then((Settings settings) {
-      if (settings != null) {
-        changeSortBy(settings.sortBy);
-        changeSortDirection(settings.sortDirection);
-        changeListType(settings.noteListType);
-      }
-    });
-
     // init filemanager
     FileManager();
-
-    //LocalStorage().setInitialStart(false);
-
-    //  Future.delayed(Duration(milliseconds: 1000), () async {
-
-    LocalStorage().isInitialStart().then((initalStart) {
-      if (initalStart) {
-        showInitialImportDialog(context, (_) {
-          print("set initial start done...");
-          LocalStorage().setInitialStartDone();
-        });
-      }
-    });
   }
 
   _activeFiltersView() {
@@ -205,115 +210,54 @@ class HomeContentState extends State<HomeContent>
   }
 
   _sliverNoteSelectionAppBar() {
-    var actions = <Widget>[
-      IconButton(
-          icon: Icon(Icons.share),
-          onPressed: () {
-            showExportDialog(context, storage.selectedNotes);
-          }),
-      IconButton(
-          icon: Icon(Icons.delete),
-          onPressed: () async {
-            bool contains = false;
+    print((storage.selectedNotes
+            .map((e) => e.starred)
+            .toList()
+            .length
+            .toDouble() /
+        storage.selectedNotes.length.toDouble()));
 
-            for (Note note in storage.selectedNotes) {
-              if (await LocalStorage().getNumCollectionsByNoteId(note.id) > 0)
-                contains = true;
-            }
-
-            if (contains) {
-              String oneOrMore =
-                  "One or more notes are part of a set. Notes will be removed from their sets. Are you sure you want to continue?";
-
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      content: Text(oneOrMore),
-                      actions: <Widget>[
-                        TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text("No")),
-                        ElevatedButton(
-                            onPressed: () {
-                              discardAllSelectedNotes(true);
-                              Navigator.of(context).pop();
-                            },
-                            child: Text("Yes"))
-                      ],
-                    );
-                  });
-            } else {
-              showUndoSnackbar(
-                  data: null,
-                  context: context,
-                  onClose: () {},
-                  onUndo: (_) {
-                    undoDiscardAllSelectedNotes();
-                  },
-                  message:
-                      "Moved ${storage.selectedNotes.length} Notes to Trash");
-
-              discardAllSelectedNotes(false);
-            }
-          }),
-      IconButton(
-          icon: Icon(Icons.color_lens),
-          onPressed: () {
-            showColorPickerDialog(context, null, (c) {
-              colorAllSelectedNotes(c);
-            });
-          }),
-      IconButton(
-          icon: Icon((storage.selectedNotes
+    return SliverAppBar(
+      pinned: true,
+      leading: IconButton(
+          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
+      title: Text(storage.selectedNotes.length.toString()),
+      actions: <Widget>[
+        IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => discardAllSelectedNotes()),
+        IconButton(
+            icon: Icon(Icons.color_lens),
+            onPressed: () {
+              showColorPickerDialog(context, null, (c) {
+                colorAllSelectedNotes(c);
+              });
+            }),
+        IconButton(
+            icon: Icon((storage.selectedNotes
+                            .where((e) => e.starred)
+                            .toList()
+                            .length
+                            .toDouble() /
+                        storage.selectedNotes.length.toDouble()) <
+                    0.5
+                ? Icons.star
+                : Icons.star_border),
+            onPressed: () {
+              if ((storage.selectedNotes
                           .where((e) => e.starred)
                           .toList()
                           .length
                           .toDouble() /
                       storage.selectedNotes.length.toDouble()) <
-                  0.5
-              ? Icons.star
-              : Icons.star_border),
-          onPressed: () {
-            if ((storage.selectedNotes
-                        .where((e) => e.starred)
-                        .toList()
-                        .length
-                        .toDouble() /
-                    storage.selectedNotes.length.toDouble()) <
-                0.5) {
-              starAllSelectedNotes();
-            } else {
-              unstarAllSelectedNotes();
-            }
-          })
-    ];
-
-    return SliverAppBar(
-      pinned: true,
-      flexibleSpace: _sortingView(),
-      expandedHeight: 80,
-      leading: IconButton(
-          icon: Icon(Icons.clear), onPressed: () => clearSelection()),
-      title: Text(storage.selectedNotes.length.toString()),
-      actions: actions,
+                  0.5) {
+                starAllSelectedNotes();
+              } else {
+                unstarAllSelectedNotes();
+              }
+            }),
+      ],
     );
-  }
-
-  _sortingView() {
-    return SortingView(
-        by: storage.sortBy,
-        direction: storage.sortDirection,
-        onDirectionChange: (d) {
-          changeSortDirection(d);
-          setDefaultSortDirection(d);
-        },
-        onSortByChange: (by) {
-          changeSortBy(by);
-          setDefaultSortBy(by);
-        });
   }
 
   _sliverAppBar() {
@@ -322,7 +266,7 @@ class HomeContentState extends State<HomeContent>
       actions: isSearching ? _searchActionButtons() : _listActionButtons(),
       flexibleSpace: (filtersEnabled && isSearching)
           ? _filtersView()
-          : (isFiltering ? _activeFiltersView() : _sortingView()),
+          : (isFiltering ? _activeFiltersView() : Container()),
       leading: isSearching
           ? IconButton(
               icon: Icon(Icons.arrow_back), onPressed: () => _clearSearch())
@@ -331,7 +275,7 @@ class HomeContentState extends State<HomeContent>
           child: Center(child: _searchView()),
           padding: EdgeInsets.only(left: 5)),
       expandedHeight:
-          (isSearching && filtersEnabled) ? 370 : (isFiltering ? 100 : 80),
+          (isSearching && filtersEnabled) ? 370 : (isFiltering ? 100 : 0),
       floating: false,
       pinned: true,
     );
@@ -343,7 +287,7 @@ class HomeContentState extends State<HomeContent>
         triggerSelectNote(note);
       } else {
         Navigator.push(context,
-            new MaterialPageRoute(builder: (context) => NoteEditor(note)));
+            MaterialPageRoute(builder: (context) => NoteEditor(note)));
       }
     }
 
@@ -373,7 +317,7 @@ class HomeContentState extends State<HomeContent>
           Padding(
               padding: EdgeInsets.only(left: 16, top: 16),
               child: Row(children: [
-                Text("Starred", style: Theme.of(context).textTheme.caption),
+                Text("Starred", style: Theme.of(context).textTheme.bodySmall),
                 Padding(
                     padding: EdgeInsets.only(left: 8),
                     child: Icon(Icons.star, size: 16))
@@ -385,7 +329,7 @@ class HomeContentState extends State<HomeContent>
             delegate: SliverChildListDelegate([
           Padding(
               padding: EdgeInsets.only(left: 16),
-              child: Text("Other", style: Theme.of(context).textTheme.caption))
+              child: Text("Other", style: Theme.of(context).textTheme.bodySmall))
         ])),
         NoteList(true, storage.view, items, onTap, onLongPress,
             highlight: storage.search == "" ? null : storage.search.trim())
@@ -414,9 +358,7 @@ class HomeContentState extends State<HomeContent>
   _searchView() {
     return SearchTextView(
         toggleIsSearching: _toggleIsSearching,
-        onChanged: (s) {
-          searchNotes(s);
-        },
+        onChanged: searchNotes,
         controller: _controller);
   }
 }

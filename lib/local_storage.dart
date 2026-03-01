@@ -1,79 +1,25 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'model.dart';
-import 'dart:async';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
-// table defintions
+import 'model.dart';
+
 final String noteTable = 'notes';
 final String sectionTable = 'sections';
 final String audioFileTable = 'audiofiles';
 final String collectionTable = 'collections';
 final String collectionMappingTable = 'collectionmapping';
 
-// up and downgrades of the database
-final migrations = {
-  1: {
-    2: [
-      //upgrade
-      "CREATE TABLE $collectionTable(id TEXT PRIMARY KEY, title TEXT, description TEXT, createdAt TEXT, lastModified TEXT, starred INTEGER);",
-      "CREATE TABLE $collectionMappingTable (noteId TEXT, collectionId TEXT);"
-    ]
-  },
-  2: {
-    1: [
-      // downgrade
-      "DROP TABLE $collectionTable;",
-      "DROP TABLE $collectionMappingTable;",
-    ],
-    3: [
-      "ALTER TABLE $sectionTable ADD createdAt TEXT",
-      "ALTER TABLE $sectionTable ADD lastModified TEXT",
-    ]
-  },
-  3: {
-    2: [
-      "ALTER TABLE $sectionTable DROP COLUMN createdAt",
-      "ALTER TABLE $sectionTable DROP COLUMN lastModified",
-    ],
-    4: [
-      "ALTER TABLE $noteTable ADD length REAL",
-    ]
-  },
-  4: {
-    3: [
-      "ALTER TABLE $noteTable DROP COLUMN length",
-    ],
-    5: [
-      "ALTER TABLE $audioFileTable ADD text TEXT",
-    ]
-  },
-  5: {
-    4: [
-      "ALTER TABLE $audioFileTable DROP COLUMN text",
-    ],
-    6: [
-      "ALTER TABLE $audioFileTable ADD starred INTEGER",
-    ]
-  },
-  6: {
-    5: [
-      "ALTER TABLE $audioFileTable DROP COLUMN starred",
-    ]
-  }
-};
-
 class LocalStorage {
   LocalStorage._internal();
-  static final LocalStorage _singleton = new LocalStorage._internal();
+  static final LocalStorage _singleton = LocalStorage._internal();
 
   final StreamController<List<Note>> _controller =
       StreamController<List<Note>>.broadcast();
-
   final StreamController<List<NoteCollection>> _collectionController =
       StreamController<List<NoteCollection>>.broadcast();
 
@@ -85,316 +31,233 @@ class LocalStorage {
   Stream<List<NoteCollection>> get collectionStream =>
       _collectionController.stream.asBroadcastStream();
 
-  factory LocalStorage() {
-    return _singleton;
-  }
+  factory LocalStorage() => _singleton;
 
-  Future<void> deleteFile(File f) {
-    return f.delete();
-  }
-
-  Future<bool> anyNote() async {
-    final List<Map<String, dynamic>> maps =
-        await (await getDatabase()).query(noteTable, limit: 1);
-
-    if (maps == null || (maps.length == 0))
-      return false;
-    else
-      return true;
-  }
+  Future<void> deleteFile(File f) => f.delete();
 
   Future<Database> getDatabase() async {
     return openDatabase(
-        // Set the path to the database. Note: Using the `join` function from the
-        // `path` package is best practice to ensure the path is correctly
-        // constructed for each platform.
-        join(await getDatabasesPath(), 'sketchord.db'),
-        // When the database is first created, create a table to store dogs.
-        onCreate: (db, version) async {
-      // Run the CREATE TABLE statement on the database.
-      await createDatabase(db);
-
-      if (version != 1) {
-        for (int i = 2; i <= version; i++) {
-          int oldVersion = i - 1;
-          int newVersion = i;
-          migrations[oldVersion][newVersion]
-              .forEach((script) async => await db.execute(script));
-        }
-      }
-    }, onUpgrade: (Database db, int oldVersion, int newVersion) async {
-      print("performing upgrade from $oldVersion to $newVersion");
-      migrations[oldVersion][newVersion]
-          .forEach((script) async => await db.execute(script));
-    }, onDowngrade: (Database db, int oldVersion, int newVersion) {
-      print("performing downgrade from $oldVersion to $newVersion");
-      migrations[oldVersion][newVersion]
-          .forEach((script) async => await db.execute(script));
-    },
-        // Set the version. This executes the onCreate function and provides a
-        // path to perform database upgrades and downgrades.
-        version: 6);
+      join(await getDatabasesPath(), 'sketchord.db'),
+      version: 2,
+      onCreate: (db, version) async => createDatabase(db),
+      onUpgrade: (db, oldVersion, newVersion) async => _ensureSchema(db),
+      onOpen: (db) async => _ensureSchema(db),
+    );
   }
 
   Future<void> createDatabase(Database db) async {
-    // create initial database
-    print("creating initial tables");
     await db.execute(
-      """CREATE TABLE $noteTable(id TEXT PRIMARY KEY, title TEXT, createdAt TEXT, lastModified TEXT, 
-          key TEXT, tuning TEXT, capo TEXT, instrument TEXT, label TEXT, artist TEXT, color TEXT, bpm REAL, zoom REAL, 
-          scrollOffset REAL, starred INTEGER, discarded INTEGER);
-          """,
+      '''CREATE TABLE $noteTable(
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        createdAt TEXT,
+        lastModified TEXT,
+        key TEXT,
+        tuning TEXT,
+        capo TEXT,
+        instrument TEXT,
+        label TEXT,
+        artist TEXT,
+        color TEXT,
+        bpm REAL,
+        length REAL,
+        zoom REAL,
+        scrollOffset REAL,
+        starred INTEGER,
+        discarded INTEGER
+      );''',
     );
     await db.execute(
-        'CREATE TABLE $sectionTable(id TEXT PRIMARY KEY, noteId TEXT, title TEXT, content TEXT, idx INTEGER);');
-
+      'CREATE TABLE $sectionTable(id TEXT PRIMARY KEY, noteId TEXT, title TEXT, content TEXT, idx INTEGER);',
+    );
     await db.execute(
-        'CREATE TABLE $audioFileTable(id TEXT PRIMARY KEY, noteId TEXT, idx INTEGER, duration TEXT, path TEXT, createdAt TEXT, lastModified TEXT, name TEXT, loopRange TEXT);');
+      'CREATE TABLE $audioFileTable(id TEXT PRIMARY KEY, noteId TEXT, idx INTEGER, duration TEXT, path TEXT, createdAt TEXT, lastModified TEXT, name TEXT, loopRange TEXT, text TEXT, starred INTEGER);',
+    );
+    await db.execute(
+      'CREATE TABLE $collectionTable(id TEXT PRIMARY KEY, title TEXT, description TEXT, createdAt TEXT, lastModified TEXT, starred INTEGER);',
+    );
+    await db.execute(
+      'CREATE TABLE $collectionMappingTable(noteId TEXT, collectionId TEXT);',
+    );
+  }
+
+  Future<void> _ensureSchema(Database db) async {
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS $collectionTable(id TEXT PRIMARY KEY, title TEXT, description TEXT, createdAt TEXT, lastModified TEXT, starred INTEGER);',
+    );
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS $collectionMappingTable(noteId TEXT, collectionId TEXT);',
+    );
+
+    if (!await _hasColumn(db, noteTable, 'length')) {
+      await db.execute('ALTER TABLE $noteTable ADD length REAL;');
+    }
+    if (!await _hasColumn(db, audioFileTable, 'text')) {
+      await db.execute('ALTER TABLE $audioFileTable ADD text TEXT;');
+    }
+    if (!await _hasColumn(db, audioFileTable, 'starred')) {
+      await db.execute('ALTER TABLE $audioFileTable ADD starred INTEGER;');
+    }
+  }
+
+  Future<bool> _hasColumn(Database db, String table, String column) async {
+    final res = await db.rawQuery('PRAGMA table_info($table)');
+    return res.any((row) => row['name'] == column);
   }
 
   Future<int> syncNote(Note note) async {
-    print(
-        "Syncing note ${note.id} with title ${note.title}, ${note.sections.length} sections and ${note.audioFiles.length} audio files");
-
     final db = await getDatabase();
 
-    await db.delete(sectionTable, where: "noteId = ?", whereArgs: [note.id]);
-
+    await db.delete(sectionTable, where: 'noteId = ?', whereArgs: [note.id]);
     for (int i = 0; i < note.sections.length; i++) {
-      Map<String, dynamic> sectionData = note.sections[i].toJson();
+      final sectionData = note.sections[i].toJson();
       sectionData['idx'] = i;
       sectionData['noteId'] = note.id;
-
-      int id = await db.insert(sectionTable, sectionData,
+      await db.insert(sectionTable, sectionData,
           conflictAlgorithm: ConflictAlgorithm.replace);
-
-      print("insert section ${note.sections[i].title} => $id");
     }
 
-    // delete all old audio files with noteId
-    await db.delete(audioFileTable, where: "noteId = ?", whereArgs: [note.id]);
-
+    await db.delete(audioFileTable, where: 'noteId = ?', whereArgs: [note.id]);
     for (int i = 0; i < note.audioFiles.length; i++) {
-      Map<String, dynamic> autdioFileData = note.audioFiles[i].toJson();
-      autdioFileData['idx'] = i;
-      autdioFileData['noteId'] = note.id;
-
-      await db.insert(audioFileTable, autdioFileData,
+      final audioFileData = note.audioFiles[i].toJson();
+      audioFileData['idx'] = i;
+      audioFileData['noteId'] = note.id;
+      await db.insert(audioFileTable, audioFileData,
           conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     note.lastModified = DateTime.now();
-    Map<String, dynamic> data = note.toJson();
-    data.remove('sections');
-    data.remove('audioFiles');
+    final data = note.toJson()..remove('sections')..remove('audioFiles');
+    final row = await db.insert(noteTable, data,
+        conflictAlgorithm: ConflictAlgorithm.replace);
 
-    // check if note already exists
-    List<Map> noteQuery = await db.query(noteTable,
-        where: "id = ?", whereArgs: [note.id], limit: 1);
-    int row;
-
-    if (noteQuery.length == 1) {
-      row = await db.update(noteTable, data,
-          where: "id = ?",
-          whereArgs: [note.id],
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    } else {
-      row = await db.insert(noteTable, data,
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-
-    print("Done Syncing ${note.id} in row $row");
     _controller.sink.add(await getNotes());
     return row;
   }
 
   Future<int> addAudioIdea(AudioFile f) async {
-    Database db = await getDatabase();
-
-    Map<String, dynamic> autdioFileData = f.toJson();
-    return await db.insert(audioFileTable, autdioFileData,
+    final db = await getDatabase();
+    final data = f.toJson();
+    data.remove('noteId');
+    data.remove('idx');
+    return db.insert(audioFileTable, data,
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<int> syncAudioFile(AudioFile f) async {
-    var db = await getDatabase();
-    return await db.update(audioFileTable, f.toJson(),
-        where: "id = ?",
+    final db = await getDatabase();
+    return db.update(audioFileTable, f.toJson(),
+        where: 'id = ?',
         whereArgs: [f.id],
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Section>> getSections(String noteId) async {
-    List<Map<String, dynamic>> maps = await (await getDatabase())
+    var maps = await (await getDatabase())
         .query(sectionTable, where: 'noteId = ?', whereArgs: [noteId]);
-
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
-    if (maps == null) return [];
-
-    // copy maps to sort them properly
-    maps.sort((s1, s2) => s1['idx'] - s2['idx']);
+    maps.sort((s1, s2) => (s1['idx'] as int) - (s2['idx'] as int));
     return maps.map((s) => Section.fromJson(s)).toList();
   }
 
   Future<List<AudioFile>> getAudioFiles(String noteId) async {
-    List<Map<String, dynamic>> maps = await (await getDatabase())
+    var maps = await (await getDatabase())
         .query(audioFileTable, where: 'noteId = ?', whereArgs: [noteId]);
-    if (maps == null) return [];
-
-    // copy maps to sort them properly
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
-    maps.sort((s1, s2) => s1['idx'] - s2['idx']);
+    maps.sort((s1, s2) => (s1['idx'] as int) - (s2['idx'] as int));
     return maps.map((s) => AudioFile.fromJson(s)).toList();
   }
 
   Future<List<AudioFile>> getAudioIdeas({bool descending = true}) async {
-    List<Map<String, dynamic>> maps = await (await getDatabase())
-        .query(audioFileTable, where: 'noteId IS NULL', whereArgs: []);
-    if (maps == null) return [];
-
-    // copy maps to sort them properly
+    var maps =
+        await (await getDatabase()).query(audioFileTable, where: 'noteId IS NULL');
     maps = maps.map((m) => Map<String, dynamic>.from(m)).toList();
-    var files = maps.map((s) => AudioFile.fromJson(s)).toList();
-    if (descending) {
-      files.sort((a1, a2) => a2.createdAt.compareTo(a1.createdAt));
-    }
+    final files = maps.map((s) => AudioFile.fromJson(s)).toList();
+    files.sort((a, b) => descending
+        ? b.createdAt.compareTo(a.createdAt)
+        : a.createdAt.compareTo(b.createdAt));
     return files;
   }
 
-  Future<Note> parseNote(Map<String, dynamic> data) async {
-    String noteId = data['id'];
-    if (noteId == null) return null;
+  Future<Note?> getNoteById(String id) async {
+    final maps =
+        await (await getDatabase()).query(noteTable, where: 'id = ?', whereArgs: [id]);
+    if (maps.isEmpty) return null;
+    return getNote(Map<String, dynamic>.from(maps.first));
+  }
 
-    Note note = Note.fromJson(data, noteId);
+  Future<Note> getNote(Map<String, dynamic> data) async {
+    final noteId = data['id'] as String;
+    final note = Note.fromJson(data, noteId);
     note.sections = await getSections(noteId);
     note.audioFiles = await getAudioFiles(noteId);
     return note;
   }
 
-  Future<Note> getNoteById(String id) async {
-    final List<Map<String, dynamic>> maps = await (await getDatabase())
-        .query(noteTable, where: "id = ?", whereArgs: [id]);
-
-    if (maps == null || maps.length == 0)
-      return null;
-    else
-      return parseNote(maps[0]);
-  }
-
   Future<List<Note>> getNotes() async {
-    final List<Map<String, dynamic>> maps =
-        await (await getDatabase()).query(noteTable);
-
-    if (maps == null) return [];
-
-    List<Note> notes = [];
-
-    for (var map in maps) {
-      Note note = await parseNote(map);
-      if (note != null) notes.add(note);
+    final maps = await (await getDatabase()).query(noteTable);
+    final notes = <Note>[];
+    for (final map in maps) {
+      notes.add(await getNote(Map<String, dynamic>.from(map)));
     }
     return notes;
   }
 
   Future<List<NoteCollection>> getCollections() async {
-    final List<Map<String, dynamic>> maps =
-        await (await getDatabase()).query(collectionTable);
-
-    if (maps == null) return [];
-    List<NoteCollection> collections = [];
-
-    for (var map in maps) {
-      String collectionId = map['id'];
-      NoteCollection collection = NoteCollection.fromJson(map);
-      // add notes by id
-      collection.notes = await getNotesByCollectionId(collectionId);
+    final maps = await (await getDatabase()).query(collectionTable);
+    final collections = <NoteCollection>[];
+    for (final map in maps) {
+      final collection = NoteCollection.fromJson(Map<String, dynamic>.from(map));
+      collection.notes = await getNotesByCollectionId(collection.id);
       collections.add(collection);
     }
-
     return collections;
   }
 
   Future<void> syncCollection(NoteCollection collection) async {
+    final db = await getDatabase();
     collection.lastModified = DateTime.now();
-    var data = collection.toJson();
-    data.remove('notes');
 
-    print("collection contains ${collection.notes.length} notes");
+    final data = collection.toJson()..remove('notes');
+    await db.insert(collectionTable, data,
+        conflictAlgorithm: ConflictAlgorithm.replace);
 
-    var db = await getDatabase();
-
-    var query = await db
-        .query(collectionTable, where: "id = ?", whereArgs: [collection.id]);
-    if (query == null || query.length == 0) {
-      int row = await db.insert(collectionTable, data,
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      print("Insert into row $row");
-    } else {
-      print(query);
-      print("update table");
-      _updateTable(collectionTable, data);
-    }
-
-    var noteIds = await _getNoteIdsByCollectionId(collection.id, db);
-    print("note ids: $noteIds");
-
-    for (var note in collection.notes) {
-      if (!noteIds.contains(note.id)) {
-        // add setId / noteId pair
-        Map<String, dynamic> pair = {
-          "noteId": note.id,
-          "collectionId": collection.id
-        };
-
-        int row = await db.insert(collectionMappingTable, pair,
-            conflictAlgorithm: ConflictAlgorithm.replace);
-        print(
-            "insert noteId ${note.id} into collection ${collection.id} | row: $row");
+    final existingNoteIds = await _getNoteIdsByCollectionId(collection.id, db);
+    for (final note in collection.notes) {
+      if (!existingNoteIds.contains(note.id)) {
+        await db.insert(
+          collectionMappingTable,
+          {'noteId': note.id, 'collectionId': collection.id},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       } else {
-        noteIds.remove(note.id);
+        existingNoteIds.remove(note.id);
       }
     }
 
-    // if any noteId left in list, remove entry from table
-    for (var noteId in noteIds) {
-      print("delete noteId: $noteId | collectionId: ${collection.id}");
+    for (final noteId in existingNoteIds) {
       await db.delete(collectionMappingTable,
-          where: "collectionId = ? AND noteId = ?",
+          where: 'collectionId = ? AND noteId = ?',
           whereArgs: [collection.id, noteId]);
     }
 
-    assert((await this._getNoteIdsByCollectionId(collection.id, db)).length ==
-        collection.notes.length);
-
-    var collections = await getCollections();
-    _collectionController.sink.add(collections);
+    _collectionController.sink.add(await getCollections());
   }
 
   Future<int> getNumCollectionsByNoteId(String noteId) async {
-    final List<Map<String, dynamic>> maps = await (await getDatabase()).query(
-        collectionMappingTable,
-        where: "noteId = ?",
-        whereArgs: [noteId]);
-
-    if (maps == null)
-      return 0;
-    else
-      return maps.length;
+    final maps = await (await getDatabase()).query(collectionMappingTable,
+        where: 'noteId = ?', whereArgs: [noteId]);
+    return maps.length;
   }
 
   Future<List<Note>> getNotesByCollectionId(String collectionId) async {
-    final List<Map<String, dynamic>> maps = await (await getDatabase()).query(
-        collectionMappingTable,
-        where: "collectionId = ?",
-        whereArgs: [collectionId]);
-
-    if (maps == null) return [];
-
-    List<Note> notes = [];
-    print("found ${maps.length} results");
-
-    for (var map in maps) {
-      Note note = await getNoteById(map['noteId']);
+    final maps = await (await getDatabase()).query(collectionMappingTable,
+        where: 'collectionId = ?', whereArgs: [collectionId]);
+    final notes = <Note>[];
+    for (final map in maps) {
+      final noteId = map['noteId'] as String?;
+      if (noteId == null) continue;
+      final note = await getNoteById(noteId);
       if (note != null) notes.add(note);
     }
     return notes;
@@ -402,43 +265,31 @@ class LocalStorage {
 
   Future<List<String>> _getNoteIdsByCollectionId(
       String collectionId, Database db) async {
-    final List<Map<String, dynamic>> maps = await (db.query(
-        collectionMappingTable,
-        where: "collectionId = ?",
-        whereArgs: [collectionId]));
-
-    if (maps == null) return [];
-    return maps.asMap().values.map<String>((value) => value['noteId']).toList();
+    final maps = await db.query(collectionMappingTable,
+        where: 'collectionId = ?', whereArgs: [collectionId]);
+    return maps
+        .map((row) => row['noteId'])
+        .whereType<String>()
+        .toList(growable: true);
   }
 
   Future<bool> _deleteAudioFile(AudioFile audioFile) async {
-    var db = await getDatabase();
-    await db.delete(
-      audioFileTable,
-      where: 'id = ?',
-      whereArgs: [audioFile.id],
-    );
-
+    final db = await getDatabase();
+    await db.delete(audioFileTable, where: 'id = ?', whereArgs: [audioFile.id]);
     if (audioFile.file.existsSync()) {
-      FileSystemEntity e = await audioFile.file.delete();
+      await audioFile.file.delete();
     }
     return !audioFile.file.existsSync();
   }
 
-  Future<bool> deleteAudioIdea(AudioFile audioFile) async {
-    return _deleteAudioFile(audioFile);
-  }
+  Future<bool> deleteAudioIdea(AudioFile audioFile) => _deleteAudioFile(audioFile);
 
   Future<void> deleteNote(Note note) async {
     final db = await getDatabase();
+    await db.delete(noteTable, where: 'id = ?', whereArgs: [note.id]);
+    await db.delete(collectionMappingTable, where: 'noteId = ?', whereArgs: [note.id]);
 
-    await db.delete(
-      noteTable,
-      where: 'id = ?',
-      whereArgs: [note.id],
-    );
-
-    for (AudioFile f in note.audioFiles) {
+    for (final f in note.audioFiles) {
       await _deleteAudioFile(f);
     }
     _controller.sink.add(await getNotes());
@@ -446,54 +297,30 @@ class LocalStorage {
 
   Future<void> deleteCollection(NoteCollection collection) async {
     final db = await getDatabase();
-
-    await db.delete(
-      collectionTable,
-      where: 'id = ?',
-      whereArgs: [collection.id],
-    );
-
-    await db.delete(
-      collectionMappingTable,
-      where: 'collectionId = ?',
-      whereArgs: [collection.id],
-    );
+    await db.delete(collectionTable, where: 'id = ?', whereArgs: [collection.id]);
+    await db.delete(collectionMappingTable,
+        where: 'collectionId = ?', whereArgs: [collection.id]);
     _collectionController.sink.add(await getCollections());
   }
 
   Future<int> _updateTable(String table, Map<String, dynamic> data,
       {String where = 'id = ?'}) async {
     final db = await getDatabase();
-
-    return await db.update(
-      table,
-      data,
-      where: where,
-      whereArgs: [data['id']],
-    );
+    return db.update(table, data, where: where, whereArgs: [data['id']]);
   }
 
-  Future<void> discardNote(Note note, bool removeFromCollection) async {
+  Future<void> discardNote(Note note, {bool removeFromCollection = false}) async {
     note.discarded = true;
-    _updateNote(note);
-
+    await _updateNote(note);
     if (removeFromCollection) {
-      print("removing note from collections");
-
       final db = await getDatabase();
-
-      await db.delete(collectionMappingTable,
-          where: "noteId = ?", whereArgs: [note.id]);
+      await db.delete(collectionMappingTable, where: 'noteId = ?', whereArgs: [note.id]);
     }
   }
 
   Future<void> _updateNote(Note note) async {
-    // this function does not update sections and audio files
     note.lastModified = DateTime.now();
-    var data = note.toJson();
-    data.remove("sections");
-    data.remove("audioFiles");
-
+    final data = note.toJson()..remove('sections')..remove('audioFiles');
     await _updateTable(noteTable, data);
     _controller.sink.add(await getNotes());
   }
@@ -503,37 +330,20 @@ class LocalStorage {
     await _updateNote(note);
   }
 
-  Future<bool> restoreNoteById(String noteId) async {
-    Note note = await getNoteById(noteId);
-    if (note != null) {
-      note.discarded = false;
-      await _updateNote(note);
-      return true;
-    } else
-      return false;
-  }
-
   Future<void> syncNoteAttr(Note note, String attr) async {
-    if (["sections", "title", "audioFiles", "tuning"].contains(attr))
-      note.lastModified = DateTime.now();
     await syncNote(note);
     _controller.sink.add(await getNotes());
   }
 
   Future<bool> isInitialStart() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool started = prefs.getBool('started');
-    return started == null ? true : !started;
+    final prefs = await SharedPreferences.getInstance();
+    final started = prefs.getBool('started');
+    return !(started ?? false);
   }
 
   Future<void> setInitialStartDone() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('started', true);
-  }
-
-  Future<void> setInitialStart(bool initialStart) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('started', initialStart);
   }
 
   Future<List<Note>> getActiveNotes() async {
@@ -545,14 +355,19 @@ class LocalStorage {
   }
 
   Future<bool> syncSettings(Settings settings) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return await prefs.setString("settings", jsonEncode(settings.toJson()));
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setString('settings', jsonEncode(settings.toJson()));
   }
 
   Future<Settings> getSettings() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String data = prefs.getString('settings');
-    if (data == null) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('settings');
+    if (data == null || data.isEmpty) {
+      return Settings(
+          theme: SettingsTheme.dark,
+          view: EditorView.single,
+          audioFormat: AudioFormat.wav);
+    }
     return Settings.fromJson(jsonDecode(data));
   }
 }

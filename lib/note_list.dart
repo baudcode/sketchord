@@ -1,14 +1,13 @@
 import 'package:sound/note_item.dart';
 import 'model.dart';
 import 'package:flutter/material.dart';
-import 'storage.dart';
 
 class NoteListItemModel {
   final Note note;
   final bool isSelected;
-  final String highlight; // a test to highlight
+  final String? highlight; // a test to highlight
 
-  NoteListItemModel({this.note, this.isSelected, this.highlight});
+  NoteListItemModel({required this.note, required this.isSelected, this.highlight});
 }
 
 class NoteList extends StatefulWidget {
@@ -16,7 +15,7 @@ class NoteList extends StatefulWidget {
   final bool singleView;
   final ValueChanged<Note> onTap;
   final ValueChanged<Note> onLongPress;
-  final String highlight;
+  final String? highlight;
 
   final List<NoteListItemModel> items;
   NoteList(

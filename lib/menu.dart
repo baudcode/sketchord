@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_flux/flutter_flux.dart';
-import 'package:sound/audio_list.dart';
+import 'package:sound/audio_ideas.dart';
+import 'package:sound/collections_page.dart';
 import 'package:sound/home.dart';
 import 'package:sound/intent_receive.dart';
-import 'package:sound/collections.dart';
-import 'package:sound/menu_store.dart';
 import 'package:sound/settings.dart';
 import 'package:sound/trash.dart';
 
 class Menu extends StatefulWidget {
-  Menu();
+  const Menu({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -17,21 +15,38 @@ class Menu extends StatefulWidget {
   }
 }
 
-class _MenuState extends State<Menu>
-    with SingleTickerProviderStateMixin, StoreWatcherMixin<Menu> {
+enum MenuItem { HOME, AUDIO, SETS, SETTINGS, TRASH }
+
+class MenuOption {
+  MenuItem item;
+  String name;
+  IconData icon;
+  MenuOption({required this.item, required this.name, required this.icon});
+}
+
+class _MenuState extends State<Menu> with SingleTickerProviderStateMixin {
+  bool isCollapsed = true;
   final animateMenuDuration = const Duration(milliseconds: 300);
 
-  AnimationController _controller;
-  Animation<Offset> _slideAnimation; // slide menu from left to right
-  Animation<double> _scaleAnimation,
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation; // slide menu from left to right
+  late Animation<double> _scaleAnimation,
       _menuScaleAnimation; // scale home content from 1.0 to 0.8
 
-  MenuStore store;
+  MenuItem current = MenuItem.HOME;
+
+  var options = [
+    MenuOption(icon: Icons.dashboard, name: "Home", item: MenuItem.HOME),
+    MenuOption(icon: Icons.music_note, name: "Ideas", item: MenuItem.AUDIO),
+    MenuOption(
+        icon: Icons.list_alt_outlined, name: "Sets", item: MenuItem.SETS),
+    MenuOption(icon: Icons.delete_sweep, name: "Trash", item: MenuItem.TRASH),
+    MenuOption(icon: Icons.settings, name: "Settings", item: MenuItem.SETTINGS),
+  ];
 
   @override
   void initState() {
     super.initState();
-    store = listenToStore(menuStoreToken);
     _controller =
         AnimationController(vsync: this, duration: animateMenuDuration);
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.8).animate(_controller);
@@ -51,7 +66,9 @@ class _MenuState extends State<Menu>
 
   _switch(MenuItem item) {
     _onMenuPressed();
-    setMenuItem(item);
+    setState(() {
+      current = item;
+    });
     //Navigator.push(
     //    context, new MaterialPageRoute(builder: (context) => Settings()));
   }
@@ -76,15 +93,8 @@ class _MenuState extends State<Menu>
                       children: options
                           .map((e) => TextButton.icon(
                                 label: Text(e.name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .button
-                                        .copyWith(fontSize: 20)),
-                                icon: Icon(e.icon,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .button
-                                        .color),
+                                    style: TextStyle(fontSize: 20)),
+                                icon: Icon(e.icon),
                                 onPressed: () => _switch(e.item),
                               ))
                           .toList()),
@@ -92,19 +102,17 @@ class _MenuState extends State<Menu>
   }
 
   _getView() {
-    switch (store.item) {
+    switch (current) {
       case MenuItem.HOME:
         return Home(this._onMenuPressed);
+      case MenuItem.AUDIO:
+        return AudioIdeasPage(onMenuPressed: this._onMenuPressed);
+      case MenuItem.SETS:
+        return CollectionsPage(onMenuPressed: this._onMenuPressed);
       case MenuItem.SETTINGS:
         return Settings(this._onMenuPressed);
       case MenuItem.TRASH:
         return Trash(this._onMenuPressed);
-      case MenuItem.SETS:
-        return Collections(this._onMenuPressed);
-      case MenuItem.AUDIO:
-        return AudioList(onMenuPressed: this._onMenuPressed);
-      default:
-        return Container();
     }
   }
 
@@ -116,35 +124,36 @@ class _MenuState extends State<Menu>
         duration: animateMenuDuration,
         top: 0,
         bottom: 0,
-        left: store.collapsed ? 0 : 0.6 * screenWidth,
-        right: store.collapsed ? 0 : -0.4 * screenWidth,
+        left: isCollapsed ? 0 : 0.6 * screenWidth,
+        right: isCollapsed ? 0 : -0.4 * screenWidth,
         child: ScaleTransition(
             scale: _scaleAnimation,
             child: MediaQuery.removePadding(
                 context: context,
-                removeTop: store.collapsed ? false : true,
+                removeTop: isCollapsed ? false : true,
                 child: Material(
                   animationDuration: animateMenuDuration,
-                  child: !store.collapsed
-                      ? GestureDetector(
-                          onTap: _onMenuPressed,
-                          child: AbsorbPointer(child: _getView()))
+                  child: !isCollapsed
+                      ? AbsorbPointer(child: _getView())
                       : _getView(),
-                  borderRadius: BorderRadius.all(
-                      Radius.circular(store.collapsed ? 0 : 10)),
-                  color: Theme.of(context).appBarTheme.color,
+                  borderRadius:
+                      BorderRadius.all(Radius.circular(isCollapsed ? 0 : 10)),
+                  color: Theme.of(context).appBarTheme.backgroundColor ??
+                      Theme.of(context).colorScheme.surface,
                   clipBehavior: Clip.antiAlias,
                   elevation: 5,
                 ))));
   }
 
   _onMenuPressed() {
-    if (store.collapsed) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
-    toggleMenu();
+    setState(() {
+      if (isCollapsed) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+      isCollapsed = !isCollapsed;
+    });
   }
 
   _menuWithScaffold(BuildContext context) {

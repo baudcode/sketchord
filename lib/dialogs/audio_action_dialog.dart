@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sound/file_manager.dart';
-import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
-import 'package:sound/note_editor.dart';
-import 'package:sound/note_search_view.dart';
+import 'package:sound/dialogs/import_dialog.dart';
 
 class AudioAction {
   final IconData icon;
@@ -43,9 +40,10 @@ var enum2Action = {
 
 showAudioActionDialog(BuildContext context, List<AudioActionEnum> actionEnums,
     ValueChanged<AudioAction> onActionPressed) {
-  // actions are an icon with a descrition unterneath it
-
-  var actions = actionEnums.map((x) => enum2Action[x]).toList();
+  final actions = actionEnums
+      .map((x) => enum2Action[x])
+      .whereType<AudioAction>()
+      .toList();
   showDialog(
       context: context,
       builder: (context) {
@@ -60,12 +58,13 @@ showAudioActionDialog(BuildContext context, List<AudioActionEnum> actionEnums,
                     IconButton(
                         icon: Icon(action.icon, size: 30),
                         onPressed: () => onActionPressed(action)),
-                    Text(action.description, textScaleFactor: 0.7)
+                    Text(action.description,
+                        textScaler: const TextScaler.linear(0.7))
                   ],
                 );
               }).toList()),
           // actions: [
-          //   FlatButton(
+          //   TextButton(
           //       child: Text("Close"),
           //       onPressed: () => Navigator.of(context).pop())
           // ]
@@ -73,59 +72,27 @@ showAudioActionDialog(BuildContext context, List<AudioActionEnum> actionEnums,
       });
 }
 
-showMoveToNoteDialog(BuildContext context, Function onDone, AudioFile f) {
-  // actions are an icon with a descrition unterneath it
-  onMoveToNew() async {
+showMoveToNoteDialog(
+    BuildContext context, Future<void> Function() onDone, AudioFile f) {
+  Future<Note> onMoveToNew() async {
     // create a new note
     Note note = Note.empty();
     note.audioFiles.add(f);
-
-    // manual sync
-    await LocalStorage().syncNote(note);
-
-    Navigator.of(context)
-        .push(new MaterialPageRoute(builder: (context) => NoteEditor(note)))
-        .then((value) => onDone());
+    await onDone();
+    return note;
   }
 
-  onSearch() {
-    Navigator.push(
-        context,
-        new MaterialPageRoute(
-            builder: (context) => NoteSearchViewLoader(
-                  single: true,
-                  collection: NoteCollection.empty(),
-                  onAddNotes: (List<Note> notes) async {
-                    print("selected notes: ${notes.map((e) => e.title)}");
-                    assert(notes.length == 1);
-                    Note note = notes[0];
-                    note.audioFiles.add(f);
-                    await LocalStorage().syncNote(note);
-                    Navigator.of(context).push(new MaterialPageRoute(
-                        builder: (context) => NoteEditor(note)));
-                  },
-                ))).then((value) {
-      onDone();
-    });
+  Future<Note> onMoveToExisting(Note note) async {
+    note.audioFiles.add(f);
+    await onDone();
+    return note;
   }
 
-  toggleStar() async {
-    f.starred = !f.starred;
-    await LocalStorage().syncAudioFile(f);
-  }
-
-  var id2action = {
-    AudioActionEnum.move_to_new.index: onMoveToNew,
-    AudioActionEnum.search.index: onSearch,
-    AudioActionEnum.star.index: toggleStar,
-    AudioActionEnum.unstar.index: toggleStar,
-  };
-  var order = [
-    AudioActionEnum.move_to_new,
-    AudioActionEnum.search,
-  ];
-
-  showAudioActionDialog(context, order, (value) {
-    id2action[value.id]();
-  });
+  showImportDialog(
+    context,
+    "Move audio file to note",
+    onMoveToNew,
+    onMoveToExisting,
+    importButtonText: "Move",
+  );
 }

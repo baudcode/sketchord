@@ -2,125 +2,124 @@ import 'package:flutter/material.dart';
 import 'package:sound/local_storage.dart';
 import 'package:sound/model.dart';
 
-showDeleteDialog(BuildContext context, Note note, Function onDelete) async {
-  bool isInCollection =
-      await LocalStorage().getNumCollectionsByNoteId(note.id) > 0;
-
-  String message = "Are you sure you want to delete this note?";
-
-  if (isInCollection) {
-    message =
-        "Note is part of a collection. When removing this note it will be automatically removed from its collections. \n Are you sure you want to delete this note?";
-  }
-
-  _deleteDialog(context, message, onDelete);
-}
-
-showNoteCollectionDeleteDialog(
-    BuildContext context, NoteCollection c, Function onDelete) async {
-  String message = "Are you sure you want to delete this collection?";
-  _deleteDialog(context, message, onDelete);
-}
-
-_deleteDialog(BuildContext context, String message, Function onDelete) {
-  showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text("No")),
-            ElevatedButton(
-                onPressed: () {
-                  onDelete();
-                  Future.delayed(Duration(milliseconds: 100), () {
-                    onDelete();
-                  });
-                },
-                child: Text("Yes"))
-          ],
-        );
-      });
-}
-
-showDeleteForeverDialog({
+Future<void> showDeleteDialog(
   BuildContext context,
   Note note,
-  Function onDelete,
-}) {
-  String message =
-      "Are you sure you want to delete \"${note.title}\" irrevocably?";
-  showConfirmationDialog(
-      title: "Delete Irrevocably",
-      context: context,
-      onConfirm: () {
-        LocalStorage().deleteNote(note);
-        onDelete();
-      },
-      onDeny: () {},
-      message: message);
+  VoidCallback onDelete,
+) async {
+  const message = 'Are you sure you want to delete this note?';
+  _deleteDialog(context, message, onDelete);
 }
 
-showDeleteNotesForeverDialog({
+Future<void> showNoteCollectionDeleteDialog(
   BuildContext context,
-  List<Note> notes,
-  Function onDelete,
-}) {
-  String message =
-      "Are you sure you want to delete ${notes.length} note/s irrevocably?";
-  showConfirmationDialog(
-      title: "Delete Irrevocably",
-      context: context,
-      onConfirm: () {
-        for (Note note in notes) {
-          LocalStorage().deleteNote(note);
-        }
-        onDelete();
-      },
-      onDeny: () {},
-      message: message);
+  Object collection,
+  VoidCallback onDelete,
+) async {
+  const message = 'Are you sure you want to delete this collection?';
+  _deleteDialog(context, message, onDelete);
 }
 
-showConfirmationDialog(
-    {BuildContext context,
-    String title,
-    String message,
-    Function onConfirm,
-    Function onDeny}) {
-  showDialog(
+void _deleteDialog(
+  BuildContext context,
+  String message,
+  VoidCallback onDelete,
+) {
+  showDialog<void>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              onDelete();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Yes'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void showDeleteForeverDialog({
+  required BuildContext context,
+  required Note note,
+  required VoidCallback onDelete,
+}) {
+  final message = 'Are you sure you want to delete "${note.title}" irrevocably?';
+  showConfirmationDialog(
+    title: 'Delete Irrevocably',
+    context: context,
+    onConfirm: () {
+      LocalStorage().deleteNote(note);
+      onDelete();
+    },
+    onDeny: () {},
+    message: message,
+  );
+}
+
+void showDeleteNotesForeverDialog({
+  required BuildContext context,
+  required List<Note> notes,
+  required VoidCallback onDelete,
+}) {
+  final message =
+      'Are you sure you want to delete ${notes.length} note/s irrevocably?';
+  showConfirmationDialog(
+    title: 'Delete Irrevocably',
+    context: context,
+    onConfirm: () {
+      for (final note in notes) {
+        LocalStorage().deleteNote(note);
+      }
+      onDelete();
+    },
+    onDeny: () {},
+    message: message,
+  );
+}
+
+void showConfirmationDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+  required VoidCallback onConfirm,
+  VoidCallback? onDeny,
+}) {
+  showDialog<void>(
     context: context,
     builder: (BuildContext context) {
-      return StatefulBuilder(builder: (context, setState) {
-        return AlertDialog(
-          title: new Text(title),
-          content: Padding(
-            child: Text(message),
-            padding: EdgeInsets.only(right: 10),
+      return AlertDialog(
+        title: Text(title),
+        content: Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Text(message),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('No'),
+            onPressed: () {
+              onDeny?.call();
+              Navigator.of(context).pop();
+            },
           ),
-          actions: <Widget>[
-            new TextButton(
-              child: Text("No"),
-              onPressed: () {
-                if (onDeny != null) {
-                  onDeny();
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-            // usually buttons at the bottom of the dialog
-            new ElevatedButton(
-                child: new Text("Yes"),
-                onPressed: () {
-                  onConfirm();
-                  Navigator.of(context).pop();
-                }),
-          ],
-        );
-      });
+          ElevatedButton(
+            child: const Text('Yes'),
+            onPressed: () {
+              onConfirm();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
     },
   );
 }

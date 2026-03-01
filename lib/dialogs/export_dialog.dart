@@ -1,49 +1,35 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
-import 'package:sound/backup.dart';
 import 'package:sound/export.dart';
 import 'package:sound/model.dart';
 
-showExportDialog(BuildContext context, List<Note> notes,
-    {List<NoteCollection> collections, String title}) {
+showExportDialog(BuildContext context, Note note) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       // return object of type Dialog
-      ExportType current = ExportType.ZIP;
+      ExportType current = ExportType.PDF;
 
-      _share() async {
-        await Exporter.exportShare(notes, current,
-            collections: collections, title: title);
+      _export() async {
+        await Exporter.exportShare(note, current);
+
         Navigator.of(context).pop();
       }
-
-      _save() async {
-        await Exporter.exportDialog(notes, current,
-            collections: collections, title: title);
-        Navigator.of(context).pop();
-      }
-
-      var options = (kReleaseMode)
-          ? [ExportType.ZIP, ExportType.PDF, ExportType.TEXT]
-          : [ExportType.ZIP, ExportType.PDF, ExportType.TEXT, ExportType.JSON];
 
       return StatefulBuilder(builder: (context, setState) {
         return AlertDialog(
-          title: new Text("Export Options"),
+          title: const Text("Export Options"),
           content: Row(children: [
-            Padding(
+            const Padding(
               child: Text("Format:"),
               padding: EdgeInsets.only(right: 10),
             ),
-            DropdownButton(
+            DropdownButton<ExportType>(
                 value: current,
-                items: options
-                    .map((e) => DropdownMenuItem(
+                items: ExportType.values
+                    .map((e) => DropdownMenuItem<ExportType>(
                         child: Text(getExtension(e)), value: e))
                     .toList(),
-                onChanged: (v) => setState(() => current = v)),
+                onChanged: (v) => setState(() => current = v!)),
           ]),
           actions: <Widget>[
             TextButton(
@@ -53,8 +39,12 @@ showExportDialog(BuildContext context, List<Note> notes,
               },
             ),
             // usually buttons at the bottom of the dialog
-            ElevatedButton(child: Text("Share"), onPressed: _share),
-            ElevatedButton(onPressed: _save, child: Text("Save"))
+            TextButton(
+              child: const Text("Export"),
+              onPressed: () {
+                _export();
+              },
+            ),
           ],
         );
       });
