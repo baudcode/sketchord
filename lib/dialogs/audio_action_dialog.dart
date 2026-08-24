@@ -18,7 +18,8 @@ enum AudioActionEnum {
   move_to_new,
   search,
   star,
-  unstar
+  unstar,
+  transcribe,
 }
 
 var enum2Action = {
@@ -36,14 +37,14 @@ var enum2Action = {
       AudioAction(AudioActionEnum.star.index, Icons.star_border, "Star"),
   AudioActionEnum.unstar:
       AudioAction(AudioActionEnum.unstar.index, Icons.star, "Unstar"),
+  AudioActionEnum.transcribe: AudioAction(
+      AudioActionEnum.transcribe.index, Icons.music_note, "Transcribe MIDI"),
 };
 
 showAudioActionDialog(BuildContext context, List<AudioActionEnum> actionEnums,
     ValueChanged<AudioAction> onActionPressed) {
-  final actions = actionEnums
-      .map((x) => enum2Action[x])
-      .whereType<AudioAction>()
-      .toList();
+  final actions =
+      actionEnums.map((x) => enum2Action[x]).whereType<AudioAction>().toList();
   showDialog(
       context: context,
       builder: (context) {
