@@ -7,6 +7,7 @@ import Foundation
 
 import audioplayers_darwin
 import file_picker
+import flutter_midi_pro
 import path_provider_foundation
 import record_macos
 import share_plus
@@ -16,6 +17,7 @@ import sqflite_darwin
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioplayersDarwinPlugin.register(with: registry.registrar(forPlugin: "AudioplayersDarwinPlugin"))
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
+  FlutterMidiProPlugin.register(with: registry.registrar(forPlugin: "FlutterMidiProPlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   RecordMacOsPlugin.register(with: registry.registrar(forPlugin: "RecordMacOsPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))

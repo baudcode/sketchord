@@ -7,14 +7,17 @@ import '../dialogs/audio_action_dialog.dart';
 import '../editor_store.dart';
 import '../model.dart';
 import '../recorder_store.dart';
+import '../transcription/transcription_dialog.dart';
 import '../utils.dart';
 
 class AudioFileListItem extends StatelessWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onPressed;
+  final VoidCallback? onTranscribe;
   final AudioFile file;
 
-  const AudioFileListItem(this.file, {this.onLongPress, this.onPressed, super.key});
+  const AudioFileListItem(this.file,
+      {this.onLongPress, this.onPressed, this.onTranscribe, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +27,23 @@ class AudioFileListItem extends StatelessWidget {
     }
     return ListTile(
       onLongPress: onLongPress,
-      trailing: trailing,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          trailing,
+          IconButton(
+            tooltip: 'Transcribe to MIDI',
+            icon: const Icon(Icons.music_note),
+            onPressed: onTranscribe,
+          ),
+        ],
+      ),
       subtitle: Text(file.createdAt.toIso8601String()),
       dense: true,
       visualDensity: VisualDensity.comfortable,
       contentPadding: const EdgeInsets.all(2),
-      leading: IconButton(icon: const Icon(Icons.play_arrow), onPressed: onPressed),
+      leading:
+          IconButton(icon: const Icon(Icons.play_arrow), onPressed: onPressed),
       title: Text(file.name),
     );
   }
@@ -53,7 +67,8 @@ class AudioFileView extends StatelessWidget {
     super.key,
   });
 
-  Future<void> _onAudioFileLongPress(BuildContext context, AudioFile file) async {
+  Future<void> _onAudioFileLongPress(
+      BuildContext context, AudioFile file) async {
     final controller = TextEditingController(text: file.name);
     await showDialog<void>(
       context: context,
@@ -90,6 +105,7 @@ class AudioFileView extends StatelessWidget {
     final view = AudioFileListItem(
       file,
       onLongPress: () => _onAudioFileLongPress(context, file),
+      onTranscribe: () => showTranscriptionDialog(context, file),
       onPressed: () {
         if (File(file.path).existsSync()) {
           startPlaybackAction(file);
@@ -114,13 +130,16 @@ class AudioFileView extends StatelessWidget {
           [
             AudioActionEnum.share,
             AudioActionEnum.move,
+            AudioActionEnum.transcribe,
           ],
           (action) {
             Navigator.of(context).pop();
-            if (action.id == 0) {
+            if (action.id == AudioActionEnum.share.index) {
               onShare();
-            } else if (action.id == 1) {
+            } else if (action.id == AudioActionEnum.move.index) {
               onMove();
+            } else if (action.id == AudioActionEnum.transcribe.index) {
+              showTranscriptionDialog(context, file);
             }
           },
         );
@@ -202,8 +221,9 @@ void playInDialog(BuildContext context, AudioFile f) {
               Slider(
                 min: 0.0,
                 max: (duration.inMilliseconds / 1000).toDouble(),
-                value: (position.inMilliseconds / 1000).toDouble().clamp(
-                    0.0, (duration.inMilliseconds / 1000).toDouble()),
+                value: (position.inMilliseconds / 1000)
+                    .toDouble()
+                    .clamp(0.0, (duration.inMilliseconds / 1000).toDouble()),
                 onChanged: (value) {
                   onSeek(Duration(milliseconds: (value * 1000).floor()));
                 },
